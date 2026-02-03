@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.syndo</groupId>
+		<artifactId>syndo-parent</artifactId>
+		<version>2.1.3</version>
+		<relativePath>../syndo-parent/pom.xml</relativePath>
+	</parent>
+	
+	<artifactId>syndo-tax-yx</artifactId>
+	<packaging>jar</packaging>
+
+	<name>syndo-tax-yx</name>
+	<url>http://www.taxgis.cn</url>
+	<description>syndo-tax-yx</description>
+	
+	<properties>
+	
+    </properties>
+
+	<dependencies>
+		
+		<!-- SpringBoot集成thymeleaf模板 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        
+		<!-- spring-boot-devtools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional> <!-- 表示依赖不会传递 -->
+        </dependency>
+        
+        <!-- syndo框架 -->
+        <dependency>
+            <groupId>com.syndo</groupId>
+            <artifactId>syndo-templates</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        
+        <!-- magic-api 接口快速开发框架 -->
+        <dependency>
+			<groupId>org.ssssssss</groupId>
+		    <artifactId>magic-api-spring-boot-starter</artifactId>
+		    <version>1.7.2</version>
+		     <exclusions>
+	        	<exclusion>
+	          		<groupId>commons-io</groupId>
+		          	<artifactId>commons-io</artifactId>
+		        </exclusion>
+	      	</exclusions>
+		</dependency>
+        
+		<!-- 反向代理 -->
+		<dependency>
+			<groupId>org.mitre.dsmiley.httpproxy</groupId>
+			<artifactId>smiley-http-proxy-servlet</artifactId>
+			<version>1.7</version>
+		</dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+            <scope>compile</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-ehcache</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+
+
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<fork>true</fork> <!-- 如果没有该配置，devtools不会生效 -->
+					<mainClass>com.syndo.StartApplication</mainClass>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>public</id>
+			<name>aliyun nexus</name>
+			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</repository>
+		
+		<repository>
+            <id>syndo</id>
+            <url>http://192.168.10.4:8081/repository/syndo/</url>
+        </repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>public</id>
+			<name>aliyun nexus</name>
+			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>
