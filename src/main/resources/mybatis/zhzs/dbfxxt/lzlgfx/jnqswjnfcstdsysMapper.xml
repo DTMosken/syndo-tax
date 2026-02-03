@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--缴纳契税未缴纳房产税与土地使用税 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.JnqswjnfcstdsysMapper">
+
+    <!-- 查询 -->
+    <select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Jnqswjnfcstdsys"
+            parameterType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Jnqswjnfcstdsys">
+        WITH ts AS(
+        SELECT id, ywid, nsrmc, zt, fklx FROM(
+        SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='jnqswjnfcstdsys'
+        ) ts WHERE rn=1
+        ),
+        <if test='dblx==null or dblx=="" or dblx=="fcs"'>
+        qs_f AS(
+            SELECT * FROM t_db_swj_jrkxx t
+            WHERE zsxm='契税' AND zspm LIKE '%房%'
+            AND djzclx NOT IN('内资个人','基层群众自治组织','国家机关','政党机关','事业单位')
+            <if test="ssnd != null and ssnd != ''">
+                AND SUBSTR(rkrq, 1, 4) = #{ssnd}
+            </if>
+            <if test="nsrmc != null and nsrmc != ''">
+                and nsrmc LIKE concat(concat('%',#{nsrmc}),'%')
+            </if>
+        ),
+        </if>
+        <if test='dblx==null or dblx=="" or dblx=="tds"'>
+        qs_d AS(
+            SELECT * FROM t_db_swj_jrkxx t
+            WHERE zsxm='契税' AND zspm LIKE '%地%' AND zspm NOT IN('居住用地')
+            AND djzclx NOT IN('内资个人','基层群众自治组织','国家机关','政党机关','事业单位')
+            <if test="ssnd != null and ssnd != ''">
+                AND SUBSTR(rkrq, 1, 4) = #{ssnd}
+            </if>
+            <if test="nsrmc != null and nsrmc != ''">
+                and nsrmc LIKE concat(concat('%',#{nsrmc}),'%')
+            </if>
+        ),
+        </if>
+        <if test='dblx==null or dblx=="" or dblx=="fcs"'>
+        fcs AS(
+            SELECT nsrsbh, nsrmc FROM t_db_swj_jrkxx t
+            WHERE zsxm='房产税'
+        ),
+        </if>
+        <if test='dblx==null or dblx=="" or dblx=="tds"'>
+        tds AS(
+            SELECT nsrsbh, nsrmc FROM t_db_swj_jrkxx t
+            WHERE zsxm='城镇土地使用税'
+        ),
+        </if>
+        fctds AS(
+            <if test='dblx==null or dblx=="" or dblx=="fcs"'>
+            SELECT qs.nsrsbh, qs.nsrmc, zsxm, zspm, hyml, skssqq skssq, rkrq, jsyj, kssl, sl, sjje, '缴纳契税未缴纳房产税' dblx
+            FROM qs_f qs
+            LEFT JOIN fcs ON qs.nsrsbh=fcs.nsrsbh AND qs.nsrmc=fcs.nsrmc
+            WHERE fcs.nsrsbh IS NULL
+            </if>
+            <if test='dblx==null or dblx==""'>
+            UNION ALL
+            </if>
+            <if test='dblx==null or dblx=="" or dblx=="tds"'>
+            SELECT qs.nsrsbh, qs.nsrmc, zsxm, zspm, hyml, skssqq skssq, rkrq, jsyj, kssl, sl, sjje, '缴纳契税未缴纳土地使用税' dblx
+            FROM qs_d qs
+            LEFT JOIN tds ON qs.nsrsbh=tds.nsrsbh AND qs.nsrmc=tds.nsrmc
+            WHERE tds.nsrsbh IS NULL
+            </if>
+        )
+
+        select t.*
+        , ifnull(ts.zt,'0') zt, ts.id fkid
+        from fctds t LEFT JOIN ts ON t.nsrmc=ts.nsrmc AND MD5(concat(t.nsrmc, t.dblx))=ts.ywid
+        where 1 = 1
+        <if test='zt == "0"'>
+            and ts.id is null
+        </if>
+        <if test='zt == "1"'>
+            and ts.zt in ('1', '3.1')
+        </if>
+        <if test='zt == "2"'>
+            and ts.zt = #{zt}
+        </if>
+        <if test='zt == "3"'>
+            and ts.zt in ('3', '3.0','3.2','3.3')
+        </if>
+    </select>
+
+</mapper>

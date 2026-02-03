@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.czjbmfg.mapper.CzjbmfgMapper">
+<!-- ***** 财政局部门分管 ***** -->
+	<select id="selectList"
+			parameterType="com.syndo.project.zhzs.czjbmfg.domain.Czglzxkhzjff"
+			resultType="com.syndo.project.zhzs.czjbmfg.domain.Czglzxkhzjff">
+		select xxssnd, jlnr, dwgrmc, jey, ffsj,id,f.create_by,date_time as sjssq from t_db_czj_czglzxkhzjff f
+		left join sys_user u
+		on f.create_by = u.login_name
+		left join sys_dept d on u.dept_id = d.dept_id
+		where u.status = '0' and u.del_flag = '0'
+		<if test="dwgrmc!=''and dwgrmc!=null">
+			and dwgrmc like concat(concat('%',#{dwgrmc}),'%')
+		</if>
+		<if test="params.beginTime!=''and params.beginTime!=null">
+			and date_time <![CDATA[ >= ]]> #{params.beginTime}
+		</if>
+		<if test="params.endTime!=''and params.endTime!=null">
+			and date_time <![CDATA[ <= ]]> #{params.endTime}
+		</if>
+		${params.dataScope} order by date_time desc
+
+	</select>
+
+	<insert id="insertCzglzxkhzjff" parameterType="com.syndo.project.zhzs.czjbmfg.domain.Czglzxkhzjff">
+		INSERT INTO t_db_czj_czglzxkhzjff(xxssnd, jlnr, dwgrmc, jey, ffsj,date_time,create_time,create_by) VALUES
+		(#{xxssnd},#{jlnr},#{dwgrmc},#{jey},#{ffsj},#{sjssq},now(),#{loginName})
+
+	</insert>
+
+	<select id="selectCzglzxkhzjffById" parameterType="string" resultType="com.syndo.project.zhzs.czjbmfg.domain.Czglzxkhzjff">
+		select xxssnd, jlnr, dwgrmc, jey, ffsj,id,date_time as sjssq from t_db_czj_czglzxkhzjff where id = #{khid}
+	</select>
+
+	<update id="updateCzglzxkhzjff" parameterType="com.syndo.project.zhzs.czjbmfg.domain.Czglzxkhzjff">
+		update t_db_czj_czglzxkhzjff set date_time=#{sjssq},xxssnd=#{xxssnd},jlnr=#{jlnr},dwgrmc=#{dwgrmc},jey=#{jey},ffsj=#{ffsj} where id=#{id}
+	</update>
+
+	<delete id="deleteKhzjffByIds" parameterType="String">
+		delete from t_db_czj_czglzxkhzjff where id in
+		<foreach collection="ids" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+	<!--财政专项资金拨付-->
+	<select id="selectCzzxzjbfList"
+			parameterType="com.syndo.project.zhzs.czjbmfg.domain.Czzxzjbf"
+			resultType="com.syndo.project.zhzs.czjbmfg.domain.Czzxzjbf">
+		select ks, nsrsbh, qymc, xmnr, bfjey,zfyt,bfsj,id,f.create_by,date_time as sjssq from t_db_czj_czzxzjbf f
+		left join sys_user u
+		on f.create_by = u.login_name
+		left join sys_dept d on u.dept_id = d.dept_id
+		where u.status = '0' and u.del_flag = '0'
+		<if test="qymc!=''and qymc!=null">
+			and qymc like concat(concat('%',#{qymc}),'%')
+		</if>
+		<if test="params.beginTime!=''and params.beginTime!=null">
+			and date_time <![CDATA[ >= ]]> #{params.beginTime}
+		</if>
+		<if test="params.endTime!=''and params.endTime!=null">
+			and date_time <![CDATA[ <= ]]> #{params.endTime}
+		</if>
+		${params.dataScope} order by date_time desc
+	</select>
+
+	<insert id="insertCzzxzjbf" parameterType="com.syndo.project.zhzs.czjbmfg.domain.Czzxzjbf">
+		INSERT INTO t_db_czj_czzxzjbf(create_by, create_time,date_time, ks, nsrsbh, qymc, xmnr, bfjey, zfyt, bfsj) VALUES
+		(#{loginName}, now(),#{sjssq}, #{ks}, #{nsrsbh}, #{qymc}, #{xmnr}, #{bfjey}, #{zfyt}, #{bfsj})
+	</insert>
+
+	<select id="selectCzzxzjbfById" parameterType="string" resultType="com.syndo.project.zhzs.czjbmfg.domain.Czzxzjbf">
+		select  ks, nsrsbh, qymc, xmnr, bfjey,zfyt,bfsj,id,f.create_by ,date_time as sjssq from t_db_czj_czzxzjbf f where id = #{khid}
+	</select>
+
+	<update id="updateCzzxzjbf" parameterType="com.syndo.project.zhzs.czjbmfg.domain.Czzxzjbf">
+		update t_db_czj_czzxzjbf set date_time=#{sjssq},ks=#{ks},nsrsbh=#{nsrsbh},qymc=#{qymc},xmnr=#{xmnr},bfjey=#{bfjey},zfyt=#{zfyt},bfsj=#{bfsj} where id=#{id}
+	</update>
+
+	<delete id="deleteCzzxzjbfByIds" parameterType="String">
+		delete from t_db_czj_czzxzjbf where id in
+		<foreach collection="ids" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+</mapper>

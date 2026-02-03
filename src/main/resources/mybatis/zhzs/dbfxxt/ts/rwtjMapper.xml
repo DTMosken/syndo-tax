@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 任务统计 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.RwtjMapper">
+
+    <select id="selectList" parameterType="Rwtj" resultType="Rwtj">
+        with tjmx as(
+            select t.fkr,
+            fkr.user_name fkrmc,
+            count(1) rws,
+            sum(case when t.zt='1' and datediff(date_format(current_date(),'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&lt;=ifnull(t.fksx,9999999)
+            then 1 else 0 end) dfk_wcq,
+            sum(case when t.zt='1' and datediff(date_format(current_date(),'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&gt;ifnull(t.fksx,9999999)
+            then 1 else 0 end) dfk_cq,
+            sum(case when t.zt&gt;='2' and datediff(date_format(t.fksj,'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&lt;=ifnull(t.fksx,9999999)
+            then 1 else 0 end) yfk_zq,
+            sum(case when t.zt&gt;='2' and datediff(date_format(t.fksj,'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&gt;ifnull(t.fksx,9999999)
+            then 1 else 0 end) yfk_cq,
+            round(sum(if(t.zt&gt;='2', 1, 0))/nullif(count(1),0)*100,2) fkl,
+            sum(case when t.zt&gt;='2' and t.fklx='1' then 1 else 0 end) fklx_yzg,
+            sum(case when t.zt&gt;='2' and t.fklx='2' then 1 else 0 end) fklx_wfzg,
+            sum(case when t.zt&gt;='2' and t.fklx='3' then 1 else 0 end) fklx_jbzg,
+            sum(case when t.zt&gt;='2' and t.fklx='9' then 1 else 0 end) fklx_wwt,
+            sum(case when t.zt='3' then 1 else 0 end) splx_gd,
+            sum(case when t.zt='3.0' then 1 else 0 end) splx_zdxc,
+            sum(case when t.zt='3.1' then 1 else 0 end) splx_yth,
+            sum(case when t.zt='3.2' then 1 else 0 end) splx_xc,
+            sum(case when t.zt='3.3' then 1 else 0 end) splx_zjc
+            from t_dbfxxt_fkb t left join sys_user fkr on t.fkr = fkr.user_id
+            <where>
+                <if test="qsrq!=null and qsrq!=''">
+                    DATE_FORMAT(t.tssj, '%Y-%m')&gt;=#{qsrq}
+                </if>
+                <if test="zzrq!=null and zzrq!=''">
+                    and DATE_FORMAT(t.tssj, '%Y-%m')&lt;=#{zzrq}
+                </if>
+            </where>
+            group by t.fkr
+        )
+        select '' fkr, '合计' fkrmc, ifnull(sum(rws),0) rws, ifnull(sum(dfk_wcq),0) dfk_wcq, ifnull(sum(dfk_cq),0) dfk_cq, ifnull(sum(yfk_zq),0) yfk_zq, ifnull(sum(yfk_cq),0) yfk_cq, ifnull(round((sum(yfk_zq)+sum(yfk_cq))/nullif(sum(dfk_wcq) + sum(dfk_cq),0)*100,2),0) fkl,
+               ifnull(sum(fklx_yzg),0) fklx_yzg, ifnull(sum(fklx_wfzg),0) fklx_wfzg, ifnull(sum(fklx_jbzg),0) fklx_jbzg, ifnull(sum(fklx_wwt),0) fklx_wwt,
+               ifnull(sum(splx_gd),0) splx_gd, ifnull(sum(splx_zdxc),0) splx_zdxc, ifnull(sum(splx_yth),0) splx_yth, ifnull(sum(splx_xc),0) splx_xc, ifnull(sum(splx_zjc),0) splx_zjc
+        from tjmx
+        union all
+        select * from tjmx
+    </select>
+    
+    <select id="selectRws" resultType="Dbrw">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+        tsr.user_name tsr, date_format(t.tssj,'%Y-%m-%d %T') tssj, fkr.user_name fkr, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        <where>
+        <if test="fkr!=null and fkr!=''">
+            t.fkr = #{fkr}
+        </if>
+        </where>
+    </select>
+    <select id="selectDfk2" resultType="Dbrw">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+        tsr.user_name tsr, date_format(t.tssj,'%Y-%m-%d %T') tssj, fkr.user_name fkr, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        where t.zt = '1'
+        <if test="fkr!=null and fkr!=''">
+            and t.fkr = #{fkr}
+        </if>
+        <if test="lx!=null and lx=='cq'">
+            and datediff(date_format(current_date(),'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&gt;ifnull(t.fksx,9999999)
+        </if>
+        <if test="lx!=null and lx=='wcq'">
+            and datediff(date_format(current_date(),'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&lt;=ifnull(t.fksx,9999999)
+        </if>
+    </select>
+    <select id="selectYfk2" resultType="Dbrw">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+        tsr.user_name tsr, date_format(t.tssj,'%Y-%m-%d %T') tssj, fkr.user_name fkr, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        where t.zt &gt;= '2'
+        <if test="fkr!=null and fkr!=''">
+            and t.fkr = #{fkr}
+        </if>
+        <if test="lx!=null and lx=='cq'">
+            and datediff(date_format(t.fksj,'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&gt;ifnull(t.fksx,9999999)
+        </if>
+        <if test="lx!=null and lx=='zq'">
+            and datediff(date_format(t.fksj,'%Y-%m-%d'), date_format(t.tssj, '%Y-%m-%d'))&lt;=ifnull(t.fksx,9999999)
+        </if>
+    </select>
+    <select id="selectYfk" resultType="Dbrw">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+        tsr.user_name tsr, date_format(t.tssj,'%Y-%m-%d %T') tssj, fkr.user_name fkr, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        where t.zt &gt;= '2'
+        <if test="fkr!=null and fkr!=''">
+            and t.fkr = #{fkr}
+        </if>
+        <if test="lx!=null and lx!=''">
+            and t.fklx = #{lx}
+        </if>
+    </select>
+    <select id="selectSplx" resultType="Dbrw">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+        tsr.user_name tsr, date_format(t.tssj,'%Y-%m-%d %T') tssj, fkr.user_name fkr, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx, shr.user_name shr, date_format(t.shsj,'%Y-%m-%d %T') shsj
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        left join sys_user shr on t.shr=shr.user_id
+        where t.zt = #{lx}
+        <if test="fkr!=null and fkr!=''">
+            and t.fkr = #{fkr}
+        </if>
+    </select>
+
+
+</mapper>

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('查看详情')" />
+</head>
+<body class="gray-white">
+    <input id="ssyfq" name="ssyfq" type="hidden" th:value="${ssyfq}"/>
+    <input id="ssyfz" name="ssyfz" type="hidden" th:value="${ssyfz}"/>
+    <input id="jyzname" name="jyzname" type="hidden" th:value="${jyzname}"/>
+     <div class="container-div">
+		<div class="row">
+	        <div class="btn-group-sm" id="toolbar" role="group">
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+    var prefix = ctx + "zhzs/dbfxxt/sybd/jyzxsnsfx";
+        
+        $(function() {
+            var options = {
+                url: prefix + '/getTwoList?ssyfq=' + $("#ssyfq").val()+'&ssyfz='+$("#ssyfz").val()+'&jyzname='+$("#jyzname").val(),
+                modalName: "查看详情",
+                showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false
+				},
+				{
+				     field : 'jyzname', 
+				     title : '加油站名称',
+				     sortable: true
+				},
+				{
+				     field : 'xsqyl', 
+				     title : '汽油销售量',
+				     sortable: true
+				},
+				{field : 'qy92',title : '92#汽油',sortable: true},
+				{field : 'xse92',title : '92#汽油销售额',sortable: true},
+				{field : 'yjsk92',title : '92#汽油应交税款',sortable: true},
+				{field : 'qy95',title : '95#汽油',sortable: true},
+				{field : 'xse95',title : '95#汽油销售额',sortable: true},
+				{field : 'yjsk95',title : '95#汽油应缴税款',sortable: true},
+				{field : 'qy98',title : '98#汽油',sortable: true},
+				{field : 'xse98',title : '98#汽油销售额',sortable: true},
+				{field : 'yjsk98',title : '98#汽油应交税款',sortable: true},
+				{field : 'cy0',title : '0#柴油',sortable: true},
+				{field : 'xse0',title : '0#柴油销售额',sortable: true},
+				{field : 'yjsk0',title : '0#柴油应缴税款',sortable: true},
+				{field : 'cy10',title : '-10#柴油',sortable: true},
+				{field : 'xse10',title : '-10#柴油销售额',sortable: true},
+				{field : 'yjsk10',title : '-10#柴油应缴税款',sortable: true},
+				{field : 'xscyl',title : '销售柴油量',sortable: true},
+				{field : 'shuie',title : '实缴税额',sortable: true},
+				{field : 'ssyf',title : '所属月份',sortable: true}
+				]
+            };
+            $.table.init(options);
+            
+        });
+    </script>
+</body>
+</html>

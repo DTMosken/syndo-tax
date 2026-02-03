@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('镇街重点企业分析')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline">
+					<label class="layui-form-label">入库日期:</label>
+					<div class="layui-input-block" id="test-range">
+						<div class="layui-col-sm5">
+							<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+						<span class="layui-form-mid">-</span>
+						<div class="layui-col-sm5">
+							<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="1">元</option>
+							<option value="10000">万元</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline">
+					<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+					<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.form.reset()"><i class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+	var prefix = ctx + "zhzs/srfxxt/zjsrfx/zjzdqyfx";
+
+	layui.use('laydate', function(){
+		var laydate = layui.laydate;
+		laydate.render({elem: '#qsrq', type:'month', format:'yyyy-MM'});
+		laydate.render({elem: '#zzrq', type:'month', format:'yyyy-MM'});
+	});
+
+	$(function(){
+		var options = {
+			id: 'layui-table',
+			url: prefix + "/list",
+			exportUrl: prefix + "/expExcel",
+			title: '镇街重点企业分析',
+			showExport: true,
+			height: 'full-65',
+			ataType: "json",
+			limit: 50,
+			cols: [
+				[
+					{type:'checkbox'},
+					{title: '街道乡镇', width: '17%', field: 'jdxz',halign: 'center'},
+					{title: '企业名称', width: '17%', field: 'qymc',halign: 'center',align: 'left'},
+					{title: '本期数', width: '17%', field: 'bqs',halign: 'center',align: 'left'},
+					{title: '同期数', width: '16%', field: 'tqs',halign: 'center',align: 'left'},
+					{title: '增减额', width: '15%', field: 'zje',halign: 'center',align: 'left'},
+					{title: '增减率%', width: '15%', field: 'zjl',halign: 'center',align: 'left'},
+				]
+			]
+		};
+		$.table.init(options);
+	});
+
+</script>
+</body>
+</html>

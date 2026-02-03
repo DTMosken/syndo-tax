@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.hysrfx.FhyszfxMapper">
+
+    <!-- 行业全口径 -->
+    <select id="selectHyQkj" resultType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhyszfx" 
+            parameterType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhyszfx">
+		with sw as(
+			select hyml, 
+				round(sum(sjje)) sjje, 
+				round(sum(zzs)) zzs, 
+				round(sum(xfs)) xfs, 
+				round(sum(yys)) yys, 
+				round(sum(qysds)) qysds, 
+				round(sum(grsds)) grsds, 
+				round(sum(zys)) zys, 
+				round(sum(cswhjss)) cswhjss, 
+				round(sum(fcs)) fcs, 
+				round(sum(yhs)) yhs, 
+				round(sum(cztdsys)) cztdsys, 
+				round(sum(tdzzs)) tdzzs, 
+				round(sum(ccs)) ccs, 
+				round(sum(gdzys)) gdzys, 
+				round(sum(qs)) qs, 
+				round(sum(hjbhs)) hjbhs
+				from(
+					select t.HYML,
+						SUM(replace(sjje,',','')) sjje,
+						SUM((CASE WHEN zsxm='增值税' THEN replace(sjje,',','') ELSE 0 END )) AS zzs,
+						SUM( (CASE WHEN zsxm='消费税'THEN replace(sjje,',','') ELSE 0 END)) AS xfs,
+						SUM( (CASE WHEN zsxm='营业税'THEN replace(sjje,',','') ELSE 0 END)) AS yys,
+						SUM( (CASE WHEN zsxm='企业所得税'THEN replace(sjje,',','') ELSE 0 END)) AS qysds,
+						SUM( (CASE WHEN zsxm='个人所得税'THEN replace(sjje,',','') ELSE 0 END)) AS grsds,
+						SUM( (CASE WHEN zsxm='资源税'THEN replace(sjje,',','') ELSE 0 END)) AS zys,
+						SUM( (CASE WHEN zsxm='城市维护建设税'THEN replace(sjje,',','') ELSE 0 END)) AS cswhjss,
+						SUM( (CASE WHEN zsxm='房产税'THEN replace(sjje,',','') ELSE 0 END)) AS fcs,
+						SUM( (CASE WHEN zsxm='印花税'THEN replace(sjje,',','') ELSE 0 END)) AS yhs,
+						SUM( (CASE WHEN zsxm='城镇土地使用税'THEN replace(sjje,',','') ELSE 0 END)) AS cztdsys,
+						SUM( (CASE WHEN zsxm='土地增值税'THEN replace(sjje,',','') ELSE 0 END)) AS tdzzs,
+						SUM( (CASE WHEN zsxm='车船税'THEN replace(sjje,',','') ELSE 0 END)) AS ccs,
+						SUM( (CASE WHEN zsxm='耕地占用税'THEN replace(sjje,',','') ELSE 0 END)) AS gdzys,
+						SUM( (CASE WHEN zsxm='契税'THEN replace(sjje,',','') ELSE 0 END)) AS qs,
+						SUM( (CASE WHEN zsxm='环境保护税'THEN replace(sjje,',','') ELSE 0 END)) AS hjbhs
+					from t_db_swj_jrkxx t
+					where t.zsxm != '' and zsxm is not null
+						AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+						AND t.yskm not in('出口业务退增值税')
+						<if test="qsrq != null and qsrq != ''">
+							AND SUBSTRING(RKRQ,1,7) >= SUBSTRING(#{qsrq},1,7)
+						</if>
+						<if test="zzrq != null and zzrq != ''">
+							AND SUBSTRING(RKRQ,1,7) &lt;= SUBSTRING(#{zzrq},1,7)
+						</if>
+						<if test="hy != null and hy != ''">
+							AND t.HYML = #{hy}
+						</if>
+					group by t.HYML
+
+					UNION ALL
+					select hydm.HYML,
+						SUM(replace(sjjetkje,',','')) sjje,
+						SUM((CASE WHEN zsxm='增值税' THEN replace(sjjetkje,',','') ELSE 0 END )) AS zzs,
+						SUM( (CASE WHEN zsxm='消费税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS xfs,
+						SUM( (CASE WHEN zsxm='营业税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS yys,
+						SUM( (CASE WHEN zsxm='企业所得税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS qysds,
+						SUM( (CASE WHEN zsxm='个人所得税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS grsds,
+						SUM( (CASE WHEN zsxm='资源税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS zys,
+						SUM( (CASE WHEN zsxm='城市维护建设税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS cswhjss,
+						SUM( (CASE WHEN zsxm='房产税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS fcs,
+						SUM( (CASE WHEN zsxm='印花税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS yhs,
+						SUM( (CASE WHEN zsxm='城镇土地使用税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS cztdsys,
+						SUM( (CASE WHEN zsxm='土地增值税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS tdzzs,
+						SUM( (CASE WHEN zsxm='车船税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS ccs,
+						SUM( (CASE WHEN zsxm='耕地占用税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS gdzys,
+						SUM( (CASE WHEN zsxm='契税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS qs,
+						SUM( (CASE WHEN zsxm='环境保护税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS hjbhs
+					from t_db_swj_swjrkgsgr t left join dm_hy_kz hydm on t.hy=hydm.hymc
+					where t.zsxm != '' and zsxm is not null
+						<if test="qsrq != null and qsrq != ''">
+							AND SUBSTRING(RTKRQ,1,7) >= SUBSTRING(#{qsrq},1,7)
+						</if>
+						<if test="zzrq != null and zzrq != ''">
+							AND SUBSTRING(RTKRQ,1,7) &lt;= SUBSTRING(#{zzrq},1,7)
+						</if>
+						<if test="hy != null and hy != ''">
+							AND hydm.hyml = #{hy}
+						</if>
+					group by hydm.HYML
+
+					UNION ALL
+					select hydm.HYML,
+						SUM(replace(sjjetkje,',','')) sjje,
+						SUM((CASE WHEN zsxm='增值税' THEN replace(sjjetkje,',','') ELSE 0 END )) AS zzs,
+						SUM( (CASE WHEN zsxm='消费税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS xfs,
+						SUM( (CASE WHEN zsxm='营业税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS yys,
+						SUM( (CASE WHEN zsxm='企业所得税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS qysds,
+						SUM( (CASE WHEN zsxm='个人所得税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS grsds,
+						SUM( (CASE WHEN zsxm='资源税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS zys,
+						SUM( (CASE WHEN zsxm='城市维护建设税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS cswhjss,
+						SUM( (CASE WHEN zsxm='房产税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS fcs,
+						SUM( (CASE WHEN zsxm='印花税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS yhs,
+						SUM( (CASE WHEN zsxm='城镇土地使用税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS cztdsys,
+						SUM( (CASE WHEN zsxm='土地增值税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS tdzzs,
+						SUM( (CASE WHEN zsxm='车船税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS ccs,
+						SUM( (CASE WHEN zsxm='耕地占用税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS gdzys,
+						SUM( (CASE WHEN zsxm='契税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS qs,
+						SUM( (CASE WHEN zsxm='环境保护税'THEN replace(sjjetkje,',','') ELSE 0 END)) AS hjbhs
+					from t_db_swj_swjrkgsqy t left join dm_hy_kz hydm on t.hy=hydm.hymc
+					where t.zsxm != '' and zsxm is not null
+						<if test="qsrq != null and qsrq != ''">
+							AND SUBSTRING(RTKRQ,1,7) >= SUBSTRING(#{qsrq},1,7)
+						</if>
+						<if test="zzrq != null and zzrq != ''">
+							AND SUBSTRING(RTKRQ,1,7) &lt;= SUBSTRING(#{zzrq},1,7)
+						</if>
+						<if test="hy != null and hy != ''">
+							AND hydm.hyml = #{hy}
+						</if>
+					group by hydm.HYML
+				) tt
+				group by hyml
+		)
+		,hj as(
+		  select
+		       HYML hy,
+		       ROUND(IFNULL(sjje,0)/#{dw},0) hjje,
+		       ROUND(IFNULL(zzs,0)/#{dw},0) zzs,
+		       ROUND(IFNULL(xfs,0)/#{dw},0) xfs,
+		       ROUND(IFNULL(yys,0)/#{dw},0) yys,
+		       ROUND(IFNULL(qysds,0)/#{dw},0)qysds,
+		       ROUND(IFNULL(grsds,0)/#{dw},0) grsds,
+		       ROUND(IFNULL(zys,0)/#{dw},0) zys,
+		       ROUND(IFNULL(cswhjss,0)/#{dw},0) cswhjss,
+		       ROUND(IFNULL(fcs,0)/#{dw},0) fcs,
+		       ROUND(IFNULL(yhs,0)/#{dw},0) yhs,
+		       ROUND(IFNULL(cztdsys,0)/#{dw},0) cztdsys,
+		       ROUND(IFNULL(tdzzs,0)/#{dw},0) tdzzs,
+		       ROUND(IFNULL(ccs,0)/#{dw},0) ccs,
+		       ROUND(IFNULL(gdzys,0)/#{dw},0) gdzys,
+		       ROUND(IFNULL(qs,0)/#{dw},0) qs,
+		       ROUND(IFNULL(hjbhs,0)/#{dw},0) hjbhs
+		  from sw
+		  where 1=1
+		),
+		dict AS (
+		SELECT * FROM sys_dict_data WHERE dict_type='dm_ml'
+		)
+		select * from hj h left join dict d  on h.hy=d.dict_label
+		where h.hy is not null and h.hy !=''
+		ORDER BY d.dict_sort
+    </select>
+
+    <!-- 行业一般预算 -->
+    <select id="selectHyYbys" resultType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhyszfx" 
+            parameterType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhyszfx">
+			with sw as(
+				select hyml, 
+					round(sum(sjje)) sjje, 
+					round(sum(zzs)) zzs, 
+					round(sum(xfs)) xfs, 
+					round(sum(yys)) yys, 
+					round(sum(qysds)) qysds, 
+					round(sum(grsds)) grsds, 
+					round(sum(zys)) zys, 
+					round(sum(cswhjss)) cswhjss, 
+					round(sum(fcs)) fcs, 
+					round(sum(yhs)) yhs, 
+					round(sum(cztdsys)) cztdsys, 
+					round(sum(tdzzs)) tdzzs, 
+					round(sum(ccs)) ccs, 
+					round(sum(gdzys)) gdzys, 
+					round(sum(qs)) qs, 
+					round(sum(hjbhs)) hjbhs
+					from(
+						select t.HYML,
+							SUM(replace(qxj,',','')) sjje,
+							SUM((CASE WHEN zsxm='增值税' THEN replace(qxj,',','') ELSE 0 END )) AS zzs,
+							SUM( (CASE WHEN zsxm='消费税'THEN replace(qxj,',','') ELSE 0 END)) AS xfs,
+							SUM( (CASE WHEN zsxm='营业税'THEN replace(qxj,',','') ELSE 0 END)) AS yys,
+							SUM( (CASE WHEN zsxm='企业所得税'THEN replace(qxj,',','') ELSE 0 END)) AS qysds,
+							SUM( (CASE WHEN zsxm='个人所得税'THEN replace(qxj,',','') ELSE 0 END)) AS grsds,
+							SUM( (CASE WHEN zsxm='资源税'THEN replace(qxj,',','') ELSE 0 END)) AS zys,
+							SUM( (CASE WHEN zsxm='城市维护建设税'THEN replace(qxj,',','') ELSE 0 END)) AS cswhjss,
+							SUM( (CASE WHEN zsxm='房产税'THEN replace(qxj,',','') ELSE 0 END)) AS fcs,
+							SUM( (CASE WHEN zsxm='印花税'THEN replace(qxj,',','') ELSE 0 END)) AS yhs,
+							SUM( (CASE WHEN zsxm='城镇土地使用税'THEN replace(qxj,',','') ELSE 0 END)) AS cztdsys,
+							SUM( (CASE WHEN zsxm='土地增值税'THEN replace(qxj,',','') ELSE 0 END)) AS tdzzs,
+							SUM( (CASE WHEN zsxm='车船税'THEN replace(qxj,',','') ELSE 0 END)) AS ccs,
+							SUM( (CASE WHEN zsxm='耕地占用税'THEN replace(qxj,',','') ELSE 0 END)) AS gdzys,
+							SUM( (CASE WHEN zsxm='契税'THEN replace(qxj,',','') ELSE 0 END)) AS qs,
+							SUM( (CASE WHEN zsxm='环境保护税'THEN replace(qxj,',','') ELSE 0 END)) AS hjbhs
+						from t_db_swj_jrkxx t
+						where t.zsxm != '' and zsxm is not null
+							AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+							AND t.yskm not in('出口业务退增值税')
+							<if test="qsrq != null and qsrq != ''">
+								AND SUBSTRING(RKRQ,1,7) >= SUBSTRING(#{qsrq},1,7)
+							</if>
+							<if test="zzrq != null and zzrq != ''">
+								AND SUBSTRING(RKRQ,1,7) &lt;= SUBSTRING(#{zzrq},1,7)
+							</if>
+							<if test="hy != null and hy != ''">
+								AND t.HYML = #{hy}
+							</if>
+						group by t.HYML
+	
+						UNION ALL
+						select hydm.HYML,
+							SUM(replace(QXSRE,',','')) sjje,
+							SUM((CASE WHEN zsxm='增值税' THEN replace(QXSRE,',','') ELSE 0 END )) AS zzs,
+							SUM( (CASE WHEN zsxm='消费税'THEN replace(QXSRE,',','') ELSE 0 END)) AS xfs,
+							SUM( (CASE WHEN zsxm='营业税'THEN replace(QXSRE,',','') ELSE 0 END)) AS yys,
+							SUM( (CASE WHEN zsxm='企业所得税'THEN replace(QXSRE,',','') ELSE 0 END)) AS qysds,
+							SUM( (CASE WHEN zsxm='个人所得税'THEN replace(QXSRE,',','') ELSE 0 END)) AS grsds,
+							SUM( (CASE WHEN zsxm='资源税'THEN replace(QXSRE,',','') ELSE 0 END)) AS zys,
+							SUM( (CASE WHEN zsxm='城市维护建设税'THEN replace(QXSRE,',','') ELSE 0 END)) AS cswhjss,
+							SUM( (CASE WHEN zsxm='房产税'THEN replace(QXSRE,',','') ELSE 0 END)) AS fcs,
+							SUM( (CASE WHEN zsxm='印花税'THEN replace(QXSRE,',','') ELSE 0 END)) AS yhs,
+							SUM( (CASE WHEN zsxm='城镇土地使用税'THEN replace(QXSRE,',','') ELSE 0 END)) AS cztdsys,
+							SUM( (CASE WHEN zsxm='土地增值税'THEN replace(QXSRE,',','') ELSE 0 END)) AS tdzzs,
+							SUM( (CASE WHEN zsxm='车船税'THEN replace(QXSRE,',','') ELSE 0 END)) AS ccs,
+							SUM( (CASE WHEN zsxm='耕地占用税'THEN replace(QXSRE,',','') ELSE 0 END)) AS gdzys,
+							SUM( (CASE WHEN zsxm='契税'THEN replace(QXSRE,',','') ELSE 0 END)) AS qs,
+							SUM( (CASE WHEN zsxm='环境保护税'THEN replace(QXSRE,',','') ELSE 0 END)) AS hjbhs
+						from t_db_swj_swjrkgsgr t left join dm_hy_kz hydm on t.hy=hydm.hymc
+						where t.zsxm != '' and zsxm is not null
+							<if test="qsrq != null and qsrq != ''">
+								AND SUBSTRING(RTKRQ,1,7) >= SUBSTRING(#{qsrq},1,7)
+							</if>
+							<if test="zzrq != null and zzrq != ''">
+								AND SUBSTRING(RTKRQ,1,7) &lt;= SUBSTRING(#{zzrq},1,7)
+							</if>
+							<if test="hy != null and hy != ''">
+								AND hydm.hyml = #{hy}
+							</if>
+						group by hydm.HYML
+	
+						UNION ALL
+						select hydm.HYML,
+							SUM(replace(QXSRE,',','')) sjje,
+							SUM((CASE WHEN zsxm='增值税' THEN replace(QXSRE,',','') ELSE 0 END )) AS zzs,
+							SUM( (CASE WHEN zsxm='消费税'THEN replace(QXSRE,',','') ELSE 0 END)) AS xfs,
+							SUM( (CASE WHEN zsxm='营业税'THEN replace(QXSRE,',','') ELSE 0 END)) AS yys,
+							SUM( (CASE WHEN zsxm='企业所得税'THEN replace(QXSRE,',','') ELSE 0 END)) AS qysds,
+							SUM( (CASE WHEN zsxm='个人所得税'THEN replace(QXSRE,',','') ELSE 0 END)) AS grsds,
+							SUM( (CASE WHEN zsxm='资源税'THEN replace(QXSRE,',','') ELSE 0 END)) AS zys,
+							SUM( (CASE WHEN zsxm='城市维护建设税'THEN replace(QXSRE,',','') ELSE 0 END)) AS cswhjss,
+							SUM( (CASE WHEN zsxm='房产税'THEN replace(QXSRE,',','') ELSE 0 END)) AS fcs,
+							SUM( (CASE WHEN zsxm='印花税'THEN replace(QXSRE,',','') ELSE 0 END)) AS yhs,
+							SUM( (CASE WHEN zsxm='城镇土地使用税'THEN replace(QXSRE,',','') ELSE 0 END)) AS cztdsys,
+							SUM( (CASE WHEN zsxm='土地增值税'THEN replace(QXSRE,',','') ELSE 0 END)) AS tdzzs,
+							SUM( (CASE WHEN zsxm='车船税'THEN replace(QXSRE,',','') ELSE 0 END)) AS ccs,
+							SUM( (CASE WHEN zsxm='耕地占用税'THEN replace(QXSRE,',','') ELSE 0 END)) AS gdzys,
+							SUM( (CASE WHEN zsxm='契税'THEN replace(QXSRE,',','') ELSE 0 END)) AS qs,
+							SUM( (CASE WHEN zsxm='环境保护税'THEN replace(QXSRE,',','') ELSE 0 END)) AS hjbhs
+						from t_db_swj_swjrkgsqy t left join dm_hy_kz hydm on t.hy=hydm.hymc
+						where t.zsxm != '' and zsxm is not null
+							<if test="qsrq != null and qsrq != ''">
+								AND SUBSTRING(RTKRQ,1,7) >= SUBSTRING(#{qsrq},1,7)
+							</if>
+							<if test="zzrq != null and zzrq != ''">
+								AND SUBSTRING(RTKRQ,1,7) &lt;= SUBSTRING(#{zzrq},1,7)
+							</if>
+							<if test="hy != null and hy != ''">
+								AND hydm.hyml = #{hy}
+							</if>
+						group by hydm.HYML
+					) tt
+					group by hyml
+			)
+			,hj as(
+			  select
+				   HYML hy,
+				   ROUND(IFNULL(sjje,0)/#{dw},0) hjje,
+				   ROUND(IFNULL(zzs,0)/#{dw},0) zzs,
+				   ROUND(IFNULL(xfs,0)/#{dw},0) xfs,
+				   ROUND(IFNULL(yys,0)/#{dw},0) yys,
+				   ROUND(IFNULL(qysds,0)/#{dw},0) qysds,
+				   ROUND(IFNULL(grsds,0)/#{dw},0) grsds,
+				   ROUND(IFNULL(zys,0)/#{dw},0) zys,
+				   ROUND(IFNULL(cswhjss,0)/#{dw},0) cswhjss,
+				   ROUND(IFNULL(fcs,0)/#{dw},0) fcs,
+				   ROUND(IFNULL(yhs,0)/#{dw},0) yhs,
+				   ROUND(IFNULL(cztdsys,0)/#{dw},0) cztdsys,
+				   ROUND(IFNULL(tdzzs,0)/#{dw},0) tdzzs,
+				   ROUND(IFNULL(ccs,0)/#{dw},0) ccs,
+				   ROUND(IFNULL(gdzys,0)/#{dw},0) gdzys,
+				   ROUND(IFNULL(qs,0)/#{dw},0) qs,
+				   ROUND(IFNULL(hjbhs,0)/#{dw},0) hjbhs
+			  from sw
+			  where 1=1
+			),
+			dict AS (
+			SELECT * FROM sys_dict_data WHERE dict_type='dm_ml'
+			)
+			select * from hj h left join dict d  on h.hy=d.dict_label
+			where h.hy is not null and h.hy !=''
+			ORDER BY d.dict_sort
+    </select>
+    
+</mapper>

@@ -1,0 +1,176 @@
+<head th:fragment="lct_css" xmlns:th="http://www.thymeleaf.org">
+    <style type="text/css">
+        .iradio-blue, .iradio-blue.static:hover {
+            background-position: 0 0
+        }
+        .iradio-blue.hover,.iradio-blue:hover {
+            background-position: -20px 0
+        }
+        .iradio-blue.disabled {
+            background-position: -60px 0;
+            cursor: default
+        }
+        .iradio-blue.checked {
+            background-position: -40px 0;
+        }
+        .iradio-blue.checked.disabled {
+            background-position: -40px 0;
+        }
+        .lct {
+            position: absolute;
+            width: 102px;
+            height: 52px;
+            top: 93px;
+            border: 3px solid;
+            border-radius: 5px;
+        }
+        .lct1 {
+            left: 24px;
+            border-radius: 20px;
+        }
+        .lct2 {
+            left: 224px;
+        }
+        .lct3 {
+            left: 447px;
+            top: 91px;
+            width: 56px;
+            height: 56px;
+            transform: rotate(135deg) skew(19deg,19deg);
+            border-radius: 0;
+        }
+        .lct4 {
+            left: 624px;
+            border-radius: 20px;
+        }
+        .lct5 {
+            top: 24px;
+            left: 624px;
+            border-radius: 20px;
+        }
+        .lct6 {
+            top: 162px;
+            left: 624px;
+            border-radius: 20px;
+        }
+        .lct_lbl {
+            position: absolute;
+            width: 290px;
+            height: 30px;
+            top: 230px;
+            left: 190px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            padding-top: 3px;
+        }
+        .lct_lbl_icon {
+            position: absolute;
+            width: 40px;
+            height: 25px;
+            border: 3px solid;
+            border-radius: 3px;
+        }
+        .lct_lbl_txt {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            top: 7px;
+            font-size: 12px;
+            text-align: left;
+        }
+        @media (min-width: 796px) {
+            .lct1 {
+                left: 50%;
+                margin-left: -351px;
+                border-radius: 20px;
+            }
+            .lct2 {
+                left: 50%;
+                margin-left: -151px;
+            }
+            .lct3 {
+                top: 91px;
+                width: 56px;
+                height: 56px;
+                left: 50%;
+                margin-left: 71px;
+                transform: rotate(135deg) skew(19deg,19deg);
+                border-radius: 0;
+            }
+            .lct4 {
+                left: 50%;
+                margin-left: 249px;
+                border-radius: 20px;
+            }
+            .lct5 {
+                top: 24px;
+                left: 50%;
+                margin-left: 249px;
+                border-radius: 20px;
+            }
+            .lct6 {
+                top: 162px;
+                left: 50%;
+                margin-left: 249px;
+                border-radius: 20px;
+            }
+            .lct_lbl {
+                position: absolute;
+                width: 290px;
+                height: 30px;
+                top: 230px;
+                left: 50%;
+                margin-left: -185px;
+                background-color: #f1f1f1;
+                border-radius: 5px;
+                padding-top: 3px;
+            }
+        }
+    </style>
+</head>
+
+<div th:fragment="lct(zt)" xmlns:th="http://www.thymeleaf.org">
+    <h4 class="form-header h4">流程图</h4><span style="display: none" th:value="${zt}"></span>
+    <div class="form-group">
+        <div class="col-sm-12" style="text-align: center; padding: 0">
+            <div style="margin: 0 auto; width: 750px; height: 248px;">
+                <div class="lct lct1" style="border-color: green"></div>
+                <div class="lct lct2" th:if="${zt=='3' || zt=='3.0' || zt=='3.2' || zt=='3.3' || zt=='2'}" style="border-color: green"></div><div class="lct lct2" th:if="${zt=='1' || zt=='3.1'}" style="border-color: red"></div>
+                <div class="lct lct3" th:if="${zt=='3' || zt=='3.0' || zt=='3.2' || zt=='3.3' || zt=='3.1'}" style="border-color: green"></div><div class="lct lct3" th:if="${zt=='2'}" style="border-color: red"></div>
+                <div class="lct lct5" th:if="${zt=='3'}" style="border-color: green"></div>
+                <div class="lct lct4" th:if="${zt=='3.2' || zt=='3.0'}" style="border-color: green"></div>
+                <div class="lct lct6" th:if="${zt=='3.3'}" style="border-color: green"></div>
+                <div class="lct_lbl">
+                    <div class="lct_lbl_icon" style="left: 10px; border-color: green"></div>
+                    <span class="lct_lbl_txt" style="left: 55px;">已处理</span>
+                    <div class="lct_lbl_icon" style="left: 100px; border-color: red"></div>
+                    <span class="lct_lbl_txt" style="left: 145px;">正在处理</span>
+                    <div class="lct_lbl_icon" style="left: 200px; border-color: #64b5f6"></div>
+                    <span class="lct_lbl_txt" style="left: 245px;">未处理</span>
+                </div>
+                <!--/*https://www.processon.com/diagraming/616cc7461efad41d825f3802*/-->
+                <img th:src="@{/img/lcgl/lct_fxts.png}" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="lzxx(id)" xmlns:th="http://www.thymeleaf.org">
+    <h4 class="form-header h4" style="margin-bottom:2px; border: none;">流转信息</h4>
+    <div class="form-group">
+        <div style="margin:0px 25px; text-align: center; padding: 0">
+            <table class="layui-table" th:attr="lay-data=|{id:'table-lz',url:'@{'/zhzs/dbfxxt/ts/dbrw/rwlzList'}',method:'post',where:{id:'${id}'},size:'sm'}|" style="margin:0; table-layout:fixed;overflow:scroll">
+                <thead>
+                    <tr>
+                        <th lay-data="{type:'numbers'}"></th>
+                        <th lay-data="{field:'lcjdmc', width:120, align:'center'}">流程节点</th>
+                        <th lay-data="{field:'zxmc', width:120, align:'center'}">流程走向</th>
+                        <th lay-data="{field:'yj', width:300, align:'center'}">意见</th>
+                        <th lay-data="{field:'lrrymc', width:120, align:'center'}">操作员</th>
+                        <th lay-data="{field:'lrsj', width:180, align:'center'}">时间</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>

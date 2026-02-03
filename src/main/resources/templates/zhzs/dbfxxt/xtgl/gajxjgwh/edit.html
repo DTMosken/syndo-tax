@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('修改驾校价格')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-gajxjgwh-edit" th:object="${entity}">
+	            <input id="objId" name="objId" th:field="*{objId}"  type="hidden">
+	            <div class="form-group">	
+	                <label class="col-sm-2 control-label">驾校名称：</label>
+	                <div class="col-sm-4">
+	                    <input id="jxmc" name="jxmc" th:field="*{jxmc}" class="form-control" type="text">
+	                </div>
+	                <label class="col-sm-2 control-label">准驾车型：</label>
+					<div class="col-sm-4">
+						 <input id="sqzjcx" name="sqzjcx" th:field="*{sqzjcx}" class="form-control" type="text">
+					</div>
+	            </div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">价格：</label>
+					<div class="col-sm-4">
+						 <input id="jg" name="jg" th:field="*{jg}" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">开始时间： </label>
+					<div class="col-sm-4">
+						 <input id="kssj" name="kssj" th:field="*{kssj}" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">结束时间： </label>
+					<div class="col-sm-4">
+						<input id="jssj" name="jssj" th:field="*{jssj}" class="form-control" type="text">
+					</div>
+				</div>
+			</form>
+	    </div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+			var prefix = ctx + "zhzs/dbfxxt/xtgl/gajxjgwh";
+			$("#form-gajxjgwh-edit").validate({
+				// 表单验证，参考notes文件
+				rules:{	
+					jxmc:{
+						required:true
+					},
+					sqzjcx:{
+						required:false
+					},
+					jg:{
+						required:false,
+						number:true
+					},
+					kssj:{
+						required:false
+					},
+					jssj:{
+						required:false
+					}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/edit", $('#form-gajxjgwh-edit').serialize());
+		        }
+		    }
+			layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#kssj', type: 'month', format: 'yyyy-MM'});
+	    	  	laydate.render({elem: '#jssj', type: 'month', format: 'yyyy-MM'});
+		    });
+		</script>
+	</body>
+</html>

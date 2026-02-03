@@ -1,0 +1,304 @@
+ <!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+<th:block th:include="include :: header('用户列表')" />
+<th:block th:include="include :: layout-latest-css" />
+<th:block th:include="include :: ztree-css-default" />
+<style type="text/css">
+		.ztree li span.button.add {margin-left:2px; margin-right: -1px; background-position:-144px 0; vertical-align:top; *vertical-align:middle}
+/* 		.select-list li input, .select-list li select {padding-left:180px} */
+</style>
+</head>
+<body class="gray-bg">
+	<div class="ui-layout-west">
+		<div class="box box-main">
+			<div class="box-header">
+				<div class="box-title">
+					<i class="fa icon-grid"></i> 指标分类
+				</div>
+				<div class="box-tools pull-right">
+					<button type="button" class="btn btn-box-tool" id="btnExpand" title="展开" style="display:none;"><i class="fa fa-chevron-up"></i></button>
+					<button type="button" class="btn btn-box-tool" id="btnCollapse" title="折叠"><i class="fa fa-chevron-down"></i></button>
+					<button type="button" class="btn btn-box-tool" id="btnRefresh" title="刷新"><i class="fa fa-refresh"></i></button>
+				</div>
+			</div>
+			<div class="ui-layout-content">
+				<div id="tree" class="ztree"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="ui-layout-center">
+		<div class="container-div">
+			<div class="row">
+				<div class="col-sm-12 search-collapse">
+					<form id="user-form">
+						<input type="hidden" id="deptId" name="deptId"> <input
+							type="hidden" id="parentId" name="parentId">
+						<div class="select-list">
+							<ul>
+								<li>指标名称：<input type="text" name="ZBMC" id="ZBMC" />
+								</li>
+								<li>评分方式：<select name="PFFS" id="PFFS">
+										<option value="">所有</option>
+										<option value="1">计算公式</option>
+										<option value="2">直接打分</option>
+								</select>
+								</li>
+								<li>状态：<select name="YXBZ" ID="YXBZ" >
+									<option value="">所有</option>
+									<option value="Y">有效</option>
+									<option value="N">无效</option> </select>
+								</li>
+								<li><a class="btn btn-primary btn-rounded btn-sm"
+									onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+									<a class="btn btn-warning btn-rounded btn-sm"
+									onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+								</li>
+							</ul>
+						</div>
+						<div style="display: none;">
+							<input name="FLMLID" type="text" id="FLMLID">
+						</div>
+					</form>
+				</div>
+
+				<div class="btn-group-sm" id="toolbar" role="group">
+					<a class="btn btn-success" onclick="ZbladdTab()"
+						shiro:hasPermission="system:user:add"> <i class="fa fa-plus"></i>
+						新增
+					</a> <a class="btn btn-primary single disabled"
+						onclick="$.operate.editTab()"
+						shiro:hasPermission="system:user:edit"> <i class="fa fa-edit"></i>
+						修改
+					</a> <a class="btn btn-danger multiple disabled"
+						onclick="$.operate.removeAll()"
+						shiro:hasPermission="system:user:remove"> <i
+						class="fa fa-remove"></i> 删除
+					</a>
+				</div>
+
+				<div class="col-sm-12 select-table table-striped">
+					<table id="bootstrap-table"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: layout-latest-js" />
+	<th:block th:include="include :: ztree-js" />
+		<script th:src="@{/main/js/sf-ui.extend.js?v=1.0.0}"></script>
+	<script th:inline="javascript">
+			var editFlag = /*[[${@permission.hasPermi('system:user:edit')}]]*/ null;
+			var removeFlag = /*[[${@permission.hasPermi('system:user:remove')}]]*/ null;
+			var resetPwdFlag = /*[[${@permission.hasPermi('system:user:resetPwd')}]]*/ null;
+			var prefix = ctx + "module/industry/zbkgl";
+			var prefix2 = ctx + "module/industry/zbGzk";
+			var datas = /*[[${@dict.getType('zbk_yxbz')}]]*/ null;
+			var pfdata = /*[[${@dict.getType('zbk_pffs')}]]*/ null;
+			$(function() {
+			    var panehHidden = false;
+			    if ($(this).width() < 769) {
+			        panehHidden = true;
+			    }
+			    $('body').layout({ initClosed: panehHidden, west__size: 200 });
+				queryUserList();
+				queryTree();
+			});
+	
+			function queryUserList() {
+			    var options = {
+			        url: prefix + "/GetZbkLST",
+			        createUrl: prefix + "/add",
+			        updateUrl: prefix + "/updateZbk/{id}",
+			        removeUrl: prefix + "/remove",
+			        exportUrl: prefix + "/export",
+			        importUrl: prefix + "/importData",
+			    //    importTemplateUrl: prefix + "/importTemplate",
+		        	sortName: "flmlid",
+		        //	sortOrder: "desc",
+			        modalName: "指标库",
+			        columns: [{
+			            checkbox: true
+			        },
+			        {
+			            field: 'id',
+			            width: '170',
+			            visible: false,
+			            title: 'ID'
+			        },			       
+			        {
+			            field: 'flmc',
+			            title: '指标分类',
+			            width: '120',
+			            sortable: true
+			        } ,
+			        {
+			            field: 'zbmc',
+			            title: '指标名称',
+			            width: '120',
+			            sortable: true
+			        },
+			        {
+			            field: 'pffs',
+			            width: '100',
+			            title: '评分方式',
+			            formatter: function(value, item, index) {
+			            	return $.table.selectDictLabel(pfdata, item.pffs);
+			            }
+			        },
+			        {
+			            field: 'yxbz',
+			            width: '100',
+			            title: '状态'	,
+			            formatter: function(value, item, index) {
+			            	return $.table.selectDictLabel(datas, item.yxbz);
+			            }
+			        },
+			        
+			        {
+			            title: '操作',
+			            width: '180',
+			            align: 'center',
+			            formatter: function(value, row, index) {
+			                var actions = [];
+			                actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.editTab(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+			                actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a> ');
+			                return actions.join('');
+			            }
+			        }]
+			    };
+			    $.table.init(options);
+			}
+
+			function queryTree() {
+				var url = prefix2 + "/treeData?lx=zbk";
+				var options = {
+			        url: url,
+			        expandLevel: 2,			        
+			        onClick : zOnClick,
+			        view: {
+						addHoverDom: addHoverDom,
+						removeHoverDom: removeHoverDom,
+						selectedMulti: false
+					},
+			        edit: {
+						enable: true,
+						removeTitle: "删除分类",
+						showRemoveBtn: showRemoveBtn,
+						showRenameBtn: false
+					},
+					callback: {
+						beforeRemove: beforeRemove
+						//beforeRename: beforeRename
+					}
+			    };
+				$.tree.init(options);
+
+				function isPrivate(treeNode){
+					return treeNode.level==1 && (treeNode.name=='省定指标'||treeNode.name=='县区特色指标'||treeNode.name=='加分'||treeNode.name=='减分');
+				}
+				
+				function showRemoveBtn(treeId, treeNode) {
+					return !(treeNode.pId==null||treeNode.isParent||isPrivate(treeNode));
+				}
+				function showRenameBtn(treeId, treeNode) {
+					return !(treeNode.pId==null||isPrivate(treeNode));
+				}
+				
+				function beforeRemove(treeId, treeNode) {
+					var zTree = $.fn.zTree.getZTreeObj("tree");
+					zTree.selectNode(treeNode);
+					$.modal.confirm("确认删除 “ " + treeNode.name + " ”吗？", function(){
+						$.operate.post(prefix2 + "/flmlDelete", { "id": treeNode.id}, function(data) {
+							if(data.code == 0) zTree.removeNode(treeNode);
+						});
+					});
+					return false;
+				}
+// 				function beforeRename(treeId, treeNode, newName, isCancel) {
+// 					if (newName.length == 0) {
+// 						setTimeout(function() {
+// 							var zTree = $.fn.zTree.getZTreeObj("tree");
+// 							zTree.cancelEditName();
+// 							$.modal.alertError("分类名称不能为空.");
+// 						}, 0);
+// 						return false;
+// 					}
+// 					$.operate.post(prefix2 + "/flmlEdit", { "id": treeNode.id, "mlmc": treeNode.name });
+// 					return true;
+// 				}
+				function addHoverDom(treeId, treeNode) {
+					var sObj = $("#" + treeNode.tId + "_span");
+					if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length>0) {
+						sObj.siblings(".add,.edit,.remove").show().delay(3000).hide(0);
+						return;
+					}
+					var addStr = "";
+					if(!isPrivate(treeNode))
+						addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+						+ "' title='新增子分类' onfocus='this.blur();'></span>";
+					if(showRenameBtn(treeId, treeNode)){
+						addStr +="<span class='button edit' id='editBtn_" + treeNode.tId
+						+ "' title='编辑分类' onfocus='this.blur();'></span>";
+					}
+					sObj.after(addStr);
+					var btn = $("#addBtn_"+treeNode.tId);
+					if (btn) btn.bind("click", function(){						
+						$.modal.open("新增子分类", prefix2 + "/flmlAdd?lx=zbk&pid="+treeNode.id, 460, 310, function(index, layero) {
+							var iframeWin = layero.find('iframe')[0];
+	                        iframeWin.contentWindow.submitHandler(queryTree);
+						});						
+						//var zTree = $.fn.zTree.getZTreeObj("tree");
+						//zTree.addNodes(treeNode, {id:$.uuid(), pId:treeNode.id, name:"分类" + (newCount), title:"分类" + (newCount)});
+						//newCount++;
+						return false;
+					});
+					if(showRenameBtn(treeId, treeNode)) {
+						var btn2 = $("#editBtn_"+treeNode.tId);
+						if (btn2) btn2.bind("click", function(){						
+							$.modal.open("编辑子分类", prefix2 + "/flmlEdit?lx=zbk&id="+treeNode.id, 460, 310, function(index, layero) {
+								var iframeWin = layero.find('iframe')[0];
+		                        iframeWin.contentWindow.submitHandler(queryTree);
+							});
+							return false;
+						});
+					}
+				};
+				function removeHoverDom(treeId, treeNode) {
+					$("#addBtn_"+treeNode.tId).unbind().remove();
+					$("#editBtn_"+treeNode.tId).unbind().remove();
+				};
+				function zOnClick(event, treeId, treeNode) {
+					$("#" + treeNode.tId + "_span").siblings(".add,.edit,.remove").show().delay(3000).hide(0);
+					$("#FLMLID").val(treeNode.id);
+					$.table.search();
+				}
+			}
+			
+			function ZbladdTab(){
+				$.modal.openTab("新增指标" , prefix+"/add?flmlid="+$("#FLMLID").val());
+			}
+
+			$('#btnExpand').click(function() {
+				$._tree.expandAll(true);
+			    $(this).hide();
+			    $('#btnCollapse').show();
+			});
+			
+			$('#btnCollapse').click(function() {
+				$._tree.expandAll(false);
+			    $(this).hide();
+			    $('#btnExpand').show();
+			});
+			
+			$('#btnRefresh').click(function() {
+				queryTree();
+			});	
+		</script>
+
+</body>
+
+</html>

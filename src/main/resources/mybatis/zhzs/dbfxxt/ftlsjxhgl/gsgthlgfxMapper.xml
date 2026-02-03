@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.GsgthlgfxMapper">
+   
+	<sql id="whereClause">
+		<if test="bszq != null and bszq != ''"> AND T.BSZQ = #{bszq}</if>
+		<if test="title != null and title != ''"> AND T.TITLE LIKE '%'||#{title}||'%'</if>
+		<if test="nsrsbh != null and nsrsbh != ''"> AND T.NSRSBH = #{nsrsbh}</if>
+		<if test="nsrmc != null and nsrmc != ''"> AND T.NSRMC LIKE '%'||#{nsrmc}||'%'</if>
+		<if test="staddress != null and staddress != ''"> AND T.STADDRESS LIKE '%'||#{staddress}||'%'</if>
+		<if test="sbyh != null and sbyh != ''"> AND Y.USER_NAME LIKE '%'||#{sbyh}||'%'</if>
+		<if test="taxnumber != null and taxnumber != ''"> AND T.TAXNUMBER=#{taxnumber}</if>
+		<if test="ownername != null and ownername != ''"> AND T.OWNERNAME LIKE '%'||#{ownername}||'%'</if>
+		<if test="businessstate != null and businessstate != ''"> AND T.BUSINESSSTATE = #{businessstate}</if>
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Gsgthlgfx" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Gsgthlgfx">
+	<![CDATA[
+		SELECT T.OBJ_ID AS OBJID,T.TITLE,T.STADDRESS,T.ADDRESS,T.REMARK,T.USERID,T.LONGITUDE,T.LATITUDE,T.ELECTRICITYNUMBER,T.WATERNUMBER,T.TAXNUMBER,T.SBSJ,
+			   T.IMGFILEPATH,T.IMGFILEPATH2,
+			   T.BUSINESSTITLE,T.BUSINESSNUMBER,T.BUSINESSSTATE,T.BUSINESSPHONE,T.GASNUMBER,T.OWNNUMBER,T.OWNERNAME,T.OWNERIDNUMBER,T.OWNERPHNUMBER,
+			   T.INDUSTRYNAME,T.POLICEHOTEL,T.NSRSBH,T.NSRMC,T.SCJYDZ,T.FRMC,T.LXDH,T.JYFW,T.CYRS,T.JYE,T.FWLY,T.XCQR,T.CQRZJH,T.FWJZ,T.CZFCYZ,T.FCMJ,
+			   T.CZFCMJ,T.FCZLJE,T.FCSZXBZ,T.TDDJBZ,T.QNYNFTLS,T.JMFTSE,T.YJNFTLS,T.SBHM,T.GLBM,T.BSZQ,T.ZJR,T.ZJSJ,T.XGR,T.XGSJ,
+			   T.TAXACREAGE,T.NOTAXACREAGE,T.BUSINESSTITLE2,T.BUSINESSNUMBER2,T.OWNNUMBER2,
+			   T.ISPRINT,T.ISRAR,T.PRINTUSERID,T.PRINTTIME,T.RARTIME,Z.USER_NAME AS CHECKEDUSERID,T.CHECKTIME,T.ZL,T.DC,T.TDLB,T.MJ1,T.MJ2,T.MJ3, Y.USER_NAME AS SBYH
+	    FROM CS_FTLSGZGL T,GIS_USERS Y,SYS_USER Z
+	    WHERE OBJ_ID NOT IN(
+			    SELECT OBJ_ID FROM CS_FTLSGZGL P 
+			    WHERE P.ISCHECKED IS NOT NULL 
+			    AND P.TAXNUMBER IS NOT NULL 
+			    AND P.TAXNUMBER NOT LIKE '%办%'   
+			    AND P.TAXNUMBER <> 'NULL' 
+			    AND P.TAXNUMBER <> '无' 
+		) 
+	    AND T.ISCHECKED IS NOT NULL 
+	    AND T.BUSINESSSTATE = '正常营业' 
+	    AND T.USERID = Y.USER_ID 
+		AND T.CHECKEDUSERID = Z.LOGIN_NAME 
+		AND T.ISCHECKED IS NOT NULL 
+		]]>
+		<include refid="whereClause" />
+	</select>
+	    
+    <!-- 主键查询 -->
+    <select id="selectById" parameterType="String" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Gsgthlgfx">
+        SELECT OBJ_ID AS OBJID,TITLE,STADDRESS,ADDRESS,REMARK,USERID,LONGITUDE,LATITUDE,ELECTRICITYNUMBER,WATERNUMBER,TAXNUMBER,SBSJ,
+        'HTTP://25.52.132.101/'||SUBSTR(IMGFILEPATH,15) AS IMGFILEPATH,
+        BUSINESSTITLE,BUSINESSNUMBER,BUSINESSSTATE,BUSINESSPHONE,GASNUMBER,OWNNUMBER,OWNERNAME,OWNERIDNUMBER,OWNERPHNUMBER,
+        INDUSTRYNAME,POLICEHOTEL,NSRSBH,NSRMC,SCJYDZ,FRMC,LXDH,JYFW,CYRS,JYE,FWLY,XCQR,CQRZJH,FWJZ,CZFCYZ,FCMJ,
+        CZFCMJ,FCZLJE,FCSZXBZ,TDDJBZ,ZL,DC,TDLB,QNYNFTLS,JMFTSE,YJNFTLS,SBHM,GLBM,BSZQ,ZJR,ZJSJ,XGR,XGSJ,
+        TAXACREAGE,NOTAXACREAGE,BUSINESSTITLE2,BUSINESSNUMBER2,OWNNUMBER2
+		FROM CS_FTLSGZGL
+        WHERE OBJ_ID = #{objId}
+    </select>
+</mapper>

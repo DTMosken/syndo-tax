@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('城市基础设施配套费分析')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">所属年度： </label>
+					<div class="layui-input-block">
+						<input type="text" id="ssnd" name="ssnd" th:value="${ssnd}"
+							   readonly="readonly" autocomplete="off"
+							   data-type="month" data-format="yyyy"
+							   class="layui-input time-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md3">
+					<label class="layui-form-label">纳税人名称：</label>
+					<div class="layui-input-block">
+							<input type="text" id="nsrmc" name="nsrmc" autocomplete="off" class="layui-input">
+						</div>
+				</div>
+				<div class="layui-inline layui-col-sm12 layui-col-md5">
+					<div class="layui-form-btn" style="text-align: left">
+						<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+							<i class="layui-icon">&#xe615;</i> 查询
+						</a>
+						<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+							<i class="layui-icon">&#xe669;</i> 重置
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/syztfx/csjcssptffx";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                title: "城市基础设施配套费分析",
+				exportUrl: prefix + "/expExcel",
+				height:"full-110",
+		        showExport: true,
+                cols:[ [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+					field : 'nsrmc',
+					title : '纳税人名称',
+					sortable: true
+				},
+				{
+					field : 'ptfje',
+					title : '配套费金额',
+					sortable: true
+				},
+				{
+					field : 'jnrq',
+					title : '缴纳日期',
+					sortable: true
+				},
+				{
+					field : 'yjqs',
+					title : '应缴契税',
+					sortable: true
+				},
+				{
+					field : 'sjqs',
+					title : '实缴契税',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					sortable: true
+				}] ]
+            };
+            $.table.init(options);
+        });
+
+		layui.use('laydate', function(){
+			var laydate = layui.laydate;
+			laydate.render({elem: '#ssnd',type:'year'});
+		});
+    </script>
+</body>
+</html>

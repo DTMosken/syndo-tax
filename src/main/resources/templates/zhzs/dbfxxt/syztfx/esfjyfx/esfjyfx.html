@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('二手房交易分析')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse">
+					<form id="formId" class="form-horizontal m">
+						<div class="row">
+							<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">出售月份： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" readonly="readonly" id="bszq" name="bszq" th:value="${bszq}"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">企业名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="fwzl" name="fwzl"/>
+									</div>
+								</div>
+							</div>
+							
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+	        <!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<!-- <a class="btn btn-success" onclick="">
+		            <i class="fa fa-sign-out"></i> 派发
+		        </a>
+				<a class="btn btn-warning" onclick="">
+		            <i class="fa fa-print"></i> 打印
+		        </a>
+				<a class="btn btn-danger multiple disabled" onclick="">
+		            <i class="fa fa-times"></i> 终止流程
+		        </a> -->
+	        </div>
+	        
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true" style="table-layout: fixed;"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/sybd/esfjyfx";
+
+        $(function() {
+            var options = {
+                //url: prefix + "/list",
+                data:Data,
+                modalName: "商砼行业分析",
+                showSearch: false,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false
+				},
+				{
+					field : 'qymc', 
+					title : '企业名称',
+					sortable: true
+				},
+				{
+					field : 'cssj', 
+					title : '出售时间',
+					sortable: true
+				},
+				{
+					field : 'chl', 
+					title : '出货量',
+					sortable: true
+				},
+				{
+					field : 'dj', 
+					title : '单价',
+					sortable: true
+				},
+				{
+					field : 'xse', 
+					title : '销售额',
+					sortable: true
+				},
+				{
+					field : 'yjsk', 
+					title : '应缴税款',
+					sortable: true
+				},
+				{
+					field : 'shuie', 
+					title : '已缴税款',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					sortable: true
+				}/*,
+				{
+					field : 'qs', 
+					title : '已缴契税',
+					sortable: true
+				} ,
+				{
+					field : 'sfht', 
+					title : '状态',
+					sortable: true
+				},
+				{
+					field : 'htyy', 
+					title : '回退原因',
+					sortable: true
+				},
+				{
+					field : 'nsrsbh', 
+					title : '纳税人识别号',
+					sortable: true
+				},
+				{
+					field : 'zgsws', 
+					title : '主管税务所',
+					sortable: true
+				} */]
+            };
+            $.table.init(options);
+        });
+        
+        Data=[{objId:1,qymc:'众鑫商砼',cssj:'2020-10',chl:'178000 ',dj:'13',xse:'8840000',yjsk:'1,149,200',shuie:'802,100',ce:'347,100'},
+			{objId:2,qymc:'民鑫商砼有限公司',cssj:'2020-10',chl:'79980',dj:'13',xse:'8580000',yjsk:'1,115,400',shuie:'703,302',ce:'412,098'},
+			{objId:3,qymc:'坤鑫商砼有限公司',cssj:'2020-10',chl:'4668 ',dj:'13',xse:'12160000',yjsk:'1,580,800',shuie:'543,123',ce:'1,037,677'},
+			{objId:4,qymc:'东方商砼',cssj:'2020-10',chl:'70080 ',dj:'13',xse:'9820000',yjsk:'1,276,600',shuie:'435,123',ce:'841,477'},
+			{objId:5,qymc:'鼎泰商砼',cssj:'2020-10',chl:'68933',dj:'13',xse:'11020000',yjsk:'1,432,600',shuie:'665,332',ce:'767,268'}]
+
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#bszq',type: 'month', format: 'yyyy-MM'});
+        });
+    </script>
+</body>
+</html>

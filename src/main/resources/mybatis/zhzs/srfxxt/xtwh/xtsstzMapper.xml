@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.xtwh.XtsstzMapper">
+	<!-- 协调税收调整 -->
+	
+	<!-- 查询条件 -->
+	<sql id="whereClause" databaseId="mysql">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="tzyf != null and tzyf != ''"> and tzyf = #{tzyf} </if>
+				<if test="nsrmc != null and nsrmc != ''"> and nsrmc like concat('%',#{nsrmc},'%') </if>
+			</trim>
+		</where>
+	</sql>
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Xtsstz" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Xtsstz">
+		SELECT NULL id, 
+			NULL tzyf, 
+			NULL nsrsbh, 
+			NULL nsrmc, 
+			NULL zsxm, 
+			NULL jdxz, 
+			'合计' yskm, 
+			SUM(sjje) sjje, 
+			SUM(zyj) zyj, 
+			SUM(ssj) ssj, 
+			SUM(qxj) qxj, 
+			SUM(xzj) xzj, 
+			NULL tzys, 
+			NULL create_by, 
+			NULL create_time, 
+			NULL update_by, 
+			NULL update_time 
+		FROM T_SRFXXT_XTSSTZ	
+		<include refid="whereClause" />
+		UNION ALL
+		SELECT id, tzyf, nsrsbh, nsrmc, zsxm, jdxz, yskm, sjje, zyj, ssj, qxj, xzj, tzys, create_by, create_time, update_by, update_time FROM T_SRFXXT_XTSSTZ
+		<include refid="whereClause" />
+		ORDER BY NSRMC, TZYF
+	</select>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Xtsstz" parameterType="string">
+		SELECT * FROM T_SRFXXT_XTSSTZ WHERE id = #{id}
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Xtsstz">
+		INSERT INTO T_SRFXXT_XTSSTZ ( 
+			TZYF, NSRSBH, NSRMC, ZSXM, JDXZ, YSKM, SJJE, ZYJ, SSJ, QXJ, XZJ, TZYS, CREATE_BY, CREATE_TIME
+	    ) VALUES ( 
+	        #{tzyf}, #{nsrsbh}, #{nsrmc}, #{zsxm}, #{jdxz}, #{yskm}, #{sjje}, #{zyj}, #{ssj}, #{qxj}, #{xzj}, #{tzys}, #{createBy}, #{createTime}
+	    )
+      </insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Xtsstz">
+		UPDATE T_SRFXXT_XTSSTZ
+		SET TZYF = #{tzyf},
+			NSRSBH = #{nsrsbh},
+			NSRMC = #{nsrmc},
+			ZSXM = #{zsxm},
+			jdxz = #{jdxz},
+			YSKM = #{yskm},
+			SJJE = #{sjje},
+			ZYJ = #{zyj},
+			SSJ = #{ssj},
+			QXJ = #{qxj},
+			xzj = #{xzj},
+			tzys = #{tzys},
+			UPDATE_BY = #{updateBy},
+			UPDATE_TIME = #{updateTime}
+		WHERE ID = #{id}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        DELETE FROM T_SRFXXT_XTSSTZ WHERE ID = #{id}
+    </delete>
+    
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		DELETE FROM T_SRFXXT_XTSSTZ WHERE ID IN 
+		<foreach item="item" index="index" collection="array"
+            open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+</mapper>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<th:block th:include="include :: header('新增承建单位信息')" />
+		<th:block th:include="include :: datetimepicker-css" />
+		<style type="text/css">
+			.form-header {margin-bottom: 15px}
+		</style>
+	</head>
+	<body class="white-bg">
+		<div class="main-content">
+			<form id="form-add" class="form-horizontal">
+				<h4 class="form-header h4">承建单位信息</h4>
+				<div class="row">
+					<div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">工程项目名称：</label>
+	                        <div class="col-sm-8">
+	                            <input id="gcxmmc" name="gcxmmc" th:value="${entity.gcxmmc}" readonly="readonly" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">承建单位社会信用代码：</label>
+	                        <div class="col-sm-8">
+	                            <input id="cjdwtyshxydm" name="cjdwtyshxydm" placeholder="请填写承建单位统一社会信用代码" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">承建单位名称：</label>
+	                        <div class="col-sm-8">
+	                            <input id="cjdwmc" name="cjdwmc" placeholder="请填写承建单位名称" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">联系人：</label>
+	                        <div class="col-sm-8">
+	                            <input id="lxr" name="lxr" placeholder="请填写联系人" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">联系方式：</label>
+	                        <div class="col-sm-8">
+	                            <input id="lxfs" name="lxfs" placeholder="请填写联系方式" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">合同签订时间：</label>
+	                        <div class="col-sm-8">
+                                <input id="htqdsj" name="htqdsj" readonly="readonly" placeholder="请选择合同签订时间" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">合同签订额：</label>
+	                        <div class="col-sm-8">
+	                            <input id="htqde" name="htqde" placeholder="请填写合同签订额" class="form-control" type="number" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-4">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label">付款方式：</label>
+	                        <div class="col-sm-8">
+	                            <input id="fkfs" name="fkfs" placeholder="请填写付款方式" class="form-control" type="text">
+	                        </div>
+	                    </div>
+	                </div>
+				</div>
+				<h4 class="form-header h4">分包单位信息</h4>
+				<div class="row">
+					<div class="col-sm-12">
+						<button type="button" class="btn btn-success btn-sm" onclick="addColumn()">
+							<i class="fa fa-plus"> 新增</i>
+						</button>
+						<button type="button" class="btn btn-danger btn-sm" onclick="sub.delColumn()">
+							<i class="fa fa-minus"> 删除</i>
+						</button>
+						<div class="col-sm-12 full-table table-bordered">
+							<table id="bootstrap-table"></table>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+
+		<div class="row">
+			<div class="col-sm-offset-5 col-sm-10">
+				<button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+				<button type="button" class="btn btn-sm btn-danger" onclick="$.modal.close()"><i class="fa fa-reply-all"></i>关 闭
+				</button>
+			</div>
+		</div>
+		<th:block th:include="include :: footer" />
+		<th:block th:include="include :: datetimepicker-js" />
+		<script th:src="@{/js/jquery.tmpl.js}"></script>
+		<script type="text/javascript">
+			<!--/* 前缀地址 */-->
+			var prefix = ctx + "zhzs/sjcjxt/cjdwxx";
+			
+			$(function() {
+			    var options = {
+	                pagination: false,
+			        showSearch: false,
+	                showRefresh: false,
+	                showToggle: false,
+	                showColumns: false,
+	                sidePagination: "client",
+			        columns: [{
+			            checkbox: true
+			        },
+			        {
+			        	field: 'index',
+			        	align: 'center',
+			        	title: "序号",
+			        	width: 50,
+	                    formatter: function (value, row, index) {
+	                    	var columnIndex = $.common.sprintf("<input type='hidden' name='index' value='%s'>", $.table.serialNumber(index));
+	                    	return columnIndex + $.table.serialNumber(index);
+	                    }
+	                },
+			        {
+			            field: 'fbdwtyshxydm',
+			            align: 'center',
+			            title: '分包单位统一社会信用代码',
+			            width: 150,
+			            formatter: function(value, row, index) {
+			            	var html = $.common.sprintf("<input class='form-control' type='text' name='gcfbxx[%s].fbdwtyshxydm' value='%s'>", index, value);
+			        		return html;
+	                    }
+			        },
+			        {
+			            field: 'fbdwmc',
+			            align: 'center',
+			            title: '分包单位名称',
+			            width: 220,
+			            formatter: function(value, row, index) {
+			            	var html = $.common.sprintf("<input class='form-control' type='text' name='gcfbxx[%s].fbdwmc' value='%s'>", index, value);
+			        		return html;
+	                    }
+			        },
+			        {
+			            field: 'htqdsj',
+			            align: 'center',
+			            title: '合同签订时间',
+			            width: 100,
+			            formatter: function(value, row, index) {
+			            	var html = $.common.sprintf("<input class='form-control' type='text' name='gcfbxx[%s].htqdsj' value='%s' placeholder='请选择合同签订时间' readonly='readonly'>", index, value);
+			        		return html;
+	                    }
+			        },
+			        {
+			            field: 'htqde',
+			            align: 'center',
+			            title: '合同签订额',
+			            width: 100,
+			            formatter: function(value, row, index) {
+			            	var html = $.common.sprintf("<input class='form-control' type='number' name='gcfbxx[%s].htqde' value='%s'>", index, value);
+			        		return html;
+	                    }
+			        },
+			        {
+			            field: 'fkfs',
+			            align: 'center',
+			            title: '付款方式',
+			            width: 150,
+			            formatter: function(value, row, index) {
+			            	var html = $.common.sprintf("<input class='form-control' type='text' name='gcfbxx[%s].fkfs' value='%s'>", index, value);
+			        		return html;
+	                    }
+			        }]
+			    };
+			    $.table.init(options);
+			});
+		    
+			<!--/* 表单验证 */-->
+			$("#form-add").validate({
+	            focusCleanup: true,
+	            rules: {
+	            	gcxmmc: {required: true},
+	            	cjdwtyshxydm: {
+	            		required: true,
+	            		remote:{
+							type: 'get',							
+							url: prefix + "/checkCjdwUnique",
+							data: {
+								'gcxmmc': function(){
+									return $("#gcxmmc").val();
+								},
+								'cjdwtyshxydm': function(){
+									return $("#cjdwtyshxydm").val();
+								},
+								'cjdwmc': function(){
+									return $("#cjdwmc").val();
+								}
+							}
+						}
+            		},
+	            	cjdwmc: {
+            			required: true,
+            			remote:{
+							type: 'get',							
+							url: prefix + "/checkCjdwUnique",
+							data: {
+								'gcxmmc': function(){
+									return $("#gcxmmc").val();
+								},
+								'cjdwtyshxydm': function(){
+									return $("#cjdwtyshxydm").val();
+								},
+								'cjdwmc': function(){
+									return $("#cjdwmc").val();
+								}
+							}
+						}
+           			},
+	            	lxr: {required: true},
+	            	lxfs: {required: true},
+	            	htqdsj: {required: true},
+	            	htqde: {required: true},
+	            },
+	            messages: {
+	            	cjdwtyshxydm: {
+		                remote: "该承建单位已存在"
+		            },
+		            cjdwmc: {
+		                remote: "该承建单位已存在"
+		            }
+		        }
+	        });
+			
+		    <!--/* 主子表-提交 */-->
+	        function submitHandler(index, layero){
+	        	var url = prefix + "/saveSubdata";
+	        	var data = $("#form-add").serializeArray();
+	        	if ($.validate.form()) {
+	        		$.operate.save(url, data);
+	        	}
+	        }
+		    
+	        <!--/* 增加 */-->
+	        function addColumn() {
+	        	var row = {
+        			fbdwtyshxydm: "",
+        			fbdwmc: "",
+        			htqdsj: "",
+        			htqde: "",
+        			fkfs: "",
+	            }
+	        	sub.addColumn(row);
+	        }
+	        
+	        $("#bootstrap-table").on("post-body.bs.table", function (e, args) {
+	        	$("input[name$='htqdsj']").datetimepicker({
+		            format: "yyyy-mm-dd",
+		            minView: "month",
+		            autoclose: true,
+		        });
+	    	});
+
+		</script>
+	</body>
+</html>
+

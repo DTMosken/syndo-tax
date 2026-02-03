@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('土地增值税清算提醒')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse">
+					<form id="formId" class="form-horizontal m">
+						<div class="row">
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">房开商： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="fks" name="fks"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">项目： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="xm" name="xm"/>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="query()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+	        <!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<!-- <a class="btn btn-success" onclick="">
+		            <i class="fa fa-sign-out"></i> 派发
+		        </a> -->
+	        </div>
+	        
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/sybd/tdzzsqstx";
+
+        $(function() {
+            var options = {
+                //url: prefix + "/list",
+                modalName: "土地增值税清算提醒",
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false
+				},
+				{
+					title : '行号',
+					sortable: true,
+					formatter:function(value,row,index) {
+						return $.table.serialNumber(index);
+					}
+				},
+				{
+					field : 'fks', 
+					title : '房开商',
+					sortable: true
+				},
+				{
+					field : 'xm', 
+					title : '项目',
+					sortable: true
+				},
+				{
+					field : 'qyrqq', 
+					title : '签约日期起',
+					sortable: true
+				},
+				{
+					field : 'qyrqz', 
+					title : '签约日期止',
+					sortable: true
+				},
+				{
+					field : 'sfqs', 
+					title : '是否清算',
+					sortable: true
+				},
+				{
+					field : 'qssjje', 
+					title : '清算实缴金额',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+        });
+        
+    </script>
+</body>
+</html>

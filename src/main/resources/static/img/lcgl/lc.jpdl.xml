@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process name="lc" xmlns="http://jbpm.org/4.4/jpdl">
+   <state g="128,116,92,52" name="镇街核查">
+      <transition g="-12,-19" name="提交" to="行政审批局"/>
+   </state>
+   <state g="408,115,92,52" name="税务审核">
+      <transition g="-15,-18" name="提交" to="住建局审核"/>
+   </state>
+   <state g="545,114,92,52" name="住建局审核">
+      <transition g="-16,-17" name="提交" to="税收管理"/>
+   </state>
+   <state g="854,113,92,52" name="住建局验收">
+      <transition g="-15,-18" name="提交" to="财政局结算"/>
+   </state>
+   <state g="682,113,92,52" name="税收管理">
+      <transition g="-39,-19" name="税收管理证明" to="住建局验收"/>
+   </state>
+   <state g="268,116,92,52" name="行政审批局">
+      <transition g="-14,-19" name="提交" to="税务审核"/>
+   </state>
+   <state g="-1,117,92,52" name="筛选核查">
+      <transition g="-13,-20" name="提交" to="镇街核查"/>
+   </state>
+   <state g="990,114,92,52" name="财政局结算"/>
+</process>

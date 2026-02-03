@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: layui-header('城镇土地使用税分析')" />
+		<style type="text/css">
+			.layui-card-header{
+				height: auto;
+			}
+		</style>
+	</head>
+	<body class="layui-body-table">
+		<div class="layui-card">
+			<div class="layui-card-header">
+				<form id="query-form" class="layui-form">
+					<div class="layui-form-item layui-row">
+						<div class="layui-inline layui-col-sm2 layui-col-md2">
+							<label class="layui-form-label">纳税人名称：</label>
+							<div class="layui-input-block">
+								<input type="text" id="nsrmc" name="nsrmc" th:value="${param.nsrmc}" autocomplete="off" class="layui-input" />
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm2 layui-col-md2">
+							<label class="layui-form-label">税款所属期起： </label>
+							<div class="layui-input-block">
+								<input type="text" id="skssqq" name="skssqq"  th:value="${skssqq}"
+								   readonly="readonly" autocomplete="off" class="layui-input">
+		
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm2 layui-col-md2">
+							<label class="layui-form-label">税款所属期止： </label>
+							<div class="layui-input-block">
+								<input type="text" id="skssqz" name="skssqz"  th:value="${skssqz}"
+								   readonly="readonly" autocomplete="off" class="layui-input">
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm2 layui-col-md2">
+							<label class="layui-form-label">是否欠缴：</label>
+							<div class="layui-input-block">
+								<select id="sfqj" name="sfqj" th:with="type=${@dict.getType('dm_dbfxxt_syztfx_sfqj')}" class="form-control input-sm">
+									<option value=""></option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+								</select>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm2 layui-col-md2">
+							<label class="layui-form-label">反馈状态:</label>
+							<div class="layui-input-block">
+								<select id="zt" name="zt" class="form-control input-sm">
+									<option value=""></option>
+									<option value="1">待反馈</option>
+									<option value="2">已反馈</option>
+									<option value="3">已完成</option>
+								</select>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm6 layui-col-md2">
+							<div class="layui-form-btn" style="text-align: left">
+								<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+									<i class="layui-icon">&#xe615;</i> 查询
+								</a>
+								<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+									<i class="layui-icon">&#xe669;</i> 重置
+								</a>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="layui-card-body">
+				<table id="layui-table" lay-filter="layui-table"></table>
+			</div>
+		</div>
+		<script type="text/html" id="ztTpl">
+			{{# if(d.zt > '0'){ }}
+			<a href="javascript:;" onclick="ckfk('{{d.fkid}}')" class="layui-table-link">{{ d.ztmc }}</a>
+			{{# } else { }}
+			{{ d.ztmc }}
+			{{# } }}
+		</script>
+	    <th:block th:include="include :: layui-footer" />
+	    <script th:inline="javascript">
+	        var prefix = ctx + "zhzs/dbfxxt/syztfx/cztdsysfx";
+	
+	        $(function() {
+	            var options = {
+	               	// loadUrl: prefix + "/list",
+	               	url: prefix + "/list",
+					exportUrl: prefix + "/expExcel",
+	                title: "城镇土地使用税分析",
+					height: 'full-65',
+	                cols:[ [{
+			            checkbox: true
+			        },
+					{
+						field : 'nsrmc',
+						title : '纳税人名称',
+						align: 'center',
+						style: 'text-align: left',
+						width: 270
+					},
+					{
+						field : 'skssqq',
+						title : '税款所属期起',
+						align: 'center',
+						width: 120
+					},
+					{
+						field : 'skssqz',
+						title : '税款所属期止',
+						align: 'center',
+						width: 120,
+					},
+					{
+						field : 'mj',
+						title : '登记面积(㎡)',
+						align: 'center',
+						style: 'text-align: right',
+						width: 150
+					},
+					{
+						field : 'msmj',
+						title : '免税面积(㎡)',
+						align: 'center',
+						style: 'text-align: right',
+						width: 150
+					},
+					{
+						field : 'ynse',
+						title : '估算应纳税额(元)',
+						align: 'center',
+						style: 'text-align: right',
+						width: 150
+					},
+					{
+						field : 'sjje',
+						title : '实缴金额(元)',
+						align: 'center',
+						style: 'text-align: right',
+						width: 150
+					},
+					{
+						field : 'ce',
+						title : '疑似差额(元)',
+						align: 'center',
+						style: 'text-align: right',
+						width: 150
+					},{ field: "ztmc", title: "反馈状态", width: 100, align: "center", templet: '#ztTpl' },
+					] ]
+	            };
+	            $.table.init(options);
+	        });
+			layui.use('laydate', function(){
+				var laydate = layui.laydate;
+				laydate.render({elem: '#skssqq',type:'month', format:'yyyy-MM'});
+				laydate.render({elem: '#skssqz',type:'month', format:'yyyy-MM'});
+			});
+	    </script>
+	</body>
+</html>

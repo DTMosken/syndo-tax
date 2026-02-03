@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <meta charset="utf-8" />
+    <head>
+        <th:block th:include="include :: layui-header('查看详情')" />
+    </head>
+    <body class="layui-body-table">
+        <div class="layui-card-body">
+            <table id="layui-table" lay-filter="layui-table"></table>
+        </div>
+
+        <th:block th:include="include :: layui-footer" />
+        <script th:inline="javascript">
+            var prefix = ctx + 'zhzs/dbfxxt/syztfx/tdzrsysfx'
+            var nsrmc = /*[[${param.nsrmc}]]*/ ''
+            var qdrq = /*[[${param.qdrq}]]*/ ''
+
+            $(function () {
+                var options = {
+                    url: prefix + '/getSyxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq,
+                    modalName: '查看详情',
+                    bottomToolbar: [],
+                    cols: [
+                        [
+                            {
+                                checkbox: true
+                            },
+                            {
+                                field: 'id',
+                                hide: true
+                            },
+                            {
+                                field: 'shxydm',
+                                title: '社会信用代码',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'nsrmc',
+                                title: '纳税人名称',
+                                align: 'center',
+                                width: 250,
+                                sort: true
+                            },
+                            {
+                                field: 'nsrlx',
+                                title: '纳税人类型',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tdbh',
+                                title: '土地编号',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'dh',
+                                title: '地号',
+                                align: 'center',
+                                width: 100,
+                                sort: true
+                            },
+                            {
+                                field: 'tdsyqzbh',
+                                title: '土地使用权证编号',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tdmc',
+                                title: '土地名称',
+                                align: 'center',
+                                width: 100,
+                                sort: true
+                            },
+                            {
+                                field: 'tdsyqrnsrsbh',
+                                title: '土地使用权人纳税人识别号',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tdsyqrmc',
+                                title: '土地权利人名称',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tdxz',
+                                title: '土地性质',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tdqdfs',
+                                title: '土地取得方式',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tdyt',
+                                title: '土地用途',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'jdxz',
+                                title: '街道乡镇',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'zgswskfj',
+                                title: '主管税务所（科、分局）',
+                                align: 'center',
+                                width: 300,
+                                sort: true
+                            },
+                            {
+                                field: 'tdzldz',
+                                title: '土地坐落地址',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'zytdmj',
+                                title: '占用土地面积',
+                                align: 'right',
+                                width: 150,
+                                sort: true
+                            },
+                            {
+                                field: 'qzqdtdsyqzfje',
+                                title: '其中取得土地使用权支付金额',
+                                align: 'right',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'qztdkfcb',
+                                title: '其中土地开发成本',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'csqdsj',
+                                title: '初始取得时间',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'nsywzzsj',
+                                title: '纳税义务终止时间',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'yxqq',
+                                title: '有效期起',
+                                align: 'center',
+                                width: 100,
+                                sort: true
+                            },
+                            {
+                                field: 'yxqz',
+                                title: '有效期止',
+                                align: 'center',
+                                width: 130,
+                                sort: true
+                            },
+                            {
+                                field: 'zspm',
+                                title: '征收品目',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'tddj',
+                                title: '土地等级',
+                                align: 'center',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'sebz',
+                                title: '税额标准',
+                                align: 'right',
+                                width: 100,
+                                sort: true
+                            },
+                            {
+                                field: 'jmstdmj',
+                                title: '减免税土地面积',
+                                align: 'right',
+                                width: 200,
+                                sort: true
+                            },
+                            {
+                                field: 'yjmsje',
+                                title: '月减免税金额',
+                                align: 'right',
+                                width: 200,
+                                sort: true
+                            }
+                        ]
+                    ]
+                }
+                $.table.init(options)
+            })
+        </script>
+    </body>
+</html>

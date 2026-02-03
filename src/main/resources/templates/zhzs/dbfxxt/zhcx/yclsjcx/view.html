@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header(' 已处理数据查询')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse in">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">指标名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="zbmc" name="zbmc"/>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-default btn-sm" onclick="onReset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+	        <div class="btn-group-sm" id="toolbar" role="group">
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/zhcx/yclsjcx";
+
+        $(function() {
+            var options = {
+                //url: prefix + "/list",
+                modalName: " 已处理数据查询",
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'id', 
+					visible: false
+				},
+				{
+					field : 'zbmc', 
+					title : '指标名称',
+					sortable: true
+				},
+				{
+					field : 'zblx', 
+					title : '指标类型',
+					sortable: true
+				},
+				{
+					field : 'zbnr', 
+					title : '指标内容',
+					sortable: true
+				},
+				{
+					field : 'rwxfr', 
+					title : '任务下发人',
+					sortable: true
+				},
+				{
+					field : 'rwclz', 
+					title : '任务处理者',
+					sortable: true
+				},
+				{
+					field : 'cljg', 
+					title : '处理结果',
+					sortable: true
+				},
+				{
+					field : 'fkyj', 
+					title : '反馈意见',
+					sortable: true
+				},
+				{
+					field : 'cbje', 
+					title : '差补金额',
+					sortable: true
+				},
+				{
+					field : 'clr', 
+					title : '处理人',
+					sortable: true
+				},
+				{
+					field : 'clsj', 
+					title : '处理时间',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+        });
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+      });
+    </script>
+</body>
+</html>

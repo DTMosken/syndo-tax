@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ztzhfx.AhyydfxMapper">
+	<!-- 行业用电分析 -->
+	
+	<!-- 列表 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyydfx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyydfx">
+		WITH QY AS (
+			SELECT T.QYMC,T.YDL,GS.NSRMC FROM (
+				SELECT YHMC QYMC, SUM(YDL) YDL
+				FROM t_db_gdgs_qyydl G
+				WHERE 1 = 1
+		 		<if test="nsrmc != null and nsrmc != ''">AND YHMC LIKE '%'||#{nsrmc}||'%'</if>
+          		<if test="ssqq != null and ssqq != ''">AND SUBSTR(SSYF,0,7) >= #{ssqq}</if>
+		 		<if test="ssqz != null and ssqz != ''">AND SUBSTR(SSYF,0,7) &lt;= #{ssqz}</if>
+			  	GROUP BY YHMC
+			) T
+			LEFT JOIN TMP_GD_SW GS ON T.QYMC = GS.QYMC
+		),
+		RK AS (
+			SELECT NSRMC,SUM(REPLACE(SJJE,',','')) SJJE,GROUP_CONCAT(DISTINCT HYML) HYML
+			FROM MD_SWJ_RKXX
+			WHERE 1 = 1
+	 		<if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE '%'||#{nsrmc}||'%'</if>
+        	<if test="ssqq != null and ssqq != ''">AND SUBSTR(SKSSQQ,0,7) >= #{ssqq}</if>
+	 		<if test="ssqz != null and ssqz != ''">AND SUBSTR(SKSSQQ,0,7) &lt;= #{ssqz}</if>
+			GROUP BY NSRMC
+		)
+		SELECT #{ssqq} SSQQ,#{ssqz} SSQZ,NSRMC,QYYDL,QYNSE,SSHY,DLCSE FROM (
+			SELECT QY.QYMC NSRMC,IFNULL(QY.YDL,0) QYYDL,IFNULL(RK.SJJE,0) QYNSE,RK.HYML SSHY,
+			  CASE WHEN QY.YDL = 0 THEN 0 ELSE IFNULL(ROUND((RK.SJJE / QY.YDL),4),0) END DLCSE  
+			FROM QY 
+			LEFT JOIN RK ON QY.NSRMC = RK.NSRMC
+		) WHERE 1=1 
+		<if test="sshy != null and sshy != ''">AND INSTR(SSHY,#{sshy})>0</if>
+		ORDER BY CAST(QYYDL AS DECIMAL) DESC,CAST(DLCSE AS DECIMAL)
+	</select>
+	
+	<!-- 图表 获取数据 -->
+	<select id="find" resultType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyydfx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyydfx">
+       WITH QY AS (
+			SELECT T.QYMC,T.YDL,GS.NSRMC,T.RQ FROM (
+				SELECT YHMC QYMC, SUM(YDL) YDL,SUBSTR(SSYF,0,7) RQ
+				FROM MD_GDGS_QYYDL G
+				WHERE 1 = 1
+				<if test="nsrmc != null and nsrmc != ''">AND YHMC LIKE '%'||#{nsrmc}||'%'</if>
+          		<if test="ssqq != null and ssqq != ''">AND SUBSTR(SSYF,0,7) >= #{ssqq}</if>
+		 		<if test="ssqz != null and ssqz != ''">AND SUBSTR(SSYF,0,7) &lt;= #{ssqz}</if>
+				GROUP BY YHMC,SUBSTR(SSYF,0,7)
+			) T
+			LEFT JOIN TMP_GD_SW GS ON T.QYMC = GS.QYMC
+		),
+		RK AS (
+		  	SELECT NSRMC,SUM(REPLACE(SJJE,',','')) SJJE,SUBSTR(SKSSQQ,0,7) RQ
+		  	FROM MD_SWJ_RKXX
+		  	WHERE 1 = 1
+		 	<if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE '%'||#{nsrmc}||'%'</if>
+        	<if test="ssqq != null and ssqq != ''">AND SUBSTR(SKSSQQ,0,7) >= #{ssqq}</if>
+	 		<if test="ssqz != null and ssqz != ''">AND SUBSTR(SKSSQQ,0,7) &lt;= #{ssqz}</if>
+	 		<!-- <if test="sshy != null and sshy != ''">AND HYML = #{sshy}</if> -->
+		  	GROUP BY NSRMC,SUBSTR(SKSSQQ,0,7)
+		)
+		SELECT '['||WM_CONCAT(''''||RQ||'''')||']' NF,'['||WM_CONCAT(QYYDL)||']' QYYDL,'['||WM_CONCAT(QYNSE)||']' QYNSE FROM (
+		  	SELECT QY.RQ,QY.QYMC NSRMC,NVL(QY.YDL,0) QYYDL,NVL(RK.SJJE,0) QYNSE,
+		    	CASE WHEN QY.YDL = 0 THEN 0 ELSE NVL(ROUND((RK.SJJE / QY.YDL),4),0) END DLCSE  
+  			FROM QY 
+		  	LEFT JOIN RK ON QY.NSRMC = RK.NSRMC AND QY.RQ = RK.RQ
+		  	ORDER BY QY.RQ
+		)
+	</select>
+</mapper>

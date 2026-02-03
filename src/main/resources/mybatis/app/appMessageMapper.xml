@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- App通知管理  -->
+<mapper namespace="com.syndo.project.app.mapper.AppMessageMapper">
+
+	<select id="selectById" parameterType="string" resultType="com.syndo.project.app.domain.AppMessage">
+		select * from app_message
+		where obj_id=#{objId}
+	</select>
+
+	<select id="selectList" parameterType="com.syndo.project.app.domain.AppMessage" resultType="com.syndo.project.app.domain.AppMessage">
+		select m.obj_id, ifnull(s.USER_NAME, m.author) author, m.title, m.substance, m.date_time from app_message M left join SYS_USER S ON M.AUTHOR = S.login_name
+		<where>
+			<if test="title != null and title != ''">and title like concat('%',#{title},'%')</if>
+		</where>
+	</select>
+
+	<insert id="insert" parameterType="com.syndo.project.app.domain.AppMessage">
+		insert into app_message (
+			obj_id,
+			<if test="title != null and title != '' ">title, </if>
+			<if test="substance != null and substance != '' ">substance, </if>
+ 			<if test="createBy != null and createBy != ''">author,</if>
+ 			date_time
+ 		)values(
+			 #{objId},
+			<if test="title != null and title != ''">#{title}, </if>
+			<if test="substance != null and substance != ''">#{substance}, </if>
+ 			<if test="createBy != null and createBy != ''">#{createBy},</if>
+ 			now()
+		)
+	</insert>
+
+	<update id="update" parameterType="com.syndo.project.app.domain.AppMessage">
+		update app_message 
+        <set>
+            <if test="title != null and title != ''">title = #{title}, </if>
+            <if test="substance != null and substance != ''">substance = #{substance}, </if>
+        </set>
+        where obj_id = #{objId}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="String">
+		delete from app_message where obj_id in 
+        <foreach item="objId" collection="array" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+	</delete>
+</mapper>

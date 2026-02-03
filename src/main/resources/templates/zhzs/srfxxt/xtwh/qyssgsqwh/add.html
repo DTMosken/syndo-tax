@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('规模企业维护')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">纳税人识别号：</label>
+					<div class="col-sm-4">
+						<input id="tyshxydm" name="tyshxydm" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label is-required">企业名称：</label>
+					<div class="col-sm-4">
+						<input id="nsrmc" name="nsrmc" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">分类：</label>
+					<div class="col-sm-4">
+						<select id="fl" name="fl"
+								class="form-control input-sm">
+							<option value="双50强-工业企业">双50强-工业企业</option>
+							<option value="双50强-创新型高成长企业">双50强-创新型高成长企业</option>
+							<option value="工业10强">工业10强</option>
+							<option value="成长性10强">成长性10强</option>
+						</select>
+					</div>
+
+					<label class="col-sm-2 control-label is-required">生效年月：</label>
+					<div class="col-sm-4">
+						<input id="rq" name="rq" class="form-control" type="text" readonly="readonly" />
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+       	 	var prefix = ctx + "zhzs/srfxxt/xtwh/qyssgsqwh";
+       	 	
+			$("#form-add").validate({
+				rules:{
+					tyshxydm: {required:true},
+					nsrmc: {required:true},
+					fl: {required:true},
+					tzsj: {required:true}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+				laydate.render({elem: '#rq', type: 'month', range: '至'});
+	        });
+		</script>
+	</body>
+</html>

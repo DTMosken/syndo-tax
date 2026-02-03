@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <meta charset="utf-8" />
+    <head>
+        <th:block th:include="include :: layui-header('查看详情')" />
+    </head>
+    <body class="layui-body-table">
+        <div class="layui-card-body">
+            <table id="layui-table" lay-filter="layui-table"></table>
+        </div>
+
+        <th:block th:include="include :: layui-footer" />
+        <script th:inline="javascript">
+            var prefix = ctx + 'zhzs/dbfxxt/syztfx/tdcrsysfx'
+            var nsrmc = /*[[${param.nsrmc}]]*/ ''
+            var qdrq = /*[[${param.qdrq}]]*/ ''
+
+            $(function () {
+                var options = {
+                    url: prefix + '/getTdxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq,
+                    modalName: '查看详情',
+                    bottomToolbar: [],
+                    cols: [
+                        [
+                            {
+                                checkbox: true
+                            },
+                            {
+                                field: 'id',
+                                hide: true
+                            },
+                            {
+                                field: 'xmmc',
+                                title: '项目名称',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'qdrq',
+                                title: '签订日期',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'srr',
+                                title: '受让人',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'zdbh',
+                                title: '宗地编号',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'zdwz',
+                                title: '宗地位置',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'zmj',
+                                title: '总面积',
+                                align: 'right',
+                                sort: true
+                            },
+                            {
+                                field: 'zygdmj',
+                                title: '占用耕地面积',
+                                align: 'right',
+                                sort: true
+                            },
+                            {
+                                field: 'crhbjk',
+                                title: '出让/划拨价歀',
+                                align: 'right',
+                                sort: true
+                            },
+                            {
+                                field: 'ydjdsj',
+                                title: '约定交地时间',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'ynse',
+                                title: '应纳契税',
+                                align: 'right',
+                                sort: true
+                            }
+                        ]
+                    ]
+                }
+                $.table.init(options)
+            })
+        </script>
+    </body>
+</html>

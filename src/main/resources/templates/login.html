@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+	<head>
+		<meta charset="utf-8">
+		<title>综合管理平台</title>
+		<meta name="keywords" content="财税大数据平台">
+		<meta name="description" content="加强财税征管，打破财税“信息孤岛”，推进科技治税，构建“政府领导、税务主管、部门配合、司法保障、社会参与、信息化支撑”的全方位、多层次、立体式“大税收监控”格局">
+		<meta name="renderer" content="webkit">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta http-equiv="Cache-Control" content="no-siteapp,must-revalidate" />
+		
+		<link href="../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+		<link href="../static/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+		<link href="../static/css/style.css" th:href="@{/css/style.css}" rel="stylesheet" />
+		<link href="../static/css/login.css" th:href="@{/css/login.css}" rel="stylesheet" />
+		<link href="../static/main/css/sf-ui.css" th:href="@{/main/css/sf-ui.css?v=3.4.0}" rel="stylesheet" />
+		<!--[if lt IE 9]>
+   		<meta http-equiv="refresh" content="0;ie.html" />
+    	<![endif]-->
+    	<link rel="shortcut icon" href="../static/favicon.ico" th:href="@{favicon.ico}" />
+		<style type="text/css">label.error { position:inherit;  }</style>
+		<script>
+	        if(window.top!==window.self){alert('未登录或登录超时。请重新登录');window.top.location=window.location};
+	    </script>
+	</head>
+
+	<body style="background:#fff;">
+		<div class="head" style="width:100%; padding-left:100px;">
+		<img src="./img/tlogo.png" class="png" style="width:300px">
+		</div>
+		<div class="banner">
+			<div class="main_visual">
+				<div class="flicking_con">
+					<div class="flicking_inner">
+						<a href="">1</a>
+						<a href="">2</a>
+					</div>
+				</div>
+				<div class="main_image">
+					<ul>
+						<li><span style="background: url('./img/banner02.jpg') center top no-repeat;background-size: 100% 100%"></span></li>
+						<li><span style="background: url('./img/banner03.jpg') center top no-repeat;background-size: 100% 100%"></span></li>
+					</ul>
+					<a href="javascript:;" id="btn_prev" class="png"></a>
+					<a href="javascript:;" id="btn_next" class="png"></a>
+				</div>
+			</div>
+			<div class="login">
+				<div class="login_con" style="background-color: rgba(255,255,255,0.4);border-color: rgba(255,255,255,0.4);border-width: 3px;border-style: solid;border-radius: 5px;">
+					<p class="spec1">用户名</p>
+					<form id="signupForm" method="post">
+						<div class="form-group">
+							<span class="quickdelete-wrap" style="background-color:white;">
+								<input type="text" class="form-control ue-form qd_ipt" style="background-color:white;" id="username" name="username" value="" autocomplete="off" tabindex="1" placeholder="请输入用户名" />
+							</span>
+						</div>
+						<p class="spec1">密码</p>
+						<div class="form-group">
+							<span class="quickdelete-wrap" style="background-color:white;">
+								<input type="password" class="form-control ue-form qd_ipt" style="background-color:white;" id="password" name="password" value="" autocomplete="off" tabindex="2" placeholder="请输入密码" />
+							</span>
+						</div>
+						<div class="row m-t" th:if="${captchaEnabled==true}">
+							<div class="form-group">
+								<div class="col-xs-6" style="border: 1px solid #ccc;margin-left:15px; ">
+							    	<input type="text" name="validateCode"  class="form-control" placeholder="验证码" maxlength="5">
+								</div>
+								<div class="col-xs-5">
+									<a href="javascript:void(0);" title="点击更换验证码">
+										<img th:src="@{captcha/captchaImage(type=${captchaType})}" class="imgcode" width="85%"/>
+									</a>
+								</div>
+							</div>
+						</div>
+						<div class="checkbox">
+							<label class="form-checkbox" style="color:#31416a">
+								<input type="checkbox" id="rememberme" name="rememberme" tabindex="3" /> 下次自动登录 
+							</label>
+						</div>
+						<button class="btn btn-login" style="background-color:#3366cc;" tabindex="4" id="btnSubmit" data-loading="正在验证登录，请稍后...">登录</button>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="clear"></div>
+		<!--<div class="footer" style="margin-top:0px;">
+			Copyright &copy; 济南先讯威和信息技术有限公司 All rights reserved
+			<br /> 地址：济南市高新区齐鲁软件园E坐201室 邮编：250000
+		</div>-->
+		
+		<script th:inline="javascript"> var ctx = /*[[@{/}]]*/ null; var captchaType = /*[[${captchaType}]]*/ null; </script>
+		<!-- 全局js -->
+		<script src="../static/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+		<script src="../static/js/jquery.touchSlider.js" th:src="@{/js/jquery.touchSlider.js}"></script>
+		<script src="../static/js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
+
+		<!-- 验证插件 -->
+		<script src="../static/ajax/libs/validate/jquery.validate.min.js" th:src="@{/ajax/libs/validate/jquery.validate.min.js}"></script>
+		<script src="../static/ajax/libs/validate/messages_zh.min.js" th:src="@{/ajax/libs/validate/messages_zh.min.js}"></script>
+		<script src="../static/ajax/libs/layer/layer.min.js" th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+		<script src="../static/ajax/libs/blockUI/jquery.blockUI.js" th:src="@{/ajax/libs/blockUI/jquery.blockUI.js}"></script>
+		
+		<script src="../static/js/jsencrypt.min.js" th:src="@{/js/jsencrypt.min.js}"></script>
+		
+		<script src="../static/main/js/sf-ui.js" th:src="@{/main/js/sf-ui.js?v=3.4.0}"></script>
+		<script src="../static/main/login.js" th:src="@{/main/login.js}"></script>
+		
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$(".main_visual").hover(function() {
+					$("#btn_prev,#btn_next").fadeIn()
+				}, function() {
+					$("#btn_prev,#btn_next").fadeOut()
+				})
+				$dragBln = false;
+				$(".main_image").touchSlider({
+					flexible: true,
+					speed: 200,
+					btn_prev: $("#btn_prev"),
+					btn_next: $("#btn_next"),
+					paging: $(".flicking_con a"),
+					counter: function(e) {
+						$(".flicking_con a").removeClass("on").eq(e.current - 1).addClass("on");
+					}
+				});
+				$(".main_image").bind("mousedown", function() {
+					$dragBln = false;
+				})
+				$(".main_image").bind("dragstart", function() {
+					$dragBln = true;
+				})
+				$(".main_image a").click(function() {
+					if($dragBln) {
+						return false;
+					}
+				})
+				timer = setInterval(function() { $("#btn_next").click(); }, 5000);
+				$(".main_visual").hover(function() {
+					clearInterval(timer);
+				}, function() {
+					timer = setInterval(function() { $("#btn_next").click(); }, 5000);
+				})
+				$(".main_image").bind("touchstart", function() {
+					clearInterval(timer);
+				}).bind("touchend", function() {
+					timer = setInterval(function() { $("#btn_next").click(); }, 5000);
+				})
+			});
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 结果查询 -->
+<mapper namespace="com.syndo.project.industry.zbgzjs.mapper.ZbGzkMapper">
+
+	<!-- 行业列表 -->
+	<select id="selectHyList" resultType="com.syndo.project.industry.sjsb.domain.Hy">
+		select * from cs_mcxy_dm_hy t order by t.mlbz desc,t.dlbz desc,t.zlbz desc,t.xlbz desc,t.hy_dm
+	</select>
+	<select id="selectHyDynamicList" resultType="com.syndo.project.industry.sjsb.domain.Hy">
+		select t.*, (select count(1) from cs_mcxy_dm_hy where sjhy_dm=t.hy_dm) children_hy_cnt from cs_mcxy_dm_hy t
+		where
+		<choose>
+			<when test="sjhyDm==null or sjhyDm==''"> t.SJHY_DM is null </when>
+			<otherwise> t.SJHY_DM = #{sjhyDm} </otherwise>
+		</choose>
+		order by t.mlbz desc,t.dlbz desc,t.zlbz desc,t.xlbz desc,t.hy_dm
+	</select>
+	<select id="selectHyByHydms" resultType="com.syndo.project.industry.sjsb.domain.Hy">
+		select * from cs_mcxy_dm_hy t 
+		where t.hy_dm in
+		<foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+		</foreach>
+	</select>
+
+	<!-- 分类目录 -->
+	<select id="selectFlmlList" resultType="com.syndo.project.industry.sjsb.domain.Flml">
+		select * from cs_mcxy_zb_flml t where t.lx=#{lx} order by pid,id
+	</select>
+	<select id="selectFlmlById" parameterType="string" resultType="com.syndo.project.industry.sjsb.domain.Flml">
+		select * from cs_mcxy_zb_flml t where t.id=#{id}
+	</select>
+	<select id="selectFlmlidCnt" resultType="int" databaseId="oracle">
+		SELECT SUM(cnt) FROM (
+	      SELECT COUNT(1) cnt FROM cs_mcxy_zb_zbk t WHERE t.FLMLID=#{id}
+	    UNION ALL
+	      SELECT COUNT(1) cnt FROM cs_mcxy_zb_zbk t WHERE t.FLMLID=#{id}
+	    UNION ALL
+	      select count(1) from cs_mcxy_zb_flml t
+	    connect by prior t.id = t.pid start with t.pid=#{id}
+	    ) tt
+	</select>
+	<select id="selectFlmlidCnt" resultType="int" databaseId="mysql">
+		WITH recursive t1(id, pid) AS (
+			SELECT t0.id, t0.pid FROM cs_mcxy_zb_flml t0 WHERE t0.pid=#{id}
+			 UNION ALL
+			SELECT t2.id, t2.pid FROM cs_mcxy_zb_flml t2, t1
+			 WHERE t2.pid=t1.id
+			)
+			
+		SELECT SUM(cnt) FROM (
+			SELECT COUNT(1) cnt FROM cs_mcxy_zb_zbk t WHERE t.`FLMLID`=#{id} 
+		UNION ALL
+			SELECT COUNT(1) cnt FROM cs_mcxy_zb_gzk t WHERE t.`FLMLID`=#{id}
+		UNION ALL
+			SELECT COUNT(1) cnt FROM t1
+		) tt
+	</select>
+	<select id="checkInsertFlml" parameterType="com.syndo.project.industry.sjsb.domain.Flml" resultType="int">
+		select count(1) from cs_mcxy_zb_flml t
+		where t.pid=#{pid} and t.mlmc=#{mlmc}
+		<if test="id!=null and id!=''"> and t.id!=#{id} </if>
+	</select>
+	<insert id="insertFlml" parameterType="com.syndo.project.industry.sjsb.domain.Flml">
+		insert into cs_mcxy_zb_flml(id, pid, mlmc, mlsm, lx) values
+		(#{id}, #{pid}, #{mlmc}, #{mlsm}, #{lx})
+	</insert>
+	<update id="editFlml" parameterType="com.syndo.project.industry.sjsb.domain.Flml">
+		update cs_mcxy_zb_flml set mlmc=#{mlmc}, mlsm=#{mlsm} where id=#{id}
+	</update>
+	<delete id="deleteFlmlById" parameterType="string" databaseId="oracle">
+		delete from cs_mcxy_zb_flml 
+		where id=#{id}
+		  and id not in(SELECT id FROM cs_mcxy_zb_flml t
+		  WHERE t.PID=(SELECT id FROM cs_mcxy_zb_flml WHERE pid='0')
+		  AND t.MLMC IN ('省定指标','县区特色指标','加分','减分'))
+	</delete>
+	<delete id="deleteFlmlById" parameterType="string" databaseId="mysql">
+		delete from cs_mcxy_zb_flml 
+		where id=#{id}
+		  and id not in( select * from (SELECT t.id FROM cs_mcxy_zb_flml t
+		  WHERE t.PID=(SELECT id FROM cs_mcxy_zb_flml WHERE pid='0')
+		  AND t.MLMC IN ('省定指标','县区特色指标','加分','减分')) tt)
+	</delete>
+
+	<!-- 指标规则库 -->
+	<select id="selectList" databaseId="oracle" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		select t.id, m.mlmc flmc, t.gzmc, t.gzsm, t.yxbz, t.lrsj
+		  from cs_mcxy_zb_gzk t
+		  left join cs_mcxy_zb_flml m
+		    on t.flmlid = m.id
+		<where>
+			<if test="gzmc!=null and gzmc!=''">instr(t.gzmc, #{gzmc}) &gt; 0</if>
+			<if test="flmlid!=null and flmlid!=''">
+		 		and t.flmlid in (select t.id from cs_mcxy_zb_flml t
+							connect by prior t.id=t.pid start with t.id=#{flmlid} or t.pid=#{flmlid} ) 
+			</if>
+			<if test="yxbz!=null and yxbz!=''">and t.yxbz=#{yxbz}</if>
+		</where>
+		 order by t.lrsj desc
+	</select>
+	<select id="selectList" databaseId="mysql" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		select t.id, m.mlmc flmc, t.gzmc, t.gzsm, t.yxbz, t.lrsj
+		  from cs_mcxy_zb_gzk t
+		  left join cs_mcxy_zb_flml m
+		    on t.flmlid = m.id
+		<where>
+			<if test="gzmc!=null and gzmc!=''">instr(t.gzmc, #{gzmc}) &gt; 0</if>
+			<if test="flmlid!=null and flmlid!=''">
+		 		and t.flmlid in (
+		 			WITH recursive t1(id, pid) AS (
+					SELECT t0.id, t0.pid FROM cs_mcxy_zb_flml t0 WHERE t0.id=#{flmlid} OR t0.pid=#{flmlid}
+					 UNION ALL
+					SELECT t2.id, t2.pid FROM cs_mcxy_zb_flml t2, t1
+					 WHERE t2.pid=t1.id
+					)
+					SELECT t1.id FROM t1) 
+			</if>
+			<if test="yxbz!=null and yxbz!=''">and t.yxbz=#{yxbz}</if>
+		</where>
+		 order by t.lrsj desc
+	</select>
+	<select id="selectById" parameterType="string" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		select t.*, m.mlmc flmc
+		  from cs_mcxy_zb_gzk t
+		  left join cs_mcxy_zb_flml m
+		    on t.flmlid = m.id
+		 where t.id=#{id}
+	</select>
+	<insert id="insert" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="oracle">
+		insert into cs_mcxy_zb_gzk(id, flmlid, gzmc, gzsm, yxbz, lrr, lrsj) values
+		(#{id}, #{flmlid}, #{gzmc}, #{gzsm}, #{yxbz}, #{lrr}, sysdate)
+	</insert>
+	<insert id="insert" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="mysql">
+		insert into cs_mcxy_zb_gzk(id, flmlid, gzmc, gzsm, yxbz, lrr, lrsj) values
+		(#{id}, #{flmlid}, #{gzmc}, #{gzsm}, #{yxbz}, #{lrr}, now())
+	</insert>
+	<update id="update" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="oracle">
+		update cs_mcxy_zb_gzk set flmlid=#{flmlid}, gzmc=#{gzmc}, gzsm=#{gzsm}, xgr=#{xgr}, xgsj=sysdate
+		 where id=#{id}
+	</update>
+	<update id="update" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="mysql">
+		update cs_mcxy_zb_gzk set flmlid=#{flmlid}, gzmc=#{gzmc}, gzsm=#{gzsm}, xgr=#{xgr}, xgsj=now()
+		 where id=#{id}
+	</update>
+	<update id="changeYxbz" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		update cs_mcxy_zb_gzk set yxbz=#{yxbz}
+		 where id=#{id}
+	</update>
+	<delete id="deleteByIds">
+		delete from cs_mcxy_zb_gzk
+		WHERE ID IN 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+		</foreach>
+	</delete>
+
+	<!-- 指标规则库分组 -->
+	<select id="selectZbgzkfzList" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">		 
+		select t.fzid, t.gzid, t.fzmc, t.fzsm, t.mf_sdzb, t.mf_qxtszb, t.mf_jfx, t.fzlx, t.qygm, t.fzpx, t.hydm
+		from cs_mcxy_zb_gzkfz t where gzid=#{gzid}
+		order by t.fzpx
+	</select>
+	<!-- <select id="selectZbgzkfzList" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="oracle">		 
+		 select tt.fzid, tt.gzid, tt.fzmc, tt.fzsm, tt.mf_sdzb, tt.mf_qxtszb, tt.mf_jfx, tt.fzlx, tt.qygm,  wm_concat(tt.hydm) hydm, tt.fzpx, wm_concat(dm.hymc) hymc
+			from (
+			  select t.fzid, t.gzid, t.fzmc, t.fzsm, t.mf_sdzb, t.mf_qxtszb, t.mf_jfx, t.fzlx, t.qygm, t.fzpx,
+			    REGEXP_SUBSTR (t.hydm, '[^,]+', 1,rownum) hydm
+			  from (select * from cs_mcxy_zb_gzkfz where gzid=#{gzid}) t
+			
+			    CONNECT BY ROWNUM &lt;=
+			    LENGTH (t.hydm) - LENGTH (REPLACE (t.hydm, ',', ''))+1
+			    
+			    ) tt, cs_mcxy_dm_hy dm
+			  where tt.hydm=dm.hy_dm(+)
+			group by tt.fzid, tt.gzid, tt.fzmc, tt.fzsm, tt.mf_sdzb, tt.mf_qxtszb, tt.mf_jfx, tt.fzlx, tt.qygm, tt.fzpx
+			order by tt.fzpx
+	</select> -->
+	<select id="selectZbGzkfzByFzid" parameterType="string" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		select * from cs_mcxy_zb_gzkfz t where t.fzid=#{fzid}
+	</select>
+	<select id="selectZbGzkfzpxInfo" parameterType="string" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		select * from(
+			select lag(t.fzid) over(order by fzpx) fzid_pre,
+				   lead(t.fzid) over(order by fzpx) fzid_next,
+		       	   t.fzid,
+		       	   lag(t.fzpx) over(order by fzpx) fzpx_pre,
+		       	   lead(t.fzpx) over(order by fzpx) fzpx_next,
+		       	   t.fzpx
+		  	  from cs_mcxy_zb_gzkfz t
+		 	 where exists(select 1 from cs_mcxy_zb_gzkfz m where t.gzid=m.gzid and m.fzid=#{fzid})
+		 ) tt where tt.fzid=#{fzid}
+	</select>
+	<insert id="insertZbGzkfz" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="oracle">
+		insert into cs_mcxy_zb_gzkfz(fzid, gzid, fzmc, fzsm, mf_sdzb, mf_qxtszb, mf_jfx, fzlx, qygm, hydm, fzpx)
+		values(#{fzid}, #{gzid}, #{fzmc}, #{fzsm}, #{mfSdzb}, #{mfQxtszb}, #{mfJfx}, #{fzlx}, #{qygm}, #{hydm}, 
+			  (select nvl(max(t.fzpx)+1,1) from cs_mcxy_zb_gzkfz t where t.gzid=#{gzid}))
+	</insert>
+	<insert id="insertZbGzkfz" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="mysql">
+		insert into cs_mcxy_zb_gzkfz(fzid, gzid, fzmc, fzsm, mf_sdzb, mf_qxtszb, mf_jfx, fzlx, qygm, hydm, fzpx)
+		values(#{fzid}, #{gzid}, #{fzmc}, #{fzsm}, #{mfSdzb}, #{mfQxtszb}, #{mfJfx}, #{fzlx}, #{qygm}, #{hydm}, 
+			  (select ifnull(max(t.fzpx)+1,1) from cs_mcxy_zb_gzkfz t where t.gzid=#{gzid}))
+	</insert>
+	<update id="updateZbGzkfz" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		update cs_mcxy_zb_gzkfz set fzmc=#{fzmc}, fzsm=#{fzsm}, mf_sdzb=#{mfSdzb}, mf_qxtszb=#{mfQxtszb}, mf_jfx=#{mfJfx}, fzlx=#{fzlx}, qygm=#{qygm}, hydm=#{hydm}
+		where fzid=#{fzid}
+	</update>
+	<delete id="deleteZbgzkfzByFzids">
+		delete from cs_mcxy_zb_gzkfz
+		WHERE fzid IN 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+		</foreach>
+	</delete>
+	<update id="zbgzkfzUpDown" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		update cs_mcxy_zb_gzkfz t 
+		   set fzpx=#{fzpx}
+		 where t.fzid=#{fzid}
+	</update>
+
+	<!-- 指标规则库分组明细 -->
+	<select id="selectZbgzkfzmxList" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		SELECT t.id, z.ZBMC, f.MLMC fzlx, z.PFFS, t.ZBJZZ, t.ZBQZ, t.FZSX, t.FZXX
+		FROM cs_mcxy_zb_gzkfzmx t
+		LEFT JOIN cs_mcxy_zb_zbk z ON t.zbid=z.id
+		LEFT JOIN cs_mcxy_zb_flml f ON z.FLMLID=f.ID
+		where t.fzid=#{fzid}
+		order by t.zbpx
+	</select>
+	<select id="selectZbGzkfzmxById" parameterType="string" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		SELECT t.*, z.ZBMC 
+		FROM cs_mcxy_zb_gzkfzmx t 
+		LEFT JOIN cs_mcxy_zb_zbk z ON t.ZBID=z.ID 
+		where t.id=#{id}
+	</select>
+	<select id="selectZbGzkfzmxpxInfo" parameterType="string" resultType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		select * from(
+			select lag(t.id) over(order by zbpx) id_pre,
+				   lead(t.id) over(order by zbpx) id_next,
+		       	   t.id,
+		       	   lag(t.zbpx) over(order by zbpx) zbpx_pre,
+		       	   lead(t.zbpx) over(order by zbpx) zbpx_next,
+		       	   t.zbpx
+		  	  from cs_mcxy_zb_gzkfzmx t
+		 	 where exists(select 1 from cs_mcxy_zb_gzkfzmx m where t.fzid=m.fzid and m.id=#{id})
+		 ) tt where tt.id=#{id}
+	</select>
+	<select id="selectZbkDynamicList" resultType="com.syndo.project.industry.zbgzjs.domain.Zbk">
+		WITH tab AS
+			(SELECT id, flmlid pid, zbmc, 'zb' lx, fzsx, fzxx
+			FROM cs_mcxy_zb_zbk
+			UNION ALL
+			SELECT id, pid, mlmc zbmc, lx, 0 fzsx, 0 fzxx
+			FROM cs_mcxy_zb_flml f
+			WHERE f.LX='zbk')
+		SELECT t.*, (SELECT COUNT(1) FROM tab tt WHERE tt.pid=t.id) childrenZbCnt 
+		FROM tab t where 
+		<choose>
+			<when test="id==null or id==''"> t.pid = '0' </when>
+			<otherwise> t.pid = #{id} </otherwise>
+		</choose>
+		ORDER BY 2,1
+	</select>
+	<select id="checkZbid" resultType="int">
+		select count(1) from cs_mcxy_zb_gzkfzmx 
+		where zbid=#{zbid} and fzid=#{fzid}
+		<if test="id!=null and id!=''"> and id !=#{id} </if>
+	</select>
+	<insert id="insertZbGzkfzmx" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="oracle">
+		insert into cs_mcxy_zb_gzkfzmx(id, fzid, gzid, zbid, zbjzz, zbqz, fzsx, fzxx, zbpx)
+		values(#{id}, #{fzid}, #{gzid}, #{zbid}, #{zbjzz}, #{zbqz}, #{fzsx}, #{fzxx}, 
+			  (select nvl(max(t.zbpx)+1,1) from cs_mcxy_zb_gzkfzmx t where t.fzid=#{fzid}))
+	</insert>
+	<insert id="insertZbGzkfzmx" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk" databaseId="mysql">
+		insert into cs_mcxy_zb_gzkfzmx(id, fzid, gzid, zbid, zbjzz, zbqz, fzsx, fzxx, zbpx)
+		values(#{id}, #{fzid}, #{gzid}, #{zbid}, #{zbjzz}, #{zbqz}, #{fzsx}, #{fzxx}, 
+			  (select ifnull(max(t.zbpx)+1,1) from cs_mcxy_zb_gzkfzmx t where t.fzid=#{fzid}))
+	</insert>
+	<update id="updateZbGzkfzmx" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		update cs_mcxy_zb_gzkfzmx set zbid=#{zbid}, zbjzz=#{zbjzz}, zbqz=#{zbqz}, fzsx=#{fzsx}, fzxx=#{fzxx}
+		where id=#{id}
+	</update>
+	<delete id="deleteZbgzkfzmxByIds">
+		delete from cs_mcxy_zb_gzkfzmx 
+		WHERE id IN 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+		</foreach>
+	</delete>
+	<update id="zbgzkfzmxUpDown" parameterType="com.syndo.project.industry.zbgzjs.domain.ZbGzk">
+		update cs_mcxy_zb_gzkfzmx t 
+		   set zbpx=#{zbpx}
+		 where t.id=#{id}
+	</update>
+
+
+</mapper>

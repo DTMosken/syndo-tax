@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('导出选项')" />
+		<style>
+			.wrapper {
+				padding-top: 5px;
+			}
+
+			.form-header {
+				margin-bottom: 10px;
+			}
+
+			.check-box span {
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+		</style>
+	</head>
+	<body class="white-bg">
+		<div class="wrapper wrapper-content">
+			<form id="opt-form">
+				<h4 class="form-header h4">导出数据范围</h4>
+				<div class="row">
+					<div class="col-sm-12 col-xs-12">
+						<div class="form-group draggable">
+							<div class="col-sm-12 col-xs-12">
+								<label class="radio-box">
+									<input value="sel" id="expScope1" name="expScope" checked="checked" type="radio" />
+									导出本页
+								</label>
+								<label class="radio-box">
+									<input value="all" id="expScope2" name="expScope" type="radio" />
+									导出全部
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+				<h4 class="form-header h4">导出数据列</h4>
+				<div class="row">
+					<div class="col-sm-12 col-xs-12">
+						<div class="form-group draggable">
+							<div class="col-sm-12 col-xs-12">
+								<label class="check-box" for="all">
+									<input id="all" name="all" checked="checked" type="checkbox" />
+									全选
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-3 col-xs-3">
+						<div class="form-group draggable">
+							<div class="col-sm-12 col-xs-12">
+								<label class="check-box">
+									<input id="date_time" name="_expField_" value="date_time" checked="checked" type="checkbox" />
+									<span title="数据所属期">
+										报送周期
+									</span>
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-3 col-xs-3" th:each="item : ${meta.items}">
+						<div class="form-group draggable">
+							<div class="col-sm-12 col-xs-12">
+								<label class="check-box">
+									<input th:id="${item.fieldName}" name="_expField_" th:value="${item.fieldName}" checked="checked" type="checkbox" />
+									<span th:title="${item.alias != null ? item.alias : item.fieldComment}">
+										[[${item.alias != null ? item.alias : item.fieldComment}]]
+									</span>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+
+		<th:block th:include="include :: footer" />
+		<script th:inline="javascript">
+			const prefix = ctx + "module/dataImp"
+			const modalName = [[${meta.chdesc}]]
+
+			// 全选/反选
+			$("#all").on("ifChecked", function() {
+				$("input[name='_expField_']").iCheck('check');
+			});
+			$("#all").on("ifUnchecked", function() {
+				$("input[name='_expField_']").iCheck('uncheck');
+			});
+
+			// 导出
+			function submitHandler() {
+				let params = window.parent.getParams();
+				const scope = $("input[name='expScope']:checked").val()
+				const count = params.count
+				if(scope === "all" && count > 50000) {
+					$.modal.alertWarning("单次导出最多导出50000条！")
+					return;
+				}
+				const fields = $.form.selectCheckeds("_expField_")
+				if (!fields) {
+					$.modal.alertWarning("请至少选择一项数据列！")
+					return;
+				}
+				params.scope = scope;
+				params.fields = fields;
+				params.fileName = modalName;
+				$.modal.loading("正在导出数据，请稍后...");
+				$.post(prefix + '/expExcel', params, function(result) {
+					if (result.code == web_status.SUCCESS) {
+						window.location.href = ctx + "common/download?fileName=" + encodeURI(result.msg) + "&delete=" + true;
+					} else if (result.code == web_status.WARNING) {
+						$.modal.alertWarning(result.msg)
+					} else {
+						$.modal.alertError(result.msg);
+					}
+					$.modal.closeLoading();
+				});
+			}
+		</script>
+	</body>
+</html>

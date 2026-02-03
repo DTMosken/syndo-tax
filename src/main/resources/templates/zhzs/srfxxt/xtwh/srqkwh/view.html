@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('收入情况维护')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:60px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 66px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0 10px 0px 10px;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+			padding-bottom: 10px;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row" style="padding-left:10px;">
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">所属期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="dateTime" name="dateTime"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md3">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-header" style="margin-top: 5px">
+			 <form id="set-form" class="layui-form">
+				 <div class="layui-form-item layui-row" style="padding-left:10px;">
+					 <div class="layui-inline layui-col-sm4 layui-col-md4">
+						 <label class="layui-form-label" style="width: 110px">首页收入数据源：</label>
+						 <div class="layui-input-block" style="margin-left: 120px">
+							 <select id="sjy" name="sjy" class="form-control">
+								 <option value=""></option>
+								 <option value="rkxx" th:selected="${sjy == 'rkxx'}">税务局入库信息</option>
+								 <option value="srxx" th:selected="${sjy} eq 'srxx'">收入情况表</option>
+							 </select>
+						 </div>
+					 </div>
+					 <div class="layui-inline layui-col-sm4 layui-col-md3">
+						 <div class="layui-form-btn" style="text-align: left" >
+							 <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="setSjy()">
+								 <i class="layui-icon">&#xe615;</i> 设置
+							 </a>
+						 </div>
+					 </div>
+				 </div>
+			 </form>
+		 </div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+	<script type="text/html" id="tmpToolbar">
+	 <div class="layui-btn-container" id="toolbtn">
+		 <button class="layui-btn layui-btn-sm" style="background-color: #1c84c6" onclick="add()">
+			 <i class="layui-icon">&#xe654;</i>新增
+		 </button>
+		 <button class="layui-btn layui-btn-sm" style="background-color: #1dc5a3" onclick="edit()">
+			 <i class="layui-icon">&#xe642;</i>修改
+		 </button>
+		 <button class="layui-btn layui-btn-sm" style="background-color: #ef6776" onclick="remove()">
+			 <i class="layui-icon">&#xe640;</i>删除
+		 </button>
+		 <div style="position: absolute; background-color: white;top:-1px; left:-1px; width: calc(100% + 2px); height: 100%; z-index: -1;"></div>
+	 </div>
+	</script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/srqkwh";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				title: "收入情况维护",
+				toolbar: '#tmpToolbar',
+				defaultToolbar:['filter', 'print'],
+				limit: 200,
+				limits: [200],
+				even: true,
+				ataType: "json",
+				height: 'full-150',
+
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+                        {
+                            title : '序号',
+                            align: 'center',
+							width: '60',
+							type: 'numbers'
+                        },
+						{
+							field : 'id',
+							title : 'ID',
+							align: 'center',
+							hide: true
+						},
+						{
+                        	field : 'dateTime',
+                            title : '所属期',
+                            align: 'left', 
+							width: '150'
+                        },
+                        {
+                        	field : 'zsr',
+                            title : '本月总收入（万元）',
+                            align: 'center',
+							width: '150'
+                        },
+						{
+							field : 'dfsr',
+							title : '本月地方收入（万元）',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'zsrTq',
+							title : '本月同期总收入（万元）',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'dfsrTq',
+							title : '本月同期地方收入（万元）',
+							align: 'center',
+							width: '150'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#dateTime',type:'month',format:'yyyy-MM'});
+        });
+
+		layui.use(['form'], function(){
+			var form = layui.form;
+		});
+
+        function add() {
+			$.modal.open("添加收入情况", prefix + '/add', null, 500);
+		}
+        function edit() {
+			var rows = $.table.selectColumns("id".toString());
+			if (rows.length != 1) {
+				$.modal.alertWarning("请选择一条记录");
+				return;
+			}
+			$.modal.open("修改收入情况", prefix + '/edit/'+rows.join(), null, 500);
+		}
+        function remove() {
+			var rows = $.table.selectColumns("id".toString());
+			if (rows.length == 0) {
+				$.modal.alertWarning("请至少选择一条记录");
+				return;
+			}
+			$.modal.confirm("确认要删除选中的" + rows.length + "条数据吗?", function() {
+				var url = prefix + "/delete";
+				var data = { "ids": rows.join() };
+				$.operate.submit(url, "post", "json", data);
+			});
+		}
+		function setSjy() {
+			var url = prefix + "/setSjy";
+			var data = {sjy: $("#sjy").val()};
+			$.operate.submit(url, "post", "json", data);
+		}
+    </script>
+</body>
+</html>

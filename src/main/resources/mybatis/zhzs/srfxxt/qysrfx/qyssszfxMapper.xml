@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.qysrfx.QyssszfxMapper">
+	
+	<!-- 企业税收税种分析-->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qyssszfx" parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qyssszfx">
+	   	WITH 
+	   	MX AS(
+	   		SELECT * FROM (
+				SELECT group_concat(DISTINCT T.NSRSBH) NSRSBH,T.NSRMC,
+					<if test="tjkj != null and tjkj != ''">
+						<if test="tjkj == 0">
+							SUM(SJJE) HJ,
+							SUM(if(T.ZSXM = '增值税', SJJE, 0)) AS ZZS,
+							<!-- SUM(if(T.ZSXM = '增值税' AND T.YSKM = '增值税留抵退税', SJJE, 0)) AS ZZSLDTS,
+							SUM(if(T.ZSXM = '增值税' AND T.YSKM = '免抵调增改征增值税', SJJE, 0)) AS MDTZZS, -->
+							<!-- SUM(if(T.ZSXM = '提退税款', SJJE, 0)) AS TTSK, -->
+							SUM(if(T.ZSXM = '消费税', SJJE, 0)) AS XFS,
+							SUM(if(T.ZSXM = '营业税', SJJE, 0)) AS YINGYS,
+							SUM(if(T.ZSXM = '企业所得税', SJJE, 0)) AS QYSDS,
+							SUM(if(T.ZSXM = '个人所得税', SJJE, 0)) AS GRSDS,
+							SUM(if(T.ZSXM = '资源税', SJJE, 0)) AS ZYS,
+							SUM(if(T.ZSXM = '城市维护建设税', SJJE, 0)) AS CSWHJSS,				 
+							SUM(if(T.ZSXM = '房产税', SJJE, 0)) AS FCS,
+							SUM(if(T.ZSXM = '印花税', SJJE, 0)) AS YHS,    
+							SUM(if(T.ZSXM = '城镇土地使用税', SJJE, 0)) AS CZTDSYS,
+							SUM(if(T.ZSXM = '土地增值税', SJJE, 0)) AS TDZZS,
+							SUM(if(T.ZSXM = '车船税', SJJE, 0)) AS CCS,
+							SUM(if(T.ZSXM = '车辆购置税', SJJE, 0)) AS CLGZS,    
+							SUM(if(T.ZSXM = '耕地占用税', SJJE, 0)) AS GDZYS,
+							SUM(if(T.ZSXM = '契税', SJJE, 0)) AS QS,
+							SUM(if(T.ZSXM = '环境保护税', SJJE, 0)) AS HJBHS<!-- ,
+							SUM(if(T.ZSXM = '教育费附加', SJJE, 0)) AS JYFFJ,
+							SUM(if(T.ZSXM = '地方教育附加', SJJE, 0)) AS DFJYFJ,
+							SUM(if(T.ZSXM = '其他收入', SJJE, 0)) AS QTSR,
+							SUM(if(T.ZSXM = '文化事业建设费', SJJE, 0)) AS WHSYJSF,
+							SUM(if(T.ZSXM = '税务部门罚没收入', SJJE, 0)) AS SWBMFMSR,
+							SUM(if(T.ZSXM = '水利建设专项收入', SJJE, 0)) AS SLJSZXSR,
+							SUM(if(T.ZSXM = '国家重大水利工程建设基金收入', SJJE, 0)) AS SLJSJJSR,
+							SUM(if(T.ZSXM = '可再生能源发展基金', SJJE, 0)) AS FZJJ,
+							SUM(if(T.ZSXM = '残疾人就业保障金', SJJE, 0)) AS CBJ,
+							SUM(if(T.ZSXM = '大中型水库移民后期扶持基金', SJJE, 0)) AS FCJJ -->
+						</if>
+						<if test="tjkj == 1">
+							SUM(QXJ) HJ,
+							SUM(if(T.ZSXM = '增值税', QXJ, 0)) AS ZZS,
+							<!-- SUM(if(T.ZSXM = '增值税' AND T.YSKM = '增值税留抵退税', QXJ, 0)) AS ZZSLDTS,
+							SUM(if(T.ZSXM = '增值税' AND T.YSKM = '免抵调增改征增值税', QXJ, 0)) AS MDTZZS, -->
+							<!-- SUM(if(T.ZSXM = '提退税款', QXJ, 0)) AS TTSK, -->
+							SUM(if(T.ZSXM = '消费税', QXJ, 0)) AS XFS,
+							SUM(if(T.ZSXM = '营业税', QXJ, 0)) AS YINGYS,
+							SUM(if(T.ZSXM = '企业所得税', QXJ, 0)) AS QYSDS,
+							SUM(if(T.ZSXM = '个人所得税', QXJ, 0)) AS GRSDS,
+							SUM(if(T.ZSXM = '资源税', QXJ, 0)) AS ZYS,
+							SUM(if(T.ZSXM = '城市维护建设税', QXJ, 0)) AS CSWHJSS,
+							SUM(if(T.ZSXM = '房产税', QXJ, 0)) AS FCS,
+							SUM(if(T.ZSXM = '印花税', QXJ, 0)) AS YHS,
+							SUM(if(T.ZSXM = '城镇土地使用税', QXJ, 0)) AS CZTDSYS,
+							SUM(if(T.ZSXM = '土地增值税', QXJ, 0)) AS TDZZS,
+							SUM(if(T.ZSXM = '车船税', QXJ, 0)) AS CCS,
+							SUM(if(T.ZSXM = '车辆购置税', QXJ, 0)) AS CLGZS,
+							SUM(if(T.ZSXM = '耕地占用税', QXJ, 0)) AS GDZYS,
+							SUM(if(T.ZSXM = '契税', QXJ, 0)) AS QS,
+							SUM(if(T.ZSXM = '环境保护税', QXJ, 0)) AS HJBHS<!-- ,
+							SUM(if(T.ZSXM = '教育费附加', QXJ, 0)) AS JYFFJ,
+							SUM(if(T.ZSXM = '地方教育附加', QXJ, 0)) AS DFJYFJ,
+							SUM(if(T.ZSXM = '其他收入', QXJ, 0)) AS QTSR,
+							SUM(if(T.ZSXM = '文化事业建设费', QXJ, 0)) AS WHSYJSF,
+							SUM(if(T.ZSXM = '税务部门罚没收入', QXJ, 0)) AS SWBMFMSR,
+							SUM(if(T.ZSXM = '水利建设专项收入', QXJ, 0)) AS SLJSZXSR,
+							SUM(if(T.ZSXM = '国家重大水利工程建设基金收入', QXJ, 0)) AS SLJSJJSR,
+							SUM(if(T.ZSXM = '可再生能源发展基金', QXJ, 0)) AS FZJJ,
+							SUM(if(T.ZSXM = '残疾人就业保障金', QXJ, 0)) AS CBJ,
+							SUM(if(T.ZSXM = '大中型水库移民后期扶持基金', QXJ, 0)) AS FCJJ -->
+						</if>
+					</if>
+				FROM t_srfxrkxx T
+				WHERE t.RKRQ >= #{qsrq}
+				AND t.RKRQ &lt;= #{zzrq}
+				<if test="nsrsbh != null and nsrsbh != ''">
+					AND T.NSRSBH like concat('%',#{nsrsbh},'%')
+				</if>
+				<if test="nsrmc != null and nsrmc != ''">
+					AND T.NSRMC like concat('%',#{nsrmc},'%')
+				</if>
+				<if test="jdxz != null and jdxz != ''">
+					AND T.JDXZ = #{jdxz}
+				</if>
+				GROUP BY T.NSRMC ORDER BY 
+				<if test="pxzd != null and pxzd != ''">
+					${pxzd} desc
+				</if>
+				<if test="pxzd == null or pxzd == ''">
+					HJ DESC
+				</if>
+				<if test="sl != null and sl != ''">
+					LIMIT #{sl}
+				</if>
+				<!-- <if test="tjkj != null and tjkj != ''">
+					<if test="tjkj == 0"> SUM(SJJE) DESC</if>
+					<if test="tjkj == 1"> SUM(QXJ) DESC</if>
+				</if> -->
+			)T WHERE 1=1
+			
+		)
+		SELECT NSRSBH,NSRMC,
+			ROUND(HJ/#{dw},2) SSHJ,
+			ROUND(ZZS/#{dw},2) ZZS,ROUND(XFS/#{dw},2) XFS,ROUND(YINGYS/#{dw},2) YINGYS,ROUND(QYSDS/#{dw},2) QYSDS,
+			ROUND(GRSDS/#{dw},2) GRSDS,ROUND(ZYS/#{dw},2) ZYS,ROUND(CSWHJSS/#{dw},2) CSWHJSS,ROUND(FCS/#{dw},2) FCS,ROUND(YHS/#{dw},2) YHS,ROUND(CZTDSYS/#{dw},2) CZTDSYS,ROUND(TDZZS/#{dw},2) TDZZS,ROUND(CCS/#{dw},2) CCS,
+			ROUND(CLGZS/#{dw},2) CLGZS,ROUND(GDZYS/#{dw},2) GDZYS,ROUND(QS/#{dw},2) QS,ROUND(HJBHS/#{dw},2) HJBHS<!-- ,ROUND(QTSR/10000,2) QTSR,ROUND(JYFFJ/10000,2) JYFFJ,ROUND(DFJYFJ/10000,2) DFJYFJ,ROUND(WHSYJSF/10000,2) WHSYJSF,
+			ROUND(SWBMFMSR/10000,2) SWBMFMSR,ROUND(SLJSZXSR/10000,2) SLJSZXSR,ROUND(SLJSJJSR/10000,2) SLJSJJSR,ROUND(FZJJ/10000,2) FZJJ,ROUND(CBJ/10000,2) CBJ,ROUND(FCJJ/10000,2) FCJJ -->
+		FROM (
+			SELECT '合计' NSRSBH, '' NSRMC,
+				SUM(HJ)HJ,SUM(ZZS)ZZS,SUM(XFS)XFS,SUM(YINGYS)YINGYS,SUM(QYSDS)QYSDS,SUM(GRSDS)GRSDS,SUM(ZYS)ZYS,SUM(CSWHJSS)CSWHJSS,
+				SUM(FCS)FCS,SUM(YHS)YHS,SUM(CZTDSYS)CZTDSYS,SUM(TDZZS)TDZZS,SUM(CCS)CCS,SUM(CLGZS)CLGZS,SUM(GDZYS)GDZYS,SUM(QS)QS,SUM(HJBHS)HJBHS<!-- ,SUM(QTSR)QTSR,SUM(JYFFJ)JYFFJ,SUM(DFJYFJ)DFJYFJ,
+				SUM(WHSYJSF)WHSYJSF,SUM(SWBMFMSR)SWBMFMSR,SUM(SLJSZXSR)SLJSZXSR,SUM(SLJSJJSR)SLJSJJSR,SUM(FZJJ)FZJJ,SUM(CBJ)CBJ,SUM(FCJJ)FCJJ -->
+			FROM MX
+			UNION ALL
+			(SELECT NSRSBH,NSRMC,HJ,ZZS,XFS,YINGYS,QYSDS,GRSDS,ZYS,CSWHJSS,FCS,YHS,CZTDSYS,TDZZS,CCS,CLGZS,GDZYS,QS,HJBHS<!-- ,QTSR,JYFFJ,DFJYFJ,WHSYJSF,SWBMFMSR,SLJSZXSR,SLJSJJSR,FZJJ,CBJ,FCJJ -->
+			FROM MX)
+		) sssz 
+		
+	</select>
+	
+	<!-- 总条数-企业税收税种分析-->
+	<select id="selectList_COUNT" resultType="int" parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qyssszfx">
+	   	select count(0) from (
+		   	WITH 
+		   	MX AS(
+		   		SELECT * FROM (
+					SELECT T.NSRMC,
+					SUM(SJJE) HJ
+					FROM t_srfxrkxx T
+					WHERE t.RKRQ >= #{qsrq}
+					AND t.RKRQ &lt;= #{zzrq}
+					<if test="nsrsbh != null and nsrsbh != ''">
+						AND T.NSRSBH like concat('%',#{nsrsbh},'%')
+					</if>
+					<if test="nsrmc != null and nsrmc != ''">
+						AND T.NSRMC like concat('%',#{nsrmc},'%')
+					</if>
+					<if test="jdxz != null and jdxz != ''">
+						AND T.JDXZ = #{jdxz}
+					</if>
+					GROUP BY T.NSRMC ORDER BY HJ
+					<if test="sl != null and sl != ''">
+						LIMIT #{sl}
+					</if>
+				)T WHERE 1=1 
+			)
+			SELECT '合计' NSRMC
+			UNION ALL
+			(SELECT NSRMC FROM MX)
+		)t
+	</select>
+</mapper>

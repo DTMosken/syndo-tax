@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<th:block th:include="include :: header('编辑指标规则分组')" />
+	<th:block th:include="include :: ztree-css-default" />
+	<style type="text/css">
+		ul.ztree {
+			position: absolute;
+			margin-top: 10px;
+			border: 1px solid #617775;
+			background: #f0f6e4;
+			width: 220px;
+			height: 360px;
+			overflow-y: scroll;
+			overflow-x: auto;
+			z-index: 100
+		}
+
+		label.error {
+			right: 38px;
+		}
+	</style>
+</head>
+
+<body class="white-bg">
+	<div class="path-banner">
+		<span style="font-size:14px;"><span class="fa fa-chevron-right"></span>&nbsp;规则库管理 / 修改规则库 / 修改规则分组</span>
+	</div>
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content" style="border-top:0">
+		<form class="form-horizontal m" id="form-post-add" th:object="${model}">
+			<input id="fzid" name="fzid" type="hidden" th:value="*{fzid}" />
+			<input id="gzid" name="gzid" type="hidden" th:value="*{gzid}" />
+			<div class="form-group col-sm-6">
+				<label class="col-sm-4 control-label is-required">分组名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="fzmc" id="fzmc" th:field="*{fzmc}" required>
+				</div>
+			</div>
+			<div class="form-group col-sm-6">
+				<label class="col-sm-4 control-label is-required">分组类型：</label>
+				<div class="col-sm-8">
+					<select class="form-control" id="fzlx" name="fzlx" th:field="*{fzlx}"
+						th:with="type=${@dict.getType('dm_zb_gzkfzlx')}" required onchange="fzlxChange(this.value)">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}">
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group col-sm-6">
+				<label class="col-sm-4 control-label">企业规模：</label>
+				<div class="col-sm-8">
+					<select class="form-control" id="qygm" name="qygm" th:field="*{qygm}"
+						th:with="type=${@dict.getType('dm_zb_qygm')}">
+						<option value="">所有</option>
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}">
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group col-sm-6">
+				<label class="col-sm-4 control-label">行业：</label>
+				<div class="col-sm-8">
+					<input type="hidden" name="hydm" id="hydm" th:value="*{hydm}">
+					<input class="form-control" type="text" name="hymc" id="hymc" th:field="*{hymc}"
+						onclick="showMenu();" readonly="readonly">
+				</div>
+			</div>
+			<div class="form-group col-sm-12">
+				<label class="col-sm-3 col-md-2 control-label is-required">省定、区县、加分项满分：</label>
+				<div class="col-sm-2">
+					<input class="form-control" type="text" name="mfSdzb" id="mfSdzb" th:field="*{mfSdzb}" required>
+				</div>
+				<div class="col-sm-2">
+					<input class="form-control" type="text" name="mfQxtszb" id="mfQxtszb" th:field="*{mfQxtszb}"
+						required>
+				</div>
+				<div class="col-sm-2">
+					<input class="form-control" type="text" name="mfJfx" id="mfJfx" th:field="*{mfJfx}" required>
+				</div>
+			</div>
+			<div class="form-group col-sm-12">
+				<label class="col-sm-2 control-label">分组说明：</label>
+				<div class="col-sm-10">
+					<textarea id="fzsm" name="fzsm" th:field="*{fzsm}" class="form-control"></textarea>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12" style="text-align:center;">
+					<button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><span
+							class="fa fa-check"></span>保 存</button>&nbsp;
+					<button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><span
+							class="fa fa-reply-all"></span>关 闭 </button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="btn-group-sm" id="toolbar" role="group">
+					<span style="font-size:16px;margin-right:10px;"><span class="fa fa-navicon"></span>&nbsp;指标列表&nbsp;</span>
+					<a class="btn btn-success" onclick="addZb()">
+						<span class="fa fa-plus"></span> 新增
+					</a>
+					<a class="btn btn-primary single disabled" onclick="$.operate.edit()">
+						<span class="fa fa-edit"></span> 修改
+					</a>
+					<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()">
+						<span class="fa fa-remove"></span> 删除
+					</a>
+				</div>
+				<div class="col-sm-12 select-table table-striped">
+					<table id="bootstrap-table"></table>
+				</div>
+			</div>
+			<div id="menuContent" class="menuContent" style="display:none; position: absolute;">
+				<ul id="tree" class="ztree" style="margin-top:0; width:180px; "></ul>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: ztree-js" />
+	<script th:src="@{/main/js/sf-ui.extend.js?v=1.0.0}"></script>
+	<script th:inline="javascript">
+		var pfdata = /*[[${@dict.getType('zbk_pffs')}]]*/ null;
+	</script>
+	<script type="text/javascript">
+		var prefix = ctx + "module/industry/zbGzk";
+
+		$("#form-post-add").validate({
+			onkeyup: false,
+			groups: {
+				fzyj: "qygm hymc"
+			},
+			errorPlacement: function (error, element) {  //错误提示在什么地方  
+				if (element.attr("name") == "qygm" || element.attr("name") == "hymc") {
+					error.insertAfter("#qygm");
+				} else {
+					error.insertAfter(element);
+				}
+			},
+			rules: {
+				qygm: {
+					required: {
+						depends: function () { //二选一  
+							return ($('input[name=hymc]').val().length <= 0);
+						}
+					}
+				},
+				hymc: {
+					required: {
+						depends: function () { //二选一  
+							return ($('select[name=qygm]').val().length <= 0);
+						}
+					}
+				}
+				, mfSdzb: { required: true, number: true }
+				, mfQxtszb: { required: true, number: true }
+				, mfJfx: { required: true, number: true }
+			},
+			messages: {
+				qygm: "企业规模与行业至少选择一个    ",
+				hymc: "企业规模与行业至少选择一个    "
+			},
+			focusCleanup: true
+		});
+
+		function submitHandler() {
+			//二选一解决提醒红框一直存在问题
+			$('#qygm').focus(); $('#hymc').focus().blur();
+			if ($.validate.form()) {
+				$.operate.saveTab(prefix + "/zbgzkfzEdit", $('#form-post-add').serialize());
+			}
+		}
+
+		function fzlxChange(fzlx) {
+			if ("case" == fzlx) {
+				$("#qygm").removeAttr("disabled").show().parent().parent().show();
+				$("#hymc").removeAttr("disabled").show().parent().parent().show();
+			} else {
+				$("#qygm").attr("disabled", "true").hide().parent().parent().hide();
+				$("#hymc").attr("disabled", "true").hide().parent().parent().hide();
+			}
+		}
+
+		$(function () {
+			fzlxChange($('#fzlx').val());
+			queryList();
+			queryTree();
+			$(window).resize(function () {
+				var cityObj = $("#hymc");
+				var cityOffset = $("#hymc").offset();
+				$("#menuContent").css({ left: (cityOffset.left + 5) + "px", top: cityOffset.top + "px" });
+				$('#tree').width($('#hymc').width());
+			});
+		});
+
+		function queryList() {
+			var options = {
+				url: prefix + "/zbgzkfzmxList",
+				updateUrl: prefix + "/zbgzkfzmxEdit/{id}",
+				removeUrl: prefix + "/zbgzkfzmxRemove",
+				//sortName: "lrsj",
+				//sortOrder: "desc",
+				uniqueId: 'id',
+				modalName: "指标列表",
+				columns: [{
+					checkbox: true
+				},
+				{
+					field: 'id',
+					visible: false,
+					title: 'ID'
+				},
+				{
+					field: 'zbmc',
+					title: '指标名称',
+					width: '200',
+					sortable: false,
+					align: 'center',
+					formatter: function (value, row, index) {
+						var span = document.createElement('span');
+						span.setAttribute('title', value);
+						span.innerHTML = value;
+						return span.outerHTML;
+					}
+				},
+				{
+					field: 'fzlx',
+					width: '100',
+					title: '指标分类',
+					sortable: false,
+					align: 'center'
+				},
+				{
+					field: 'pffs',
+					width: '90',
+					title: '评分方式',
+					align: 'center',
+					formatter: function(value, item, index) {
+						return $.table.selectDictLabel(pfdata, item.pffs);
+					}
+				},
+				{
+					field: 'zbjzz',
+					title: '指标基准值',
+					width: '140',
+					sortable: false,
+					align: 'center'
+					// ,formatter: function (value, row, index) {
+					// 	if (value) {
+					// 		return value.replace(/(?:\.0*|(\.\d+?)0+)$/, "$1");
+					// 	} else {
+					// 		return "-";
+					// 	}
+					// }
+				},
+				{
+					field: 'zbqz',
+					title: '权重（%）',
+					width: '150',
+					align: 'center',
+					sortable: false
+					// ,formatter: function (value, row, index) {
+					// 	if (value) {
+					// 		return value.replace(/(?:\.0*|(\.\d+?)0+)$/, "$1");
+					// 	} else {
+					// 		return "-";
+					// 	}
+					// }
+				},
+				{
+					field: 'sxx',
+					title: '分值下限/上限',
+					width: '150',
+					align: 'center',
+					sortable: false
+				},
+				{
+					title: '操作',
+					width: '190',
+					align: 'center',
+					formatter: function (value, row, index) {
+						var actions = [];
+						actions.push('<a class="btn btn-primary btn-xs" title="编辑" style="margin-right:10px" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.id + '\')"><span class="fa fa-edit"></span></a> ');
+						actions.push('<a class="btn btn-danger btn-xs" title="删除" style="margin-right:10px" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.id + '\')"><span class="fa fa-trash"></span></a> ');
+						actions.push('<a class="btn btn-default btn-xs' + (index + (table.options.pageNumber - 1) * table.options.pageSize == 0 ? ' disabled' : '') + '" title="上移" style="margin-right:10px" href="javascript:void(0)" onclick="up(\'' + row.fzid + '\')"><span class="fa fa-chevron-up"></span></a> ');
+						actions.push('<a class="btn btn-default btn-xs' + ((table.options.pageNumber - 1) * table.options.pageSize + index == table.options.totalRows - 1 ? ' disabled' : '') + '" title="下移" href="javascript:void(0)" onclick="down(\'' + row.fzid + '\')"><span class="fa fa-chevron-down"></span></a> ');
+						return actions.join('');
+					}
+				}]
+			};
+			$.table.init(options);
+		}
+
+		function queryTree() {
+			$('#tree').width($('#hymc').width());
+			var url = prefix + "/hyDynamicTreeData";
+			var options = {
+				url: url,
+				async: {
+					enable: true,
+					url: url,
+					autoParam: ["id"]
+				},
+				expandLevel: 0,
+				check: {
+					enable: true,
+					chkboxType: { "Y": "", "N": "" }
+				},
+				view: {
+					dblClickExpand: false
+				},
+				callback: {
+					beforeClick: beforeClick,
+					onCheck: onCheck
+				}
+			};
+			$.tree.init(options);
+
+			function beforeClick(treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId);
+				zTree.checkNode(treeNode, !treeNode.checked, null, true);
+				return false;
+			}
+			function onCheck(e, treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId),
+					nodes = zTree.getCheckedNodes(true),
+					label = "",
+					val = "";
+				for (var i = 0, l = nodes.length; i < l; i++) {
+					label += nodes[i].name + "，";
+					val += nodes[i].id + ",";
+				}
+				if (label.length > 0) label = label.substring(0, label.length - 1);
+				if (val.length > 0) val = val.substring(0, val.length - 1);
+				var cityObj = $("#hymc");
+				cityObj.attr("value", label);
+				$('#hydm').val(val);
+			}
+		}
+		function showMenu() {
+			var cityObj = $("#hymc");
+			var cityOffset = $("#hymc").offset();
+			$("#menuContent").css({ left: (cityOffset.left + 3) + "px", top: cityOffset.top + "px" }).slideDown("fast");
+			$("body").bind("mousedown", onBodyDown);
+
+			var treeObj = $.fn.zTree.getZTreeObj("tree");
+			//treeObj.checkAllNodes(true);
+
+			var hydm = $('#hydm').val();
+			var nodes = hydm.split(",");
+			if (treeObj) {
+				for (var i = 0, l = nodes.length; i < l; i++) {
+					var node = treeObj.getNodesByParam("id", nodes[i])[0];
+					if (node != null)
+						treeObj.checkNode(node, true, false);
+					//treeObj.updateNode(node);
+				}
+			} else {
+				setTimeout(function () {
+					var treeObj = $.fn.zTree.getZTreeObj("tree");
+					for (var i = 0, l = nodes.length; i < l; i++) {
+						var node = treeObj.getNodesByParam("id", nodes[i])[0];
+						if (node != null)
+							treeObj.checkNode(node, true, false);
+						//treeObj.updateNode(node);
+					}
+				}, 3000)
+			}
+
+		}
+		function hideMenu() {
+			$("#menuContent").fadeOut("fast");
+			$("body").unbind("mousedown", onBodyDown);
+		}
+		function onBodyDown(event) {
+			if (!(event.target.id == "menuBtn" || event.target.id == "hymc" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length > 0)) {
+				hideMenu();
+			}
+		}
+
+		function addZb() {
+			table.set();
+			//$.modal.openTab("添加" + table.options.modalName, prefix + "/zbgzkfzAdd?gzid="+$('#id').val());
+			//$.modal.open("添加" + table.options.modalName, $.operate.addUrl(id));
+			$.modal.open("添加指标", prefix + "/zbgzkfzmxAdd?fzid=[[${model.fzid}]]&gzid=[[${model.gzid}]]", null, null, function (index, layero) {
+				var iframeWin = layero.find('iframe')[0];
+				//debugger
+				iframeWin.contentWindow.submitHandler();
+			});
+		}
+	</script>
+</body>
+
+</html>

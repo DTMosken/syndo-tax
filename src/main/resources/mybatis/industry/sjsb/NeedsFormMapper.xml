@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 需求调查表 -->
+<mapper namespace="com.syndo.project.industry.sjsb.mapper.NeedsFormMapper">
+
+	<!-- 根据登录名称查询需求表 -->
+	<select id="selectByLoginName" parameterType="String" resultType="com.syndo.project.industry.sjsb.domain.NeedsForm">
+		SELECT * FROM T_QY_XQDC
+		WHERE TYSHXYDM = #{loginName}
+		AND ND = TO_CHAR(SYSDATE, 'yyyy')
+	</select>
+    
+    <!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.industry.sjsb.domain.NeedsForm">
+		INSERT INTO T_QY_XQDC (
+			TYSHXYDM,QYMC,ND,TBR,LXDH,GSWZ,ZYCP,SCZYL,ZYSC,CPSSHY,
+			ZZC,ZDHSB,JYXJJE,MQHZYX,YWYDXQ,XZFTGSB,XQTD,ZLQY,XZFFWNR,
+			FGZCXQ,XJJQTWT
+		) VALUES (
+			#{tyshxydm},#{qymc},#{nd},#{tbr},#{lxdh},#{gswz},#{zycp},
+			#{sczyl},#{zysc},#{cpsshy},#{zzc},#{zdhsb},#{jyxjje},#{mqhzyx},
+			#{ywydxq},#{xzftgsb},#{xqtd},#{zlqy},#{xzffwnr},#{fgzcxq},#{xjjqtwt}
+		)
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.industry.sjsb.domain.NeedsForm">
+		UPDATE T_QY_XQDC SET 
+			tyshxydm=#{tyshxydm},qymc=#{qymc},nd=#{nd},tbr=#{tbr},lxdh=#{lxdh},gswz=#{gswz},
+			zycp=#{zycp},sczyl=#{sczyl},zysc=#{zysc},cpsshy=#{cpsshy},zzc=#{zzc},zdhsb=#{zdhsb},
+			jyxjje=#{jyxjje},mqhzyx=#{mqhzyx},ywydxq=#{ywydxq},xzftgsb=#{xzftgsb},xqtd=#{xqtd},
+			zlqy=#{zlqy},xzffwnr=#{xzffwnr},fgzcxq=#{fgzcxq},xjjqtwt=#{xjjqtwt}
+		WHERE ID = #{id}
+	</update>
+</mapper>

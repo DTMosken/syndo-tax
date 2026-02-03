@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.xxgxxt.mapper.BsjkMapper">
+	<!-- 报送监控 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bsjk" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bsjk" databaseId="mysql">
+		select d.dept_id, d.dept_name, md.name chdesc, md.date_time, 
+			if(lg.log_date is null,  '否',  '是') is_submit, md.due_date, lg.log_date, 
+			case 
+				when lg.log_date is not null and lg.log_date > md.due_date then '超期报送'
+				when lg.log_date is not null and lg.log_date &lt;= md.due_date then '准时完成'
+				when lg.log_date is null and date_format(sysdate(), '%Y-%m-%d') &lt;= md.due_date then '未到期'
+				when lg.log_date is null and date_format(sysdate(), '%Y-%m-%d') > md.due_date then '超期未完成'
+			end submit_status, 
+			case 
+				when lg.log_date is not null and lg.log_date > md.due_date then timestampdiff(day, str_to_date(md.due_date, '%Y-%m-%d'), str_to_date(lg.log_date, '%Y-%m-%d')) 
+				when lg.log_date is not null and lg.log_date &lt;= md.due_date then '0'
+				when lg.log_date is null and date_format(sysdate(), '%Y-%m-%d') &lt;= md.due_date then '0'
+				when lg.log_date is null and date_format(sysdate(), '%Y-%m-%d') > md.due_date then timestampdiff(day, str_to_date(md.due_date, '%Y-%m-%d'), sysdate()) 
+			end over_days,
+			case md.gather_cycle when '0' then '月报' when '1' then '季度报' when '2' then '半年报' when '3' then '年报' end as submit_cycle
+		from (
+			select dept_id, md_code, name, gather_cycle, concat_ws('-',substr(adddate(concat_ws('-',date_time,'01'), interval 1 month), 1, 7), gather_date) due_date, date_time 
+		  	from (
+				select dept_id, md_code, name, gather_cycle, lpad(gather_date, 2, '0') gather_date, #{dateTime} date_time 
+				from pub_data_menu where gather_monitor = '0'
+			) t
+			where(
+				case 
+					when gather_cycle = '0' then '1'
+					when gather_cycle = '1' and substr(date_time, 6, 2) in('03', '06', '09', '12') then '1'
+					when gather_cycle = '2' and substr(date_time, 6, 2) in('06', '12') then '1'
+					when gather_cycle = '3' and substr(date_time, 6, 2) in('12') then '1'
+					else '0'
+				end
+		  	) = '1'
+		  	<if test="deptId != null and deptId != ''">
+	          and dept_id = #{deptId}
+	        </if>
+		) md
+		left join sys_dept d on md.dept_id = d.dept_id
+		left join(
+			select date_time, gucode, chdesc, sum(count) cnt, date_format(max(log_date), '%Y-%m-%d') log_date 
+			from pub_meta_data_log pmdl 
+		  	group by date_time, gucode, chdesc
+		) lg on md.md_code = lg.gucode and md.date_time = lg.date_time
+		order by d.order_num
+	</select>
+	
+	<select id="selectList" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bsjk" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bsjk" databaseId="oracle">
+		SELECT d.DEPT_ID,D.DEPT_NAME,MD.CHDESC,MD.DATE_TIME,
+	  		DECODE(LG.LOG_DATE,NULL,'否','是') IS_SUBMIT,MD.DUE_DATE,LG.LOG_DATE,
+			CASE 
+				WHEN LG.LOG_DATE IS NOT NULL AND LG.LOG_DATE > MD.DUE_DATE THEN '超期报送'
+				WHEN LG.LOG_DATE IS NOT NULL AND LG.LOG_DATE &lt;= MD.DUE_DATE THEN '准时完成'
+				WHEN LG.LOG_DATE IS NULL AND TO_CHAR(SYSDATE,'yyyy-MM-dd') &lt;= MD.DUE_DATE THEN '未到期'
+				WHEN LG.LOG_DATE IS NULL AND TO_CHAR(SYSDATE,'yyyy-MM-dd') > MD.DUE_DATE THEN '超期未完成'
+			END SUBMIT_STATUS,
+			DECODE(LG.LOG_DATE,NULL,TRUNC(SYSDATE-TO_DATE(MD.DUE_DATE,'yyyy-MM-dd')),0) OVER_DAYS,
+			MD.SUBMIT_CYCLE
+		FROM (
+	  		SELECT DEPT,GUCODE,CHDESC,SUBMIT_CYCLE,DATE_TIME||'-'||SUBMIT_TIME DUE_DATE,DATE_TIME 
+		  	FROM (
+				SELECT DEPT,GUCODE,CHDESC,SUBMIT_CYCLE,SUBMIT_TIME, #{dateTime} DATE_TIME 
+				FROM PUB_META_DATA WHERE HIDE != 1
+			)
+			WHERE(
+				CASE 
+					WHEN SUBMIT_CYCLE = '月报' THEN '1'
+					WHEN SUBMIT_CYCLE = '季度报' AND SUBSTR(DATE_TIME,6,2) IN('01','04','07','10') THEN '1'
+					WHEN SUBMIT_CYCLE = '半年报' AND SUBSTR(DATE_TIME,6,2) IN('01','07') THEN '1'
+					WHEN SUBMIT_CYCLE = '年报' AND SUBSTR(DATE_TIME,6,2) IN('01') THEN '1'
+					ELSE '0'
+				END
+		  	) = '1'
+		  	<if test="deptId != null and deptId != ''">
+		  		AND DEPT = #{deptId}
+		  	</if>
+		  	<if test="deptId != null and deptId != ''">
+		  		AND DEPT = #{deptId}
+		  	</if>
+		) MD
+		LEFT JOIN SYS_DEPT D ON MD.DEPT = D.DEPT_ID
+		LEFT JOIN(
+	  		SELECT DATE_TIME,GUCODE,CHDESC,SUM(COUNT),TO_CHAR(MAX(LOG_DATE),'yyyy-MM-dd') LOG_DATE 
+			FROM PUB_META_DATA_LOG
+		  	GROUP BY DATE_TIME,GUCODE,CHDESC
+		) LG ON MD.GUCODE = LG.GUCODE AND MD.DATE_TIME = LG.DATE_TIME
+		ORDER BY DEPT_NAME
+	</select>
+	
+</mapper>

@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('分行业收入分析')" />
+    <style type="text/css">
+        .layui-card-header{
+            height: auto;
+            padding:7px;
+        }
+    </style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row layui-col-space12">
+                <div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">入库日期:</label>
+					<div class="layui-input-block" id="test-range">
+						<div class="layui-col-sm5">
+							<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+						<span class="layui-form-mid">-</span>
+						<div class="layui-col-sm5">
+							<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+				</div>
+                <div class="layui-inline layui-col-sm4 layui-col-md3">
+                    <label class="layui-form-label">行业：</label>
+                    <div class="layui-input-block">
+                        <select id="hymc" name="hymc" th:with="type=${@dict.getType('dm_ml')}"
+                                class="form-control input-sm">
+                            <option value=""></option>
+                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictLabel}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm4 layui-col-md2">
+                    <label class="layui-form-label">查询类型：</label>
+                    <div class="layui-input-block">
+                        <select id="tjkj" name="tjkj"
+                                class="form-control input-sm">
+                            <option value="qkj">全口径</option>
+                            <option value="ybys">一般预算</option>
+                        </select>
+                    </div>
+                </div>
+				<div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="1">元</option>
+							<option value="10000">万元</option>
+						</select>
+					</div>
+				</div>
+                <div class="layui-inline layui-col-sm4 layui-col-md2">
+                    <div class="layui-form-btn" style="text-align: left" >
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                            <i class="layui-icon">&#xe615;</i> 查询
+                        </a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                            <i class="layui-icon">&#xe669;</i> 重置
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/hysrfx/fhysrfx";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                title: "分行业收入分析",
+		        showExport: true,
+                exportUrl: prefix + "/expExcel",
+                height: 'full-85',
+                cols: [
+                    [
+	                {
+	                    title : '行号',
+	                     type:'numbers',
+
+	                },
+	                {
+	                	field : 'hymc', 
+	                    title : '行业名称',
+	                    align: 'center',    //水平居中
+	                },
+	                {
+	                	field : 'bnljs', 
+	                    title : '本年累计',
+                        templet:'#bnljs',
+                        align: 'right',
+	                },
+	                {
+	                	field : 'sntqs', 
+	                    title : '上年同期',
+                        templet:'#sntqs',
+                        align: 'right',
+	                },
+	                {
+	                	field : 'zje', 
+	                    title : '增减额',
+                        templet:'#zje',
+                        align: 'right',
+	                },
+	                {
+	                	field : 'zjl', 
+	                    title : '增减率%',
+                        align: 'right',
+	                },
+	                
+                ]]
+            };
+            $.table.init(options);
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#qsrq',type:'month',format:'yyyy-MM'});
+            laydate.render({elem: '#zzrq',type:'month',format:'yyyy-MM'});
+        });
+        function fixed(str){
+            if (str !== '' && str != null){
+                if(str === 0){  //当为0时，不用处理
+                    return 0 ;
+                }else {
+                    // console.log(str, isNaN(str))
+                    str = parseFloat(str)
+                    return str.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+                }
+            } else {
+                return '';
+            }
+        }
+    </script>
+<script type="text/html" id="bnljs">{{fixed(d.bnljs)}}</script>
+<script type="text/html" id="sntqs">{{fixed(d.sntqs)}}</script>
+<script type="text/html" id="zje">{{fixed(d.zje)}}</script>
+</body>
+</html>

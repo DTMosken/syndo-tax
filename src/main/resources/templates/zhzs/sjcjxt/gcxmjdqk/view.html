@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<head>
+	    <th:block th:include="include :: header('工程项目进度情况列表')" />
+	    <style type="text/css">
+	    </style>
+	</head>
+	<body class="gray-white">
+		<div class="container-div">
+			<div class="row">
+				<!-- 查询条件 -->
+				<div class="panel panel-default" id="query-panel">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+								<span class="fa fa-chevron-down"></span>
+							</a>
+						</h4>
+					</div>
+					<div id="collapseExample" class="panel-collapse collapse">
+						<form id="query-form" class="form-horizontal m">
+							<input id="gucode" name="gucode" value="gcxmjbxx" type="hidden" />
+							<div class="row">
+								<div class="col-sm-3">
+									<div class="form-group">
+										<label title="工程项目名称" class="col-sm-4 control-label input-sm">工程项目名称：</label>
+										<div class="col-sm-8">
+											<input id="gcxmmc" name="gcxmmc" class="form-control input-sm" type="text" />
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-3 text-right">
+									<div class="form-group">
+										<div class="col-sm-12">
+											<a class="btn btn-success btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+											<a class="btn btn-default btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+					<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="zhzs:sjcjxt:gcxmjdqk:add">
+	                    <i class="fa fa-plus"></i> 新增
+	                </a>
+	                <a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="zhzs:sjcjxt:gcxmjdqk:edit">
+	                    <i class="fa fa-edit"></i> 修改
+	                </a>
+	                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="zhzs:sjcjxt:gcxmjdqk:remove">
+	                    <i class="fa fa-remove"></i> 删除
+	                </a>
+	                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="zhzs:sjcjxt:gcxmjdqk:export">
+	                    <i class="fa fa-download"></i> 导出
+	                </a>
+				</div>
+				<div class="col-sm-12 full-table table-bordered">
+					<table id="bootstrap-table"></table>
+				</div>
+			</div>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script th:inline="javascript">
+	        <!--/* 数据权限 */-->
+	        var editFlag = [[${@permission.hasPermi('zhzs:sjcjxt:gcxmjdqk:edit')}]];
+	        var removeFlag = [[${@permission.hasPermi('zhzs:sjcjxt:gcxmjdqk:remove')}]];
+	        <!--/* 前缀地址 */-->
+	        var prefix = ctx + "zhzs/sjcjxt/gcxmjdqk";
+	
+	        $(function() {
+	            var options = {
+	                url: prefix + "/list",
+	                createUrl: prefix + "/add",
+	                updateUrl: prefix + "/edit/{id}",
+	                removeUrl: prefix + "/remove",
+	                exportUrl: prefix + "/export",
+	                modalName: "工程项目进度情况",
+	                uniqueId: "id",
+	                height: calcHeight(),
+	                showSearch: false,
+	                showRefresh: true,
+	                showToggle: false,
+	                showColumns: false,
+	                columns: [{
+	                    checkbox: true,
+	                    width: 50
+	                },
+	                {
+	                    field: 'id', 
+	                    title: 'ID',
+	                    visible: false,
+	                    width: 100
+	                },
+	                {
+	                    field: 'gcxmmc', 
+	                    title: '工程项目名称',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                },
+	                {
+	                    field: 'gcjd', 
+	                    title: '工程进度',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                },
+	                {
+	                    field: 'ljwctze', 
+	                    title: '累计完成投资额',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                },
+	                {
+	                    field: 'gckskdw', 
+	                    title: '工程款收款单位',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                },
+	                {
+	                    field: 'bybfk', 
+	                    title: '本月拨付款',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                },
+	                {
+	                    field: 'bfkrq', 
+	                    title: '拨付款日期',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                },
+	                {
+	                    field: 'ljbfk', 
+	                    title: '累计拨付款',
+	                    halign: 'center',
+	                    align: 'left',
+	                    width: 120
+	                }]
+	            };
+	            $.table.init(options);
+	            
+	            <!--/* 窗口改变，调整表格高度 */-->
+	            $(window).resize(function() {
+	            	$("#bootstrap-table").bootstrapTable('resetView', {
+	                    height: calcHeight()
+	                });
+	            });
+	            <!--/* 监听条件元素，调整表格高度 */-->
+	            var oP = document.getElementById('collapseExample');
+	    		var observer = new MutationObserver(mutations => {
+    				$("#bootstrap-table").bootstrapTable('resetView', {
+	                    height: calcHeight()
+	                });
+	    		});
+	    		observer.observe(oP, { attributes: true,  attributeFilter: ['class'] });
+	        });
+	        
+	        <!--/* 计算表格高度 */-->
+			function calcHeight() {
+	        	var winHeight = $(window).height();
+            	var queryHeight = $("#query-panel").height();
+            	var height = parseInt(winHeight - queryHeight - 13);
+            	return height;
+	        }
+	    </script>
+	</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('报送统计')" />
+		<style type="text/css">
+			/* 全局样式 */
+			html{font-size: 12px;}
+			html, body {height: 100%;margin: 0;}
+			.layui-fluid {height: 100%;padding: 0;}
+			.layui-row {height: 100%;margin: 0;}
+			.layui-card, .layui-card-body {height: 100%;margin: 0;}
+			.layui-card-body{padding: 0.9rem 1.2rem}
+			/* 加载动画 */
+			.layadmin-loading {position: absolute;left: 50%;top: 50%;margin: -16px -15px;font-size: 50px;color: #c2c2c2;}
+			
+			/* 图表 */
+			.layui-dataview>div>div {height: 42rem;}
+			/* 卡片样式重置 */
+			.layui-card {border-right: 1px solid #ddd;border-bottom: 1px solid #ddd}
+			.layui-card-sum * {padding-top: 10px;text-align: center;}
+			.layui-card-sum h4 {font-size: 12px;}
+			/* 滚动列表 */
+			.layui-ul-list {height: 302px;overflow: hidden;}
+			.layui-ul-list .layui-timeline {padding-left:15px; padding-top: 15px;}
+			.layui-ul-list .layui-timeline-item {padding-bottom: 0;display: inline;}
+			.layui-ul-list .layui-timeline-axis {height: 24px;line-height: 24px;color: #1e9fff;}
+			.layui-ul-list .layui-timeline-content {padding-left: 20px}
+		</style>
+	</head>
+	<body>
+		<div class="layui-fluid">
+			<div class="layui-row">
+				<div class="layui-col-sm8" style="height: 100%">
+					<div class="layui-card">
+						<div class="layui-card-body">
+							<div class="layui-dataview">
+								<div id="echarts-line">
+									<div><i class="layui-icon layui-icon-loading layui-anim layui-anim-rotate layui-anim-loop layadmin-loading"></i></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="layui-col-sm4">
+					<div class="layui-col-sm6">
+						<div class="layui-card">
+							<div class="layui-card-body">
+								<div class="layui-text layui-card-sum">
+									<h3>数据部门</h3>
+									<h2>[[${tjjg.sjbm}]]</h2>
+									<h4>数据提供部门</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="layui-col-sm6">
+						<div class="layui-card">
+							<div class="layui-card-body">
+								<div class="layui-text layui-card-sum">
+									<h3>数据资源</h3>
+									<h2>[[${tjjg.sjzy}]]</h2>
+									<h4>数据信息资源</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="layui-col-sm6">
+						<div class="layui-card">
+							<div class="layui-card-body">
+								<div class="layui-text layui-card-sum">
+									<h3>数据总量</h3>
+									<h2>[[${tjjg.sjzl}]]</h2>
+									<h4>数据采集入库</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="layui-col-sm6">
+						<div class="layui-card">
+							<div class="layui-card-body">
+								<div class="layui-text layui-card-sum">
+									<h3>主题类目</h3>
+									<h2>[[${tjjg.ztlm}]]</h2>
+									<h4>主题分类栏目</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="layui-col-sm12">
+						<div class="layui-card">
+							<div class="laui-card-body layui-ul-list">
+								<ul class="layui-timeline">
+									<li th:each="rz : ${rzList}" class="layui-timeline-item">
+										<i class="layui-icon layui-timeline-axis">&#xe681;</i>
+										<div class="layui-timeline-content layui-text">
+											<div class="layui-timeline-title layui-elip" th:text="${rz.bsxq}"></div>
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<th:block th:include="include :: footer" />
+		<script th:src="@{/ajax/libs/echarts/echarts.min.js?v=4.7.0}"></script>
+		<script th:src="@{/ajax/libs/echarts/theme/custom.js?v=1.0.0}"></script>
+		<script th:inline="javascript">
+			var prefix = ctx + "zhzs/xxgxxt/bstj";
+
+			layui.use(['laytpl', 'carousel'], function() {
+				var laytpl = layui.laytpl;
+				
+				loadEchart = function(data) {
+					var lineDom = $('#echarts-line').children('div')[0];
+					var echart_line = echarts.init(lineDom);
+					echart_line.setOption({
+						title: {
+							text: '报送数据量统计',
+							x:'center',
+					        textAlign:'center'
+	
+						},
+						tooltip: {
+							trigger: 'axis',
+							axisPointer: {
+								type: 'cross'
+							}
+						},
+						toolbox: {
+							feature: {
+					        	dataView: {show: false},
+					            magicType: {show: false, type: ['line', 'bar']},
+					            restore: {show: false},
+					            saveAsImage: {show: false}
+					        }
+						},
+						grid: {
+							bottom: '30px',
+							left: '80px',
+							right: '5px',
+						},
+						xAxis: {
+							type: 'category',
+							data: eval(data.rq)
+						},
+						yAxis: {
+							type: 'value',
+							axisLabel: {
+								formatter: '{value} 条'
+							}
+						},
+						series: [{
+							type: 'line',
+							name: '数据量',
+							data: eval(data.bssl),
+							markPoint: {
+								data: [{
+										type: 'max',
+										name: '最大值'
+									},
+									{
+										type: 'min',
+										name: '最小值'
+									}
+								]
+							},
+						}]
+					});
+					lineDom.style.width = "100%";
+					window.onresize = function() {
+						echart_line.resize();
+					}
+					
+					
+					var html = $(".layui-ul-list ul").html();
+					$(".layui-ul-list ul").append(html);
+					var ls = $(".layui-ul-list li").length / 2 + 1;
+					var i = 0;
+					var ref = setInterval(function() {
+						i++
+						if(i == ls) {
+							i = 1
+							$(".layui-ul-list ul").css({ marginTop: 0 })
+							$(".layui-ul-list ul").animate({ marginTop: -'2.75' * i + 'rem' }, 1000)
+						}
+						$(".layui-ul-list ul").animate({ marginTop: -'2.75' * i + 'rem' }, 1000)
+					}, 2000);
+				}
+				
+				$.ajax({
+					url : prefix + "/getChartData",
+					type : "post",
+					async : true,	//异步请求
+					data : {},
+					dataType : "json",
+					success : function(result) {
+						if (result.code = "0") {
+							var data = result.data;
+							loadEchart(data);
+						} else {
+							console.log(result.msg);
+						}
+					}
+				})
+			});
+			
+			
+		</script>
+	</body>
+</html>

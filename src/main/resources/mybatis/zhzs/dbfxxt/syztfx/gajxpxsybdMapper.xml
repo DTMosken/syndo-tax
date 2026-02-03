@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.GajxpxsybdMapper">
+
+	<!-- 公安驾校培训税源比对 -->
+
+	<!-- 查询 -->
+	<select id="selectList" resultType="Gajxpxsybd" parameterType="Gajxpxsybd" databaseId="mysql">
+		WITH jx AS(
+			SELECT jxmc, t.nsrmc, MIN(IF(yb.nsrmc IS NULL, 0.03/1.03, 0.06/1.06)) sl, MIN(IF(yb.nsrmc IS NULL, 0.03, 0.06)) sl2 FROM t_tmp_jsypx t LEFT JOIN t_db_swj_ybnsrdjxx yb ON t.nsrmc=yb.nsrmc GROUP BY jxmc, t.nsrmc
+		),
+		px AS(
+			SELECT jxmc, DATE_FORMAT(sqsj,'%Y-%m') sqsj, count(*) xysl
+			FROM t_db_gaj_jsypxxx t
+			WHERE DATE_FORMAT(sqsj,'%Y-%m') >= #{cxsjq}
+			AND DATE_FORMAT(sqsj,'%Y-%m') &lt;= #{cxsjz}
+			GROUP BY jxmc, DATE_FORMAT(sqsj,'%Y-%m')
+		),
+		sr AS(
+			SELECT t.*, jx.nsrmc, IFNULL(j.jg, 3800) dj, t.xysl*IFNULL(j.jg, 3800) zxf, jx.sl2 sl, ROUND(t.xysl*IFNULL(j.jg, 3800)*jx.sl,2) yjzzs
+			FROM px t 
+			INNER JOIN jx ON t.jxmc=jx.jxmc
+			LEFT JOIN t_tmp_gajxjgwh j ON t.jxmc = j.jxmc AND SUBSTRING(t.sqsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(t.sqsj,1,7) &lt;= SUBSTRING(j.jssj,1,7)
+		),
+		rk AS(
+			SELECT t.nsrmc, skssqq, skssqz, SUM(REPLACE(sjje,',','')) sjzzs
+			FROM t_db_swj_jrkxx t INNER JOIN jx ON t.nsrmc=jx.nsrmc
+			WHERE t.`ZSXM`='增值税'
+			AND t.`ZSPM` NOT IN('罚款','滞纳金') 
+			AND t.`ZSPM` NOT LIKE '%构筑物%'
+			AND SUBSTRING(skssqq, 1, 7) >= #{cxsjq}
+			AND SUBSTRING(skssqz, 1, 7) &lt;= #{cxsjz}
+			GROUP BY t.nsrmc, skssqq, skssqz
+		)
+		SELECT #{cxsjq} cxsjq, #{cxsjz} cxsjz, jxmc, format(SUM(xysl),0) xysl, format(SUM(zxf)/nullif(SUM(xysl),0),0) dj, format(SUM(zxf),0) zxf, MIN(sl) sl, format(SUM(yjzzs),2) yjzzs, format(IFNULL(SUM(rk.sjzzs),0),2) sjzzs, format(SUM(yjzzs)-IFNULL(SUM(rk.sjzzs),0),2) ce
+		FROM sr LEFT JOIN rk ON sr.nsrmc=rk.nsrmc AND sr.sqsj BETWEEN rk.skssqq AND rk.skssqz
+		where 1=1
+		<if test="jxmc!=null and jxmc!=''">AND jxmc LIKE CONCAT('%',#{jxmc},'%')</if>
+		GROUP BY jxmc
+		<trim prefix="having" prefixOverrides="AND">
+			<if test="ceq!= null and ceq!= ''"><![CDATA[AND replace(ce,',','') >= #{ceq} ]]></if>
+			<if test="cez!= null and cez!= ''"><![CDATA[AND replace(ce,',','') <= #{cez} ]]></if>
+		</trim>
+	</select>
+
+	<select id="selectList_bak" resultType="Gajxpxsybd" parameterType="Gajxpxsybd">
+		WITH RECURSIVE sjlb(dt, num) AS (
+		SELECT DATE_FORMAT(CONCAT(#{cxsjz},'-01'), '%Y-%m'), @num := 1
+		UNION ALL
+		SELECT DATE_FORMAT(DATE_SUB(CONCAT(#{cxsjz},'-01'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sjlb WHERE num &lt; TIMESTAMPDIFF(MONTH,CONCAT(#{cxsjq},'-01'),CONCAT(#{cxsjz},'-01'))+1
+		),
+		sj AS (
+		SELECT bb.slsj,aa.jxmc,aa.nsrmc
+		FROM (
+		SELECT  dt slsj
+		FROM sjlb  ) bb
+		LEFT JOIN (SELECT DISTINCT nsrmc, jxmc FROM t_tmp_jsypx ) aa ON 1=1) ,
+		sw AS (SELECT nsrmc, SUM(REPLACE(sjje,',','')) shuie, SUBSTRING(skssqq, 1, 7) ssqq FROM t_db_swj_jrkxx WHERE 1=1
+		AND SUBSTRING(skssqq, 1, 7) >= #{cxsjq}
+		AND SUBSTRING(skssqz, 1, 7) &lt;= #{cxsjz}
+		AND zsxm = '增值税' GROUP BY nsrmc, SUBSTRING(skssqq, 1, 7)),
+		gs AS (
+		SELECT  sj.jxmc,sj.nsrmc,sj.slsj,sw.shuie
+		FROM sj , sw
+		WHERE sj.nsrmc = sw.nsrmc
+		AND sj.slsj = sw.ssqq
+		),
+
+		jx AS (
+		SELECT aa.jxmc, SUM(ksrs) hj, SUBSTRING(aa.kssj,1,7) slsj FROM t_md_gaj_jsypxxx aa
+		GROUP BY aa.jxmc, SUBSTRING(aa.kssj,1,7)
+		),
+		zs AS (
+		SELECT jxmc,SUM(IFNULL(hj,0)) xysl,IFNULL(SUM(hj*price),0) zxf,ROUND(SUM(price)/COUNT(*),2) dj,slsj FROM(
+		SELECT CASE WHEN SUBSTRING(l.slsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(l.slsj,1,7) &lt;= SUBSTRING(j.jssj,1,7) THEN j.jg ELSE '3800' END AS price,l.*
+		FROM jx l
+		LEFT JOIN t_tmp_gajxjgwh j ON (l.jxmc = j.jxmc AND SUBSTRING(l.slsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(l.slsj,1,7) &lt;= SUBSTRING(j.jssj,1,7))
+		) dd
+		WHERE 1=1
+		GROUP BY jxmc,slsj
+		),
+		hj AS( SELECT UUID() obj_id,gs.jxmc jxmc,SUM(IFNULL(zs.xysl,0)) xysl,ROUND(SUM(zs.dj)/COUNT(*),2)dj,
+		SUM(IFNULL(zs.zxf,0)) zxf,'3%' sl,IFNULL(TRUNCATE(SUM(IFNULL(zs.zxf,0))*0.03,2),0) yjzzs,
+		SUM(IFNULL(gs.shuie, 0)) sjzzs,SUM(IFNULL(gs.shuie,0))-IFNULL(TRUNCATE(SUM(IFNULL(zs.zxf,0))*0.03,2),0) ce
+		FROM gs,zs
+		WHERE gs.jxmc = zs.jxmc
+		AND gs.slsj = zs.slsj
+		AND gs.jxmc NOT IN (SELECT jxmc FROM t_db_gaj_gajxpxsybd b WHERE state='1')
+		GROUP BY gs.jxmc
+		)
+		SELECT UUID() obj_id,'合计' jxmc,SUM(xysl) xysl,'' dj,SUM(zxf) zxf,'3%' sl,SUM(yjzzs) yjzzs,SUM(sjzzs) sjzzs,SUM(ce) ce
+		<if test="cxsjq!=null and cxsjq!=''">, #{cxsjq} cxsjq</if>
+		<if test="cxsjz!=null and cxsjz!=''">, #{cxsjz} cxsjz</if>
+		FROM (
+		SELECT * FROM hj WHERE 1=1
+		<if test="jxmc!=null and jxmc!=''">AND hj.jxmc LIKE CONCAT(CONCAT('%',#{jxmc}),'%')</if>
+		<if test="cxtype !=null and cxtype !=''">
+			<if test="1==cxtype">
+				AND ce &lt; 0
+				<if test="ceq!= null and ceq!= ''"><![CDATA[AND ce*-1 >= #{ceq} ]]></if>
+				<if test="cez!= null and cez!= ''"><![CDATA[AND ce*-1 <= #{cez} ]]></if>
+			</if>
+			<if test="2==cxtype">
+				AND ce &gt;= 0
+				<if test="ceq!= null and ceq!= ''"><![CDATA[AND ce >= #{ceq} ]]></if>
+				<if test="cez!= null and cez!= ''"><![CDATA[AND ce <= #{cez} ]]></if>
+			</if>
+		</if>
+		<if test="yyeq!=null and yyeq!=''">AND yjyys>=#{yyeq}</if>
+		<if test="yyez !=null and yyez !=''"><![CDATA[AND yjyys<=#{yyez}]]></if>
+		) sh
+		UNION ALL
+		SELECT * FROM (
+		SELECT hj.*
+		<if test="cxsjq!=null and cxsjq!=''">, #{cxsjq} cxsjq</if>
+		<if test="cxsjz!=null and cxsjz!=''">, #{cxsjz} cxsjz</if>
+		FROM hj WHERE 1=1
+		<if test="jxmc!=null and jxmc!=''">AND hj.jxmc LIKE CONCAT(CONCAT('%',#{jxmc}),'%')</if>
+		<if test="cxtype !=null and cxtype !=''">
+			<if test="1==cxtype">
+				AND ce &lt; 0
+				<if test="ceq!= null and ceq!= ''"><![CDATA[AND ce*-1 >= #{ceq} ]]></if>
+				<if test="cez!= null and cez!= ''"><![CDATA[AND ce*-1 <= #{cez} ]]></if>
+			</if>
+			<if test="2==cxtype">
+				AND ce &gt;= 0
+				<if test="ceq!= null and ceq!= ''"><![CDATA[AND ce >= #{ceq} ]]></if>
+				<if test="cez!= null and cez!= ''"><![CDATA[AND ce <= #{cez} ]]></if>
+			</if>
+		</if>
+		<if test="yyeq!=null and yyeq!=''">AND yjyys>=#{yyeq}</if>
+		<if test="yyez !=null and yyez !=''"><![CDATA[AND yjyys<=#{yyez}]]></if>
+		ORDER BY CE
+		) cd
+	</select>
+
+	<!-- 二级页面 -->
+	<select id="getTwoList" resultType="Gajxpxsybd" parameterType="Gajxpxsybd">
+		WITH jx AS(
+			SELECT jxmc, t.nsrmc, MIN(IF(yb.nsrmc IS NULL, 0.03/1.03, 0.06/1.06)) sl, MIN(IF(yb.nsrmc IS NULL, 0.03, 0.06)) sl2 FROM t_tmp_jsypx t LEFT JOIN t_db_swj_ybnsrdjxx yb ON t.nsrmc=yb.nsrmc GROUP BY jxmc, t.nsrmc
+		),
+		px AS(
+			SELECT jxmc, DATE_FORMAT(sqsj,'%Y-%m') sqsj, COUNT(id) xysl
+			FROM t_db_jjzd_jxpxxx_qx t
+			WHERE DATE_FORMAT(sqsj,'%Y-%m') >= #{cxsjq}
+			  AND DATE_FORMAT(sqsj,'%Y-%m') &lt;= #{cxsjz}
+			GROUP BY jxmc, DATE_FORMAT(sqsj,'%Y-%m')
+		),
+		sr AS(
+			SELECT t.*, jx.nsrmc, IFNULL(j.jg, 3800) dj, t.xysl*IFNULL(j.jg, 3800) zxf, jx.sl2 sl, ROUND(t.xysl*IFNULL(j.jg, 3800)*jx.sl,2) yjzzs
+			FROM px t 
+			INNER JOIN jx ON t.jxmc=jx.jxmc
+			LEFT JOIN t_tmp_gajxjgwh j ON t.jxmc = j.jxmc AND SUBSTRING(t.sqsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(t.sqsj,1,7) &lt;= SUBSTRING(j.jssj,1,7)			
+		),
+		rk AS(
+			SELECT t.nsrmc, skssqq, skssqz, SUM(REPLACE(sjje,',','')) sjzzs
+			FROM t_db_swj_jrkxx t INNER JOIN jx ON t.nsrmc=jx.nsrmc
+			WHERE t.`ZSXM`='增值税'
+			AND t.`ZSPM` NOT IN('罚款','滞纳金') 
+			AND t.`ZSPM` NOT LIKE '%构筑物%'
+			AND SUBSTRING(skssqq, 1, 7) >= #{cxsjq}
+			AND SUBSTRING(skssqz, 1, 7) &lt;= #{cxsjz}
+			GROUP BY t.nsrmc, skssqq, skssqz
+		)
+		SELECT #{cxsjq} cxsjq, #{cxsjz} cxsjz, sr.sqsj slsj, jxmc, format(xysl,0) xysl, format(zxf/nullif(xysl,0),0) dj, format(zxf,0) zxf, sl, format(yjzzs,2) yjzzs, format(IFNULL(rk.sjzzs,0),2) sjzzs, format(yjzzs-IFNULL(rk.sjzzs,0),2) ce
+		FROM sr LEFT JOIN rk ON sr.nsrmc=rk.nsrmc AND sr.sqsj BETWEEN rk.skssqq AND rk.skssqz
+		where 1=1
+		<if test="jxmc!=null and jxmc!=''">AND jxmc LIKE CONCAT('%',#{jxmc},'%')</if>
+	</select>
+
+	<select id="getTwoList_bak" resultType="Gajxpxsybd" parameterType="Gajxpxsybd">
+		WITH RECURSIVE sjlb(dt, num) AS (
+		SELECT DATE_FORMAT(CONCAT(#{cxsjz},'-01'), '%Y-%m'), @num := 1
+		UNION ALL
+		SELECT DATE_FORMAT(DATE_SUB(CONCAT(#{cxsjz},'-01'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1
+		FROM sjlb WHERE num &lt; TIMESTAMPDIFF(MONTH,CONCAT(#{cxsjq},'-01'),CONCAT(#{cxsjz},'-01'))+1
+		),
+		sj AS (
+		SELECT bb.slsj,aa.jxmc,aa.nsrmc
+		FROM (
+		SELECT  dt slsj
+		FROM sjlb  ) bb
+		LEFT JOIN (SELECT DISTINCT nsrmc, jxmc FROM t_tmp_jsypx WHERE jxmc=#{jxmc} ) aa ON 1=1),
+		sw AS (SELECT nsrmc, SUM(REPLACE(sjje,',','')) shuie, SUBSTRING(skssqq, 1, 7) ssqq FROM t_db_swj_jrkxx WHERE 1=1
+		<if test="cxsjq!=null and cxsjq!=''">and substring(skssqq, 1, 7) >= #{cxsjq}</if>
+		<if test="cxsjz!=null and cxsjz!=''">and substring(skssqq, 1, 7) &lt;= #{cxsjz}</if>
+		AND zsxm = '增值税' GROUP BY nsrmc, SUBSTRING(skssqq, 1, 7)),
+		gs AS (
+		SELECT  sj.jxmc,sj.nsrmc,sj.slsj,sw.shuie
+		FROM sj LEFT JOIN sw
+		ON  sj.nsrmc = sw.nsrmc
+		AND sj.slsj = sw.ssqq
+		),
+
+		jx AS (
+		SELECT aa.jxmc, SUM(ksrs) hj, SUBSTRING(aa.kssj,1,7) slsj FROM t_md_gaj_jsypxxx aa
+		GROUP BY aa.jxmc, SUBSTRING(aa.kssj,1,7)
+		),
+		zs AS (
+		SELECT jxmc,SUM(IFNULL(hj,0)) xysl,IFNULL(SUM(hj*price),0) zxf,ROUND(SUM(price)/COUNT(*),2) dj,slsj FROM(
+		SELECT CASE WHEN SUBSTRING(l.slsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(l.slsj,1,7) &lt;= SUBSTRING(j.jssj,1,7) THEN j.jg ELSE '3800' END AS price,l.*
+		FROM jx l
+		LEFT JOIN t_tmp_gajxjgwh j ON (l.jxmc = j.jxmc AND SUBSTRING(l.slsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(l.slsj,1,7) &lt;= SUBSTRING(j.jssj,1,7))
+		) bb
+		WHERE 1=1
+		GROUP BY jxmc,slsj
+		),
+		hj AS( SELECT UUID() obj_id,gs.jxmc jxmc,SUBSTRING(gs.slsj,1,4) slsj,SUM(IFNULL(zs.xysl,0)) xysl,ROUND(SUM(zs.dj)/COUNT(*),2)dj,
+		SUM(IFNULL(zs.zxf,0)) zxf,'3%' sl,IFNULL(TRUNCATE(SUM(IFNULL(zs.zxf,0))*0.03,2),0) yjzzs,
+		SUM(IFNULL(gs.shuie, 0)) sjzzs,SUM(IFNULL(gs.shuie, 0))-ifnull(TRUNCATE(SUM(IFNULL(zs.zxf,0))*0.03,2),0) ce
+		FROM gs LEFT JOIN zs
+		ON gs.jxmc = zs.jxmc
+		AND gs.slsj = zs.slsj
+		WHERE gs.jxmc NOT IN (SELECT jxmc FROM t_db_gaj_gajxpxsybd b WHERE state='1')
+		GROUP BY gs.jxmc,SUBSTRING(gs.slsj,0,4)
+		ORDER BY SUBSTRING(gs.slsj,0,4)
+		)
+		SELECT hj.*
+		<if test="cxsjq!=null and cxsjq!=''">, #{cxsjq} cxsjq</if>
+		<if test="cxsjz!=null and cxsjz!=''">, #{cxsjz} cxsjz</if>
+		FROM hj WHERE 1=1
+	</select>
+	
+	<!-- 三级页面 -->
+	<select id="getThreeList" resultType="Gajxpxsybd" parameterType="Gajxpxsybd">
+		WITH RECURSIVE sjlb(dt, num) AS (
+			SELECT DATE_FORMAT(CONCAT(#{cxsjz},'-01'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(CONCAT(#{cxsjz},'-01'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1
+			FROM sjlb WHERE num &lt; TIMESTAMPDIFF(MONTH,CONCAT(#{cxsjq},'-01'),CONCAT(#{cxsjz},'-01'))+1
+		),
+		sj AS (
+			SELECT bb.slsj,aa.jxmc,aa.nsrmc
+		FROM (
+			SELECT  dt slsj
+			FROM sjlb  ) bb
+			LEFT JOIN (SELECT DISTINCT nsrmc, jxmc FROM t_tmp_jsypx WHERE jxmc=#{jxmc} ) aa ON 1=1),
+			sw AS (SELECT nsrmc, SUM(REPLACE(sjje,',','')) shuie, SUBSTRING(skssqq, 0, 7) ssqq FROM t_db_swj_jrkxx WHERE 1=1
+			<if test="cxsjq!=null and cxsjq!=''">and substr(skssqq, 1, 7) >= #{cxsjq}</if>
+			<if test="cxsjz!=null and cxsjz!=''">and substr(skssqq, 1, 7) &lt;= #{cxsjz}</if>
+			AND zsxm = '增值税' GROUP BY nsrmc, SUBSTRING(skssqq, 0, 7)),
+			gs AS (
+			SELECT  sj.jxmc,sj.nsrmc,sj.slsj,sw.shuie
+			FROM sj LEFT JOIN sw
+			ON sj.nsrmc = sw.nsrmc
+			AND sj.slsj = sw.ssqq
+		    where 1=1
+			<if test="cxsjq!=null and cxsjq!=''">and sj.slsj >= #{cxsjq}</if>
+			<if test="cxsjz!=null and cxsjz!=''"><![CDATA[and sj.slsj <= #{cxsjz}]]></if>
+		),
+		jx AS (
+			SELECT aa.jxmc, SUM(ksrs) hj, SUBSTRING(aa.kssj,1,7) slsj FROM t_md_gaj_jsypxxx aa
+			GROUP BY aa.jxmc, SUBSTRING(aa.kssj,1,7)
+		),
+		zs AS (
+			SELECT jxmc,SUM(IFNULL(hj,0)) xysl,IFNULL(SUM(hj*price),0) zxf,ROUND(SUM(price)/COUNT(*),2) dj,slsj FROM(
+			SELECT CASE WHEN SUBSTRING(l.slsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(l.slsj,1,7) &lt;= SUBSTRING(j.jssj,1,7) THEN j.jg ELSE '3800' END AS price,l.*
+			FROM jx l
+			LEFT JOIN t_tmp_gajxjgwh j ON (l.jxmc = j.jxmc AND SUBSTRING(l.slsj,1,7) >= SUBSTRING(j.kssj,1,7) AND SUBSTRING(l.slsj,1,7) &lt;= SUBSTRING(j.jssj,1,7))
+		) bb
+		WHERE 1=1
+		GROUP BY jxmc,slsj
+		),
+		hj AS( SELECT UUID() obj_id,gs.jxmc jxmc,SUBSTRING(gs.slsj,1,7) slsj,SUM(IFNULL(zs.xysl,0)) xysl,ROUND(SUM(zs.dj)/COUNT(*),2)dj,
+			SUM(IFNULL(zs.zxf,0)) zxf,'3%' sl,IFNULL(TRUNCATE(SUM(IFNULL(zs.zxf,0))*0.03,2),0) yjzzs,
+			SUM(IFNULL(gs.shuie, 0)) sjzzs,SUM(IFNULL(gs.shuie, 0))-IFNULL(TRUNCATE(SUM(IFNULL(zs.zxf,0))*0.03,2),0) ce
+			FROM gs LEFT JOIN zs
+			ON (gs.jxmc = zs.jxmc
+			AND gs.slsj = zs.slsj )
+			WHERE gs.jxmc NOT IN (SELECT jxmc FROM t_db_gaj_gajxpxsybd b WHERE state='1')
+			AND SUBSTRING(gs.slsj,1,4) = '2020'
+			GROUP BY gs.jxmc,SUBSTRING(gs.slsj,1,7)
+			ORDER BY SUBSTRING(gs.slsj,1,7)
+		)
+		SELECT hj.* FROM hj WHERE 1=1
+	</select>
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.syndo.project.industry.sjsb.mapper.QyGyjgtzMapper">
+    
+    <resultMap type="QyGyjgtz" id="QyGyjgtzResult">
+        <result property="id"    column="id"    />
+        <result property="xxmc"    column="xxmc"    />
+        <result property="xmztz"    column="xmztz"    />
+        <result property="lrzdxm"    column="lrzdxm"    />
+        <result property="ljtze"    column="ljtze"    />
+        <result property="yf"    column="yf"    />
+        <result property="sjwctze"    column="sjwctze"    />
+        <result property="bndjhtze"    column="bndjhtze"    />
+        <result property="wghyjcz"    column="wghyjcz"    />
+        <result property="yjkgsj"    column="yjkgsj"    />
+        <result property="yjjgsj"    column="yjjgsj"    />
+        <result property="sfjggz"    column="sfjggz"    />
+    </resultMap>
+
+    <sql id="selectQyGyjgtzVo">
+        select id, xxmc, xmztz, lrzdxm, ljtze, yf, sjwctze, bndjhtze, wghyjcz, yjkgsj, yjjgsj, sfjggz from t_qy_gyjgtz
+    </sql>
+
+    <select id="selectQyGyjgtzList" parameterType="QyGyjgtz" resultMap="QyGyjgtzResult">
+        <include refid="selectQyGyjgtzVo"/>
+        <where>  
+            <if test="xxmc != null  and xxmc != ''"> and xxmc like concat(concat('%',#{xxmc}),'%')</if>
+            <if test="shxydm != null  and shxydm != ''"> and shxydm = #{shxydm}</if>
+        </where>
+    </select>
+    
+    <select id="selectQyGyjgtzById" parameterType="String" resultMap="QyGyjgtzResult">
+        <include refid="selectQyGyjgtzVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertQyGyjgtz" parameterType="QyGyjgtz">
+        insert into t_qy_gyjgtz
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="xxmc != null  and xxmc != ''">xxmc,</if>
+            <if test="xmztz != null  and xmztz != ''">xmztz,</if>
+            <if test="lrzdxm != null  and lrzdxm != ''">lrzdxm,</if>
+            <if test="ljtze != null  and ljtze != ''">ljtze,</if>
+            <if test="yf != null  and yf != ''">yf,</if>
+            <if test="sjwctze != null  and sjwctze != ''">sjwctze,</if>
+            <if test="bndjhtze != null  and bndjhtze != ''">bndjhtze,</if>
+            <if test="wghyjcz != null  and wghyjcz != ''">wghyjcz,</if>
+            <if test="yjkgsj != null and yjkgsj != ''">yjkgsj,</if>
+            <if test="yjjgsj != null and yjjgsj != ''">yjjgsj,</if>
+            <if test="sfjggz != null  and sfjggz != ''">sfjggz,</if>
+            <if test="nf != null  and nf != ''">nf,</if>
+            <if test="shxydm != null and shxydm != ''">shxydm,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="xxmc != null  and xxmc != ''">#{xxmc},</if>
+            <if test="xmztz != null  and xmztz != ''">#{xmztz},</if>
+            <if test="lrzdxm != null  and lrzdxm != ''">#{lrzdxm},</if>
+            <if test="ljtze != null  and ljtze != ''">#{ljtze},</if>
+            <if test="yf != null  and yf != ''">#{yf},</if>
+            <if test="sjwctze != null  and sjwctze != ''">#{sjwctze},</if>
+            <if test="bndjhtze != null  and bndjhtze != ''">#{bndjhtze},</if>
+            <if test="wghyjcz != null  and wghyjcz != ''">#{wghyjcz},</if>
+            <if test="yjkgsj != null and yjkgsj != ''">#{yjkgsj},</if>
+            <if test="yjjgsj != null and yjjgsj != ''">#{yjjgsj},</if>
+            <if test="sfjggz != null  and sfjggz != ''">#{sfjggz},</if>
+            <if test="nf != null  and nf != ''">#{nf},</if>
+            <if test="shxydm != null  and shxydm != ''">#{shxydm},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQyGyjgtz" parameterType="QyGyjgtz">
+        update t_qy_gyjgtz
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="xxmc != null  and xxmc != ''">xxmc = #{xxmc},</if>
+            <if test="xmztz != null  and xmztz != ''">xmztz = #{xmztz},</if>
+            <if test="lrzdxm != null  and lrzdxm != ''">lrzdxm = #{lrzdxm},</if>
+            <if test="ljtze != null  and ljtze != ''">ljtze = #{ljtze},</if>
+            <if test="yf != null  and yf != ''">yf = #{yf},</if>
+            <if test="sjwctze != null  and sjwctze != ''">sjwctze = #{sjwctze},</if>
+            <if test="bndjhtze != null  and bndjhtze != ''">bndjhtze = #{bndjhtze},</if>
+            <if test="wghyjcz != null  and wghyjcz != ''">wghyjcz = #{wghyjcz},</if>
+            <if test="yjkgsj != null ">yjkgsj = #{yjkgsj},</if>
+            <if test="yjjgsj != null ">yjjgsj = #{yjjgsj},</if>
+            <if test="sfjggz != null  and sfjggz != ''">sfjggz = #{sfjggz},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQyGyjgtzById" parameterType="String">
+        delete from t_qy_gyjgtz where id = #{id}
+    </delete>
+
+    <delete id="deleteQyGyjgtzByIds" parameterType="String">
+        delete from t_qy_gyjgtz where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

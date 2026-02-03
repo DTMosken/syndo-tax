@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.qysrfx.ZdnsqyfxMapper">
+	
+	<!-- 重点纳税企业分析 -->
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Zdnsqyfx" 
+		parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Zdnsqyfx">
+		with bn as (
+			select GROUP_CONCAT(distinct nsrsbh)nsrsbh, nsrmc
+			<if test="tjkj == 0">
+				, round(IFNULL(sum(replace(sjje,',',''))/#{dw},0),2) bnwc
+			</if>
+			<if test="tjkj == 1">
+				, round(IFNULL(sum(replace(qxj,',',''))/#{dw},0),2) bnwc
+			</if>
+			from t_srfxrkxx where 1=1
+			<if test="qsrq != null and qsrq != ''"> and rkrq &gt;= #{qsrq}</if>
+			<if test="zzrq != null and zzrq != ''"> and rkrq &lt;= #{zzrq}</if>
+			<if test="nsrmc != null and nsrmc != ''">and nsrmc like CONCAT('%',#{nsrmc},'%')</if>
+			group by nsrmc
+		),
+		qn as(
+			select GROUP_CONCAT(distinct nsrsbh)nsrsbh, nsrmc
+			<if test="tjkj == 0">
+				, round(IFNULL(sum(replace(sjje,',',''))/#{dw},0),2) snwc
+			</if>
+			<if test="tjkj == 1">
+				, round(IFNULL(sum(replace(qxj,',',''))/#{dw},0),2) snwc
+			</if>
+			from t_srfxrkxx where 1=1
+			<if test="qsrq != null and qsrq != ''"> and rkrq &gt;= CONCAT(substr(#{qsrq},1,4)-1 , substr(#{qsrq},5,3))</if>
+			<if test="zzrq != null and zzrq != ''"> and rkrq &lt;= CONCAT(substr(#{zzrq},1,4)-1 , substr(#{zzrq},5,3))</if>
+			<if test="nsrmc != null and nsrmc != ''">and nsrmc like CONCAT('%',#{nsrmc},'%')</if>
+			group by nsrmc
+		)
+		SELECT bn.nsrsbh, bn.nsrmc, FORMAT(IFNULL(bn.bnwc,0),2) bnwc, FORMAT(IFNULL(qn.snwc,0),2) snwc, FORMAT(IFNULL(bnwc-snwc,0),2)zje,
+		format((ifnull(bnwc,0)-ifnull(snwc,0))/nullif(abs(snwc),0)*100,2) zjl
+		FROM bn LEFT JOIN qn ON bn.nsrmc = qn.nsrmc
+		<if test="sedy != null and sedy != ''">
+			where bnwc >= #{sedy}
+		</if>
+		order by bn.bnwc desc
+	</select>
+
+</mapper>

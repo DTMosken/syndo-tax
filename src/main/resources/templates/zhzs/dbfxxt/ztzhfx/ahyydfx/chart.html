@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('查看图表')" />
+	</head>
+	<body class="gray-white">
+		<div class="container-div">
+			<form id="query-form" th:object="${model}">
+				<input type="hidden" id="nsrmc" name="nsrmc" th:field="*{nsrmc}" />
+				<input type="hidden" id="ssqq" name="ssqq" th:field="*{ssqq}" />
+				<input type="hidden" id="ssqq" name="ssqz" th:field="*{ssqz}" />
+				<input type="hidden" id="sshy" name="sshy" th:field="*{sshy}" />
+			</form>
+			
+			<div class="echarts" id="echarts-line-chart" style="height: 460px"></div>
+		
+		</div>
+		<th:block th:include="include :: footer" />
+		<th:block th:include="include :: echarts-js" />
+		<script th:inline="javascript">
+		    var prefix = ctx + "zhzs/dbfxxt/sybdfzfx/ahyydfx";
+		    var data = $('#query-form').serialize();
+		    var url =  prefix + "/getChartData?" + data;
+		    
+		    $.ajax({
+		        type: "GET",
+		        url: url,
+		        traditional: true,//传数组进后台需要设置该属性
+		        dataType : 'json',
+		        success: function (data) {
+		        	var myChart = echarts.init(document.getElementById('echarts-line-chart'));
+		        	var option = {
+	        			title : {
+	        		        text: [[${model.nsrmc}]],
+	        		        subtext: '纳税额和用电量',
+	        		        x: 'center'
+	        		    },
+	        		    tooltip: {
+	        		        trigger: 'axis',
+	        		        axisPointer: {
+	        		            type: 'cross',
+	        		            crossStyle: {
+	        		                color: '#999'
+	        		            }
+	        		        }
+	        		    },
+	        		    toolbox: {
+	        		        feature: {
+	        		            dataView: {show: true, readOnly: false},
+	        		            magicType: {show: true, type: ['line', 'bar']},
+	        		            restore: {show: true},
+	        		            saveAsImage: {show: true}
+	        		        }
+	        		    },
+	        		    legend: {
+	        		        data:['纳税额','用电量'],
+	        		        x : 'center',
+	        		        y : 'bottom'
+	        		    },
+	        		    xAxis: [
+	        		        {
+	        		            type: 'category',
+	        		            data: eval(data[0].nf),
+	        		            axisPointer: {
+	        		                type: 'shadow'
+	        		            }
+	        		        }
+	        		    ],
+	        		    yAxis: [
+	        		        {
+	        		            type: 'value',
+	        		            name: '纳税额',
+	        		            axisLabel: {
+	        		                formatter: '{value} 元'
+	        		            }
+	        		        },
+	        		        {
+	        		            type: 'value',
+	        		            name: '用电量',
+	        		            axisLabel: {
+	        		                formatter: '{value} kwh'
+	        		            }
+	        		        }
+	        		    ],
+	        		    series: [
+	        		        {
+	        		            name:'纳税额',
+	        		            type:'bar',
+	        		            data:eval(data[0].qynse)
+	        		        },
+	        		        {
+	        		            name:'用电量',
+	        		            type:'line',
+	        		            yAxisIndex: 1,
+	        		            data:eval(data[0].qyydl)
+	        		        }
+	        		    ]
+	        		};
+		        	myChart.setOption(option);
+		        }
+		    });
+	    </script>
+	</body>
+</html>

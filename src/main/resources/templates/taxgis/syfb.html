@@ -1,0 +1,532 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 税源分布 -->
+<div th:fragment="syfb">
+    <style>
+        .syfb-tab .el-tabs__content {
+            padding: 0;
+            height: calc(100% - 39px);
+        }
+        .syfbTreeContainer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        .syfbTreeContainer .treeNode {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            padding-right: 8px;
+        }
+        .syfbTreeContainer .linkTreeNode {
+            /* color:#2440B3;  */
+            padding-bottom: 2px; 
+            /* border-bottom: 1px solid ; */
+        }
+        .syfbTreeContainer .linkTreeNode::after {
+            content: "";
+            display: block;
+            margin-left: 18px;
+            padding-top: 2px;
+            border-bottom: 1px solid ;
+        }
+    </style>
+    <template id="syfbTemplate">
+        <div>
+            <my-panel ref="panel" :width.sync="leftWidth" :height.sync="leftHeight" :collapsed="false">
+                <el-tabs class="syfb-tab" type="border-card" style="height: 100%">
+                    <el-tab-pane label="行业分析" style="height: 100%">
+                        <div class="syfbTreeContainer" v-loading="hy.loading">
+                            <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{hy.selected.label}}</i></div>
+                            <el-tree
+                                :data="hy.data"
+                                node-key="id"
+                                :expand-on-click-node="false"
+                                :props="hy.defaultProps"
+                                @node-click="handleNodeClickHy"
+                            >
+                                <span class="treeNode" slot-scope="{ node, data }">
+                                    <span :title="data.name"> {{ data.label }}</span>
+                                </span>
+                            </el-tree>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="管理区域分析" style="height: 100%">
+                        <div class="syfbTreeContainer" v-loading="glqy.loading">
+                            <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{glqy.selected.label}}</i></div>
+                            <el-tree                            
+                                :data="glqy.data"
+                                node-key="id"
+                                :expand-on-click-node="false"
+                                default-expand-all
+                                :props="glqy.defaultProps"
+                                @node-click="handleNodeClickGlqy"
+                            >
+                                <span class="treeNode" slot-scope="{ node, data }">
+                                    <span v-if="data.lx==='2' && !data.geo" class="fa fa-university" :title="data.name">{{ data.label }}</span>
+                                    <span v-if="data.lx==='2' && data.geo && data.geo.length > 0" class="fa fa-university linkTreeNode" :title="data.name">{{ data.label }}</span>
+                                    <span v-if="data.lx==='3'" class="fa fa-map linkTreeNode" :title="data.name"> {{ data.label }}</span>
+                                </span>
+                            </el-tree>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="行政区域分析" style="height: 100%">
+                        <div class="syfbTreeContainer" v-loading="xzqy.loading">
+                            <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{xzqy.selected.label}}</i></div>
+                            <el-tree                            
+                                :data="xzqy.data"
+                                node-key="id"
+                                :expand-on-click-node="false"
+                                default-expand-all
+                                :props="xzqy.defaultProps"
+                                @node-click="handleNodeClickXzqy"
+                            >
+                                <span class="treeNode" slot-scope="{ node, data }">
+                                    <span v-if="!data.geo" class="fa fa-map-o" :title="data.name"> {{ data.label }}</span>
+                                    <span v-if="data.geo && data.geo.length > 0" class="fa fa-map linkTreeNode" :title="data.name"> {{ data.label }}</span>
+                                </span>
+                            </el-tree>
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+            </my-panel>
+            <syfb-glqy-dialog ref="dialog" @on-close="onClose"></syfb-glqy-dialog>
+        </div>
+        
+    </template>
+    <script type="module">
+        Vue.component('syfbComponent', {
+            template: '#syfbTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                }
+            },
+            data() {
+                let defaultSelected = { label: "", id: "", lx: "" };
+                return {
+                    layerType: 'syfb',
+                    leftWidth: 355,
+                    leftHeight: '100%',
+                    markerContentCmp: syfbMarkerContentCmp,
+                    hy: {
+                        loading: true,
+                        queryUrl: "/module/taxgis/hyTreeData",
+                        hyAnalyzeUrl: "/module/taxgis/hyAnalyze",
+                        data: [],                        
+                        selected: $.extend({}, defaultSelected)
+                    },
+                    glqy: {
+                        loading: false,
+                        queryUrl: "/module/taxgis/glqyTreeData",
+                        data: [],                        
+                        selected: $.extend({}, defaultSelected)
+                    },
+                    xzqy: {
+                        loading: false,
+                        queryUrl: "/module/taxgis/XzqhwhTreeData",
+                        data: [],                        
+                        selected: $.extend({}, defaultSelected)
+                    },
+                    expandedKeys: [],
+                    defaultSelected: defaultSelected,
+                    defaultProps: {
+                        children: "children",
+                        label: "label",
+                    },
+                };
+            },
+            destroyed: function () {
+                this.removeMarkers()
+            },
+            mounted: function () {
+                // this.$refs.table.queryList();
+                // for (let i = 0; i < this.columns.length; i++) {
+                //     this.columns[i] = $.extend({ show: true, align: 'center' }, this.columns[i])
+                // }
+                this.loadHyTree()
+                this.loadGlqyTree()
+                this.loadXzqyTree()
+            },
+            methods: {
+                loadXzqyTree() {
+                    let params = new URLSearchParams();
+                    this.axios
+                        .post(this.xzqy.queryUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.xzqy.loading = false
+                            let data = response.data;
+                            this.xzqy.data = data;
+                            if (data.length > 0) this.expandedKeys = [data[0].id];
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            this.xzqy.loading = false
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                loadGlqyTree() {
+                    let params = new URLSearchParams();
+                    this.axios
+                        .post(this.glqy.queryUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.glqy.loading = false
+                            let data = response.data;
+                            this.glqy.data = data;
+                            if (data.length > 0) this.expandedKeys = [data[0].id];
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            this.glqy.loading = false
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                loadHyTree() {
+                    let params = new URLSearchParams();
+                    this.axios
+                        .post(this.hy.queryUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.hy.loading = false
+                            let data = response.data;
+                            this.hy.data = data;
+                            if (data.length > 0) this.expandedKeys = [data[0].id];
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            this.hy.loading = false
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                handleNodeClickXzqy(data) {
+                    if(!data.geo) return;
+                    this.xzqy.selected = $.extend({}, data);
+                    let obj = {};
+                    $.extend(obj, data);
+
+                    this.qySelect(obj);
+                },
+                handleNodeClickGlqy(data) {
+                    if(!data.geo) return;
+                    this.glqy.selected = $.extend({}, data);
+                    let obj = {};
+                    $.extend(obj, data);
+
+                    this.qySelect(obj);
+                },
+                qySelect(obj) {
+                    // 地图显示
+                    let that = this.$parent.$refs.leafletMap
+                    let layerId = that.genLayerId(obj.id, this.layerType)
+                    let markerData = obj
+                    // 清除之前正在编辑的相同Polygon
+                    that.deleteEditingPolygon(layerId)
+                    // 删除已有相同标记
+                    that.delFromDrawGroup(layerId)
+                    that.map.pm.disableDraw()
+                    let wkt = new Wkt.Wkt()
+                    wkt.read(markerData.geo)
+                    let geometry = L.GeoJSON.geometryToLayer(L.GeoJSON.asFeature(wkt.toJson()))
+                    geometry.id = layerId
+                    geometry.on('click', e => this.showGlqyDialog(obj.geo, obj.label))
+                    this.showGlqyDialog(obj.geo, obj.label);                        
+                    let center = geometry.getBounds().getCenter()
+                    that.drawGroup.addLayer(geometry)
+                    that.pmPolygon.selected = geometry
+                    // 往右偏移1/10屏以避开列表
+                    // that.map.panTo([center.lat, center.lng - (that.map.getBounds().getEast() - that.map.getBounds().getWest()) / 10])
+                    that.map.panTo([center.lat - (that.map.getBounds().getNorth() - that.map.getBounds().getSouth()) / 4, center.lng - (that.map.getBounds().getEast() - that.map.getBounds().getWest()) / 10])
+                },
+                onClose() {
+                    this.leftHeight = '100%'
+                },
+                showGlqyDialog(polygon, label) {
+                    this.leftHeight = '50%'
+                    this.$refs.dialog.showDialog(polygon, label)
+                },
+                handleNodeClickHy(data) {
+                    this.hy.selected = $.extend({}, data);
+                    // let obj = {};
+                    // $.extend(obj, data);
+                    let params = new URLSearchParams();
+                    params.append("hyDm", data.id)
+                    this.axios
+                        .post(this.hy.hyAnalyzeUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            let resdata = response.data;
+
+                            // 地图显示
+                            let that = this.$parent.$refs.leafletMap
+                            let rows = resdata
+                            let layerType = this.layerType
+                            let markerCmp = this.markerContentCmp
+                            this.pubVue.$emit("removeMarkers", { layerType: layerType });
+                            rows.forEach((row) => {
+                                let marker = L.circleMarker([row.lat, row.lon], { radius: 3, color: '#4797D8', fillColor: '#4797D8', fillOpacity: 1 })
+                                marker.id = that.genLayerId(row.id, layerType)
+                                marker.bindPopup(
+                                    that.getMarkerContent(
+                                        {
+                                            markerData: $.extend(row, { lat: row.lat, lon: row.lon })
+                                        },
+                                        markerCmp
+                                    )
+                                )
+                                that.drawGroup.addLayer(marker)
+                            })
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                }
+            }
+        })
+    </script>
+    <style>
+        /*dialog*/
+        .syfbDialogClass {
+            position:absolute;
+            width: 100%;
+            height: 50%;
+            top: 50%;
+            margin: 0 auto;
+        }
+        .syfbDialogClass .el-dialog__body {
+            height: 100%;
+            max-height: 42vh;
+            overflow: hidden;
+        }
+        .syfbDialogClass .el-tabs__content {
+            height: 100%;
+            max-height: 42vh;
+            padding: 0;
+        }
+        .syfbTable1 {
+            width: 100%;
+            height: calc(100% - 40px);
+        }
+        .syfbTable2 {
+            width: 100%;
+            height: calc(100% - 40px);
+        }
+        .syfbTable3 {
+            width: 100%;
+            height: calc(100% - 40px);
+        }
+    </style>
+    <!-- 管理区域分析结果 -->
+    <template id="syfbGlqyDialogTemplate">
+        <el-dialog
+            :top="0"
+            :title="title"
+            custom-class="syfbDialogClass"
+            :append-to-body="false"
+            :fullscreen="false"
+            :modal="false"
+            :modal-append-to-body="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogTableVisible"
+            :before-close="handleDialogClose"
+        >
+        <el-tabs v-model="active" @tab-click="onSwitch" class="syfb-bottom-tab" type="border-card" style="height: 100%">
+            <el-tab-pane name="hyfx" label="区域行业分析" style="height: 100%">
+                <my-el-table ref="hyfx" table-class="syfbTable1" :is-page="false" :columns="hyfx.columns" :data-url="hyfx.queryUrl" :query-params="queryParams">
+                </my-el-table>
+            </el-tab-pane>
+            <el-tab-pane name="szfx" label="区域税种分析" style="height: 100%">
+                <my-el-table ref="szfx" table-class="syfbTable2" :is-page="false" :columns="szfx.columns" :data-url="szfx.queryUrl" :query-params="queryParams">
+                </my-el-table>
+            </el-tab-pane>
+            <el-tab-pane name="qyqd" label="区域企业清单" style="height: 100%">                
+                <my-el-table ref="qyqd" table-class="syfbTable2" :columns="qyqd.columns" :data-url="qyqd.queryUrl" :query-params="queryParams">
+                </my-el-table>
+            </el-tab-pane>
+        </el-tabs>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component('syfbGlqyDialog', {
+            template: '#syfbGlqyDialogTemplate',
+            data() {
+                return {
+                    title: '区域分析结果',
+                    dialogTableVisible: false,
+                    active: 'qyqd',
+                    queryParams: {
+                        polygon: "",
+                        cols:""
+                    },
+                    state: {hyfx: false, szfx: false, qyqd: false},
+                    hyfx: {
+                        queryUrl: "/module/taxgis/hyfx",
+                        columns: [
+                            { prop: "hy", label: "行业", width: "200" }
+                        ]
+                    },
+                    szfx: {
+                        queryUrl: "/module/taxgis/szfx",
+                        columns: [
+                            { prop: "zsxm", label: "征收项目", width: "200" },
+                            { prop: "zspm", label: "征收品目", width: "200" }
+                        ]
+                    },
+                    qyqd: {
+                        queryUrl: "/module/taxgis/glqyAnalyze",
+                        columns: [
+                            { prop: "nsrsbh", label: "纳税人识别号", width: "200" },
+                            { prop: "nsrmc", label: "纳税人名称", width: "250" },
+                            { prop: "nsrzt", label: "纳税人状态", width: "150" },
+                            { prop: "kzztdjlx", label: "登记类型", width: "150" },
+                            { prop: "djzclx", label: "登记注册类型", width: "150" },
+                            { prop: "kyslrq", label: "开业设立日期", width: "120" },
+                            { prop: "cyrs", label: "从业人数", width: "120", align: 'right'},
+                            { prop: "zzjglx", label: "组织机构类型", width: "200" },
+                            { prop: "jyfw", label: "经营范围", width: "200" },
+                            { prop: "hy", label: "行业", width: "200" },
+                            { prop: "jdxz", label: "街道乡镇", width: "150" },
+                            { prop: "zczb", label: "注册资本", width: "150", align: 'right' },
+                            { prop: "zcdz", label: "注册地址", width: "260" },
+                            { prop: "jydz", label: "经营地址", width: "260" },
+                            { prop: "djjg", label: "登记机关", width: "360" }
+                        ]
+                    }
+                    
+                }
+            },
+            mounted(){
+                let params = new URLSearchParams();
+                this.axios
+                    .post("/module/taxgis/qyAnalyzeColumns", params)
+                    .then((response) => {
+                        // 请求成功
+                        let data = response.data;
+                        this.queryParams.cols = data.join(',');
+                        for(let i=0; i < 12; i++){
+                            this.hyfx.columns.push({ prop: "col" + i, label: data[i], width: "150", align: 'right' });
+                            this.szfx.columns.push({ prop: "col" + i, label: data[i], width: "150", align: 'right' });
+                        }
+                    })
+                    .catch((error) => {
+                        // 请求失败
+                        console.log("请求失败");
+                        console.log(error);
+                    });
+                
+            },
+            methods: {
+                showDialog(polygon, label) {
+                    this.dialogTableVisible = true
+                    this.active = 'qyqd'
+                    this.state.hyfx = false
+                    this.state.szfx = false
+                    this.state.qyqd = true
+                    this.queryParams.polygon = polygon
+                    this.title = '区域分析结果（' + label+'）'
+                    this.$nextTick().then(() => {
+                        this.$refs.qyqd.queryList();
+                    });
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false
+                    this.$emit('on-close')
+                },
+                onSwitch(tab) {
+                    if(this.state[tab.name] === false) {
+                        this.state[tab.name] = true;
+                        this.$refs[tab.name].queryList();
+                    }
+                }
+                // handleSumbit() {
+                //     this.dialogTableVisible = false
+                //     let params = {}
+                //     $.extend(params, this.form)
+                //     this.$emit('do-query', params)
+                // }
+            }
+        })
+    </script>
+    
+    <!-- 地图信息框 -->
+    <style>
+        /* marker样式 */
+        .syfb_popup_content {
+            padding: 0;
+        }
+
+        .syfb_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 310px;
+        }
+
+        .syfb_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .syfb_info_container .title:after {
+            clear: both;
+            content: '';
+            display: table;
+        }
+
+        .syfb_info_container .props p {
+            margin: 10px 0;
+        }
+
+        .syfb_info_container p {
+            font-size: 12px;
+        }
+    </style>
+    <template id="syfbMarkerTemplate">
+        <div class="syfb_popup_content">
+            <div class="syfb_info_container">
+                <div class="title">
+                    <span><a href="#" @click="showYhs">{{markerData.nsrmc}}</a></span>
+                </div>
+                <div class="props">
+                    <p><span>注册地址：</span> <span>{{markerData.zcdz}}</span></p>
+                    <p><span>经营地址：</span> <span>{{markerData.jydz}}</span></p>
+                    <p><span>登记注册类型：</span> <span>{{markerData.djzclx}}</span></p>
+                    <p><span>社会信用代码：</span> <span>{{markerData.shxydm}}</span></p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let syfbMarkerContentCmp = Vue.extend({
+            template: '#syfbMarkerTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                },
+                markerData: {
+                    type: Object
+                }
+            },
+            data: function () {
+                return {}
+            },
+            methods: {
+                showYhs() {
+                    this.pubVue.$emit('showYhs', { shxydm: this.markerData.shxydm, nsrmc: this.markerData.nsrmc })
+                }
+            }
+        })
+    </script>
+</div>

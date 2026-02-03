@@ -1,0 +1,278 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('查看企业房土信息已核实详细信息')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-qyftxxyhs-edit" th:object="${entity}">
+	        	<div class="row">
+		            <input id="objId" name="objId" th:field="*{objId}"  type="hidden">
+		            <div class="form-group">	
+		                <label class="col-sm-2 control-label ">企业名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{title}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">标准地址：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{staddress}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">是否租赁：</label>
+						<div class="col-sm-4">
+							<label th:text="*{zl}" class="control-label"></label>
+						</div>
+						<label class="col-sm-2 control-label ">档次：</label>
+						<div class="col-sm-4">
+							<label th:text="*{dc}"  class="control-label"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">土地类别：</label>
+						<div class="col-sm-4">
+							<label th:text="*{tdlb}" class="control-label"></label>
+						</div>
+						<label class="col-sm-2 control-label ">报送日期：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{bszq}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">定位地址：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{address}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">描述备注：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{remark}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">经度：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{longitude}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">纬度：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{latitude}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">电表号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{electricitynumber}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">水表号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{waternumber}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">天然气号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{gasnumber}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">经营状态：</label>
+						<div class="col-sm-4">
+							<label th:text="*{businessstate}" class="control-label"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">经营者电话：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{businessphone}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">应税面积：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{taxAcreage}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">非税面积：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{noTaxAcreage}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">税务号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{taxnumber}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">行业名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{industryname}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">工商注册名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{businesstitle}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">工商注册号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{businessnumber}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">产权号码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{ownnumber}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">产权人身份证号码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{owneridnumber}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">产权人名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{ownername}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">产权人电话号码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{ownerphnumber}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">纳税人识别号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{nsrsbh}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">纳税人名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{nsrmc}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">生产经营地址：</label>
+						<div class="col-sm-4">
+							<label class="control-label"th:text="*{scjydz}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">月核定营业额：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{jye}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">联系电话：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{lxdh}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">从业人数：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{cyrs}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">工商注册号：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{businessnumber2}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">工商注册名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{businesstitle2}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">法人名称：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{frmc}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">经营范围：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{jyfw}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">产权号码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{ownnumber2}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">产权人：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{xcqr}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">产权人身份证号码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{cqrzjh}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">房屋来源：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{fwly}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">房产原值：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{fwjz}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">房产面积：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{fcmj}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">出租房产原值：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{czfcyz}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">出租房产面积：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{czfcmj}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">房产租赁金额：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{fczlje}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">房产税执行标准：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{fcszxbz}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">土地等级标准：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{tddjbz}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">全年应纳房、土两税：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{qnynftls}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">减免房、土税额及年度：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{jmftse}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">已缴纳房、土两税税款年度：</label>
+						<div class="col-sm-4">
+							<label class="control-label"th:text="*{yjnftls}"></label>
+						</div>
+						<label class="col-sm-2 control-label ">税票号码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{sbhm}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label ">管理编码：</label>
+						<div class="col-sm-4">
+							<label class="control-label" th:text="*{glbm}"></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12 text-center">
+							<a class="btn" onclick="$.modal.close()"><i class="fa fa-repeat"></i>&nbsp;返回</a>
+						</div>
+					</div>
+				</div>
+			</form>
+	    </div>
+	    <th:block th:include="include :: footer" />
+	</body>
+</html>

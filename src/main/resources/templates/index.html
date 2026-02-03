@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<head>
+	    <meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="renderer" content="webkit">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    	<title>综合管理平台</title>
+    	<meta name="keywords" content="财税大数据平台">
+    	<meta name="description" content="加强财税征管，打破财税“信息孤岛”，推进科技治税，构建“政府领导、税务主管、部门配合、司法保障、社会参与、信息化支撑”的全方位、多层次、立体式“大税收监控”格局">
+    	<!--[if lt IE 9]>
+    		<meta http-equiv="refresh" content="0;ie.html"/>
+    	<![endif]-->
+    	<link th:href="@{favicon.ico}" rel="shortcut icon"/>
+	    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet"/>
+		<link th:href="@{/css/jquery.contextMenu.min.css}" rel="stylesheet"/>
+	    <link th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+	    <link th:href="@{/css/animate.css}" rel="stylesheet"/>
+	    <link th:href="@{/css/style.css}" rel="stylesheet"/>
+ 		<link th:href="@{/css/skins.css}" rel="stylesheet"/>
+ 		<link th:href="@{/main/css/sf-ui.css?v=4.2.0}" rel="stylesheet"/>
+ 		
+ 		<link th:href="@{/main/css/style.css?v=2.0.0}" rel="stylesheet"/>
+ 		<link th:href="@{/ajax/libs/toastr/toastr.min.css}" rel="stylesheet"/>
+		<style type="text/css">
+			#resizerBar {
+				position: absolute;right: 0;top: 0;width: 4px; margin-right:-2px; height: 100%;cursor: w-resize;z-index: 99999;
+
+			}
+			#resizerBar:hover {
+				background-color: #3c8dbc;box-shadow: 1px 0 3px rgba(0, 0, 0, 0.5) inset;
+			}
+			.resizerBarDisplay {
+				display:none
+			}
+		</style>
+	</head>
+	<body class="fixed-sidebar full-height-layout gray-bg fixed-nav" style="overflow: hidden">
+		<div id="wrapper">
+			<!--左侧菜单开始-->
+			<nav class="navbar-default navbar-static-side index-menu" role="navigation">
+				<div id="resizerBar"></div>
+				<div class="nav-close">
+					<i class="fa fa-times-circle"></i>
+				</div>
+				<div class="menu-search">
+					<div class="input-group" style="width: 100%">
+						<input type="text" id="search" name="search" style="width: 100%" autocomplete="off" class="form-control input-sm" placeholder="Search..." onkeypress="onSearch()">
+					</div>
+				</div>
+				<div class="sidebar-collapse">
+					<ul class="nav sidebar-menu" id="side-menu">
+		                <li th:each="menu : ${menus}">
+		                	<a th:class="@{${#lists.isEmpty(menu.url) != '' && menu.url != '#'} ? ${menu.target}}" th:href="@{${#lists.isEmpty(menu.url)} ? |#| : ${menu.url}}">
+		                		<i class="fa fa-bar-chart-o" th:class="${menu.icon}"></i>
+		                    	<span class="nav-label" th:text="${menu.menuName}">一级菜单</span> 
+		                    	<span th:class="${#lists.isEmpty(menu.url) || menu.url == '#'} ? |fa arrow|"></span>
+		                	</a>
+		                    <ul class="nav nav-second-level collapse">
+								<li th:each="cmenu : ${menu.children}">
+									<a th:if="${#lists.isEmpty(cmenu.children)}" th:class="${#strings.isEmpty(cmenu.target)} ? |menuItem| : ${cmenu.target}" th:href="@{${cmenu.url}}">
+										<i class="fa fa-bar-chart-o" th:class="${cmenu.icon}"></i>
+		                    			<span class="nav-label" th:text="${cmenu.menuName}">二级菜单</span> 
+									</a>
+									<a th:if="${not #lists.isEmpty(cmenu.children)}" href="#">
+										<i class="fa fa-bar-chart-o" th:class="${cmenu.icon}"></i>
+		                    			<span class="nav-label" th:text="${cmenu.menuName}">二级菜单</span> 
+										<span class="fa arrow"></span>
+									</a>
+									<ul th:if="${not #lists.isEmpty(cmenu.children)}" class="nav nav-third-level">
+										<li th:each="emenu : ${cmenu.children}">
+										    <a th:if="${#lists.isEmpty(emenu.children)}" th:class="${#lists.isEmpty(emenu.target)} ? |menuItem| : ${emenu.target}" th:href="@{${emenu.url}}">
+										    	<i class="fa fa-bar-chart-o" th:class="${emenu.icon}"></i>
+				                    			<span class="nav-label" th:text="${emenu.menuName}">三级菜单</span> 
+										    </a>
+										    <a th:if="${not #lists.isEmpty(emenu.children)}" href="#">
+										    	<i class="fa fa-bar-chart-o" th:class="${emenu.icon}"></i>
+				                    			<span class="nav-label" th:text="${emenu.menuName}">三级菜单</span> 
+										    	<span class="fa arrow"></span>
+										    </a>
+										    <ul th:if="${not #lists.isEmpty(emenu.children)}" class="nav nav-four-level">
+										      	<li th:each="fmenu : ${emenu.children}">
+										      		<a th:if="${#lists.isEmpty(fmenu.children)}" th:class="${#lists.isEmpty(fmenu.target)} ? |menuItem| : ${fmenu.target}" th:text="${fmenu.menuName}" th:href="@{${fmenu.url}}">四级菜单</a>
+									      		</li>
+										    </ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+		                </li>
+		            </ul>
+		        </div>
+			</nav>
+			<!--左侧菜单结束-->
+
+			<!--右侧部分开始-->
+		    <div id="page-wrapper" class="gray-bg dashbard-1">
+		        <div class="row border-bottom index-header">
+		            <nav class="navbar navbar-fixed-top" role="navigation" style="margin-bottom: 0">
+		                <div class="navbar-header" >
+		                    <a class="navbar-minimalize minimalize-styl-2" style="color:#FFF;" href="javascript:void(0)" title="收起菜单">
+		                    	<i class="fa fa-bars"></i>
+		                    </a>
+	                        <div class="index-logo">
+								<a href="http://10.37.203.52:3000/home">
+									<img src="img/logo1.png" style="width:260px" />
+								</a>
+			            	</div>
+	                    </div>
+				      	<!-- 
+				       	<ul class="nav navbar-nav hidden-xs">
+			          		<li><a th:href="@{/system/user/profile}" class="menuItem">个人信息</a></li>
+			          		<li><a onclick="">接收测试</a></li>
+			          		<li><a onclick="">发送测试</a></li>
+						</ul> 
+				      	 -->
+		                <ul class="nav navbar-top-links navbar-right hidden-xs">
+			                <!-- 
+			                <li><a title="查看消息" href="javascript:void(0)" onclick="openMsg()"><i class="fa fa-bell"></i></a></li> 
+			                -->
+			                <li><a title="全屏显示" href="javascript:void(0)" id="fullScreen"><i class="fa fa-arrows-alt"></i></a></li>
+		                    <li class="dropdown user-menu">
+								<a href="javascript:void(0)" class="dropdown-toggle" data-hover="dropdown">
+									<img th:src="(${#strings.isEmpty(user.avatar)}) ? @{/img/profile.jpg} : @{${user.avatar}}" th:onerror="this.src='img/profile.jpg'" class="user-image">
+									<span class="hidden-xs">[[${#strings.defaultString(user.userName, '-')}]]</span>
+								</a>
+								<ul class="dropdown-menu">
+									<li class="mt5">
+										<a th:href="@{/system/user/profile}" class="menuItem">
+										<i class="fa fa-user"></i> 个人中心</a>
+									</li>
+									<li>
+										<a onclick="resetPwd()">
+										<i class="fa fa-key"></i> 修改密码</a>
+									</li>
+									<li>
+										<a onclick="switchSkin()">
+										<i class="fa fa-dashboard"></i> 切换主题</a>
+									</li>
+									<li class="divider"></li>
+									<li>
+										<!--<a th:href="@{logout}">-->
+										<a onclick="logoutFunc()">
+										<i class="fa fa-sign-out"></i> 退出登录</a>
+									</li>
+								</ul>
+							</li>
+		                </ul>
+					</nav>
+				</div>
+				<!-- 标签栏 -->
+				<div class="row content-tabs index-tabs">
+					<button class="roll-nav roll-left tabLeft">
+                		<i class="fa fa-backward"></i>
+            		</button>
+					<nav class="page-tabs menuTabs">
+						<div class="page-tabs-content">
+							<a href="javascript:;" class="active menuTab" th:data-id="@{/system/main}">首页</a>
+						</div>
+					</nav>
+					<button class="roll-nav roll-right tabRight">
+		                <i class="fa fa-forward"></i>
+		            </button>
+            		<a href="javascript:void(0)" class="roll-nav roll-right tabReload"><i class="fa fa-refresh"></i> 刷新</a>
+				</div>
+			 	<!-- 关闭全屏按钮 -->
+        		<a id="ax_close_max" class="ax_close_max" href="javascript:void(0)" title="关闭全屏"> <i class="fa fa-times-circle-o"></i></a>
+		        <div class="row mainContent" id="content-main">
+		            <iframe class="Main_iframe" name="iframe0" width="100%" height="100%" th:data-id="@{/system/main}"
+	                    th:src="@{/system/main}" frameborder="0" seamless></iframe>
+		        </div>
+		        <!-- 
+		        <div class="footer">
+		            <div class="pull-right">© [[${copyrightYear}]] 济南先讯威和信息技术有限公司 Copyright </div>
+		        </div>
+		         -->
+				<!--右侧部分结束-->
+			</div>
+		</div>
+		<!-- 全局js -->
+		<script th:src="@{/js/jquery.min.js}"></script>
+		<script th:src="@{/js/bootstrap.min.js}"></script>
+		<script th:src="@{/js/plugins/metisMenu/jquery.metisMenu.js}"></script>
+		<script th:src="@{/js/plugins/slimscroll/jquery.slimscroll.min.js}"></script>
+		<script th:src="@{/js/jquery.contextMenu.min.js}"></script>
+		<script th:src="@{/ajax/libs/blockUI/jquery.blockUI.js}"></script>
+		<script th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+		<script th:src="@{/main/js/sf-ui.js?v=4.2.0}"></script>
+		<script th:src="@{/main/js/common.js?v=4.2.0}"></script>
+		<script th:src="@{/main/index.js?t=20211213}"></script>
+		
+		<script th:src="@{/ajax/libs/fullscreen/jquery.fullscreen.js}"></script>
+		<script th:src="@{/ajax/libs/toastr/toastr.min.js}"></script>
+		<!-- <script th:src="@{/main/socket.js}"></script> -->
+		<script th:inline="javascript"> 
+			var ctx = [[@{/}]];
+			var userId = [[${user.userId}]];
+			
+			// 皮肤缓存
+			var skin = storage.get("skin");
+			// history（表示去掉地址的#）否则地址以"#"形式展示
+			var mode = "history";
+			// 历史访问路径缓存
+			var historyPath = storage.get("historyPath");
+			// 是否页签与菜单联动
+			var isLinkage = true;
+
+			// 本地主题优先，未设置取系统配置
+			if($.common.isNotEmpty(skin)){
+				$("body").addClass(skin.split('|')[0]);
+				$("body").addClass(skin.split('|')[1]);
+			} else {
+				$("body").addClass([[${sideTheme}]]);
+				$("body").addClass([[${skinName}]]);
+			}
+			
+			/*用户管理-重置密码*/
+			function resetPwd() {
+			    var url = ctx + 'system/user/profile/resetPwd';
+			    $.modal.open("重置密码", url, '770', '380');
+			}
+			/* 切换主题 */
+			function switchSkin() {
+			    layer.open({
+					type : 2,
+					shadeClose : true,
+					title : "切换主题",
+					area : ["530px", "486px"],
+					content : [ctx + "system/switchSkin", 'no']
+				})
+			}
+			/*登出*/
+			function logoutFunc(){
+                var service = [[${localBaseUrl}]];
+                var prefix = [[${prefixUrl}]];
+                var serviceUrl = encodeURIComponent(service);
+				window.location.href= prefix +"/logout?service="+serviceUrl;
+            }
+			/** 刷新时访问路径页签 */
+			function applyPath(url) {
+			    $('a[href$="' + decodeURI(url) + '"]').click();
+				if (!$('a[href$="' + url + '"]').hasClass("noactive")) {
+				    $('a[href$="' + url + '"]').parent("li").addClass("selected").parents("li").addClass("active").end().parents("ul").addClass("in");
+				}
+			}
+			/* 
+			$(function() {
+				if($.common.equals("history", mode) && window.performance.navigation.type == 1) {
+					var url = storage.get('publicPath');
+				    if ($.common.isNotEmpty(url)) {
+				    	applyPath(url);
+				    }
+				} else {
+					var hash = location.hash;
+				    if ($.common.isNotEmpty(hash)) {
+				        var url = hash.substring(1, hash.length);
+				        applyPath(url);
+				    }
+				}
+			}); 
+			*/
+			
+			// 搜索
+			function onSearch() {
+				if (event.keyCode == 13) {
+				 	var text = $("#search").val();
+	    			if(text == "") return;
+	    			var $ul = $(".sidebar-menu");
+				    $ul.find("a.menuItem").each(function () {
+				        var $a = $(this).css("border", "");
+				        if ($a.children("span.nav-label").text().indexOf(text) >= 0) {
+				            //如果a标签的父级是隐藏的就展开
+				            $ul = $a.parents("ul");
+				            if ($ul.is(":hidden")) {
+				                $a.parents("ul").prev().click();
+				            }
+				            $a.click().css("border", "1px solid #777");
+				        }
+				    });
+			    }	
+			}
+			
+			// toastr参数
+			toastr.options = {
+			  "closeButton": true,
+			  "debug": false,
+			  "progressBar": false,
+			  "positionClass": "toast-bottom-right",
+			  "showDuration": "400",		// 显示时间
+			  "hideDuration": "1000",		// 隐藏时间
+			  "timeOut": "600000",			// 展示时间
+			  "extendedTimeOut": "1000",	// 延长时间
+			  "showEasing": "swing",
+			  "hideEasing": "linear",
+			  "showMethod": "fadeIn",
+			  "hideMethod": "fadeOut"
+			}
+			
+			function openMsg() {
+				var url = ctx + 'system/msg';
+				var width = 300;
+				var	height = ($(window).height() - 60);
+				top.layer.open({
+			  		type: 2, 
+					title: false,
+					closeBtn: 0,
+				  	content: url,
+				  	area: [width + 'px', height + 'px'],
+					offset: 'rb',
+					shadeClose: true,
+				}); 
+			}
+		</script>
+		
+	</body>
+</html>

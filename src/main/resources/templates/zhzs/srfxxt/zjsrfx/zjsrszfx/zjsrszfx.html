@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('镇街收入税种分析')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+		.layui-card-body{
+			width: max-content;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">入库日期:</label>
+					<div class="layui-input-block" id="test-range">
+						<div class="layui-col-sm5">
+							<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+						<span class="layui-form-mid">-</span>
+						<div class="layui-col-sm5">
+							<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="10000">万元</option>
+							<option value="1">元</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+						<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+							<i class="layui-icon">&#xe615;</i> &nbsp;查询
+						</a>
+						<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+							<i class="layui-icon">&#xe669;</i> &nbsp;重置
+						</a>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+	var prefix = ctx + "zhzs/srfxxt/zjsrfx/zjsrszfx";
+
+	$(function() {
+		var options = {
+			id: 'layui-table',
+			url: prefix + "/list",
+			exportUrl: prefix + "/expExcel",
+			title: "镇街收入税种分析",
+			height: 'full-65',
+			ataType: "json",
+			showExport: true,
+			cols: [
+				[
+					{type:'checkbox'},
+					{title: '街道乡镇', width : 150, field: 'jdxz',halign: 'center'},
+					{title : '合计', field : 'sjje', halign: 'center', width : 150},
+					{title : '增值税', field : 'zzs',  halign: 'center', width : 150},
+					{title : '消费税', field : 'xfs', halign: 'center', width : 150},
+					{title : '营业税', field : 'yys', halign: 'center', width : 150},
+					{title : '企业所得税', field : 'qysds', halign: 'center', width : 150},
+					{title : '个人所得税', field : 'grsds', halign: 'center', width : 150},
+					{title : '资源税', field : 'grsds', halign: 'center', width : 150},
+					{title : '城市维护建设税', field : 'cswhjss', halign: 'center', width : 150},
+					{title : '房产税', field : 'fcs', halign: 'center', width : 150},
+					{title : '印花税', field : 'yhs', halign: 'center', width : 150},
+					{title : '城镇土地使用税', field : 'cztdsys', halign: 'center', width : 150},
+					{title : '土地增值税', field : 'tdzzs', halign: 'center', width : 150},
+					{title : '车船税', field : 'ccs', halign: 'center', width : 150},
+					{title : '耕地占用税', field : 'gdzys', halign: 'center', width : 150},
+					{title : '契税', field : 'qs', halign: 'center', width : 150},
+					{title : '环境保护税', field : 'hjbhs', halign: 'center', width : 150},
+					{title : '车辆购置税', field : 'clgzs', halign: 'center', width : 150},
+					{title : '烟叶税', field : 'yy', halign: 'center', width : 150},
+					{title : '教育费附加', field : 'jyffj', halign: 'center', width : 150},
+					{title : '地方教育附加', field : 'dfjyfj', halign: 'center', width : 150},
+					{title : '残疾人就业保障金', field : 'cjrjybzj', halign: 'center', width : 150},
+					{title : '文化事业建设费', field : 'whsjjsf', halign: 'center', width : 150},
+					{title : '税务部门罚没收入', field : 'swbmfmsr', halign: 'center', width : 150},
+					{title : '水利建设专项收入', field : 'sljszxsr', halign: 'center', width : 150},
+					{title : '其他收入', field : 'qtsr', halign: 'center', width : 150},
+				]
+			]
+		};
+		$.table.init(options);
+	});
+	layui.use('laydate', function(){
+		var laydate = layui.laydate;
+		laydate.render({elem: '#qsrq',type:'month',format:'yyyy-MM'});
+		laydate.render({elem: '#zzrq',type:'month',format:'yyyy-MM'});
+	});
+</script>
+</body>
+</html>

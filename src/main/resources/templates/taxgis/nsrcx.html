@@ -1,0 +1,321 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 纳税人查询 -->
+<div th:fragment="nsrcx">
+    <style>
+        .nsrcxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 65px);
+        }
+    </style>
+    <template id="nsrcxTemplate">
+        <my-panel ref="panel" :width.sync="width" :collapsed="true">
+            <nsrcx-dialog ref="dialog" @do-query="handleDoQuery"></nsrcx-dialog>
+            <div>
+                <h3 style="padding-left: 20px">查询结果</h3>
+                <el-button
+                    @click="queryFilter"
+                    icon="fa fa-filter"
+                    style="position: absolute; top: 10px; right: 80px"
+                    circle
+                    title="筛选"
+                ></el-button>
+                <el-button @click="refresh" icon="fa fa-refresh" style="position: absolute; top: 10px; right: 30px" circle title="刷新"></el-button>
+                <my-el-table2
+                    ref="table"
+                    table-class="nsrcxComponentTable"
+                    @row-click="rowClick"
+                    @on-load="onLoad"
+                    :data-url="queryUrl"
+                    :query-params="queryParams"
+                >
+                    <el-table-column label="是否已标注" width="100" align="center">
+                        <template slot-scope="scope">
+                            <a
+                                v-if="scope.row.wbz===1"
+                                href="javascript:void(0)"
+                                style="text-decoration: none"
+                                @click="showYhs(scope.row)"
+                                type="text"
+                                size="small"
+                                >未标注</a
+                            >
+                            <div v-else>已标注</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        v-for="(item, index) in columns"
+                        :key="index"
+                        :prop="item.prop"
+                        :label="item.label"
+                        :width="item.width"
+                        :formatter="item.format"
+                        label-class-name="cellStyle"
+                        v-if="item.show"
+                        show-overflow-tooltip
+                        align="center"
+                    >
+                    </el-table-column>
+                </my-el-table2>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component('nsrcxComponent', {
+            template: '#nsrcxTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                }
+            },
+            data() {
+                return {
+                    width: 340,
+                    layerType: 'nsrcx',
+                    marker: nsrcxMarkerContentCmp,
+                    queryUrl: '/module/taxgis/GetNsrxxBz',
+                    queryParams: {},
+                    columns: [
+                        { prop: 'shxydm', label: '社会信用代码', width: '200' },
+                        { prop: 'nsrmc', label: '纳税人名称', width: '250' },
+                        { prop: 'nsrzt', label: '纳税人状态', width: '100' },
+                        { prop: 'zcdz', label: '注册地址', width: '150'},
+                        // { prop: "jydz", label: "经营地址", width: "100" },
+                        { prop: 'djzclx', label: '登记注册类型', width: '200' }
+                    ]
+                }
+            },
+            destroyed: function () {
+                this.removeMarkers()
+            },
+            mounted: function () {
+                // this.$refs.table.queryList();
+                for (let i = 0; i < this.columns.length; i++) {
+                    this.columns[i] = $.extend({ show: true, align: 'center' }, this.columns[i])
+                }
+            },
+            methods: {
+                showYhs(row) {
+                    this.pubVue.$emit('showYhs', { shxydm: row.shxydm, nsrmc: row.nsrmc })
+                },
+                removeMarkers() {
+                    this.pubVue.$emit('removeMarkers', { layerType: this.layerType })
+                },
+                rowClick(row) {
+                    let rowObj = {}
+                    $.extend(rowObj, row, { layerType: this.layerType })
+                    this.pubVue.$emit('showPoint', { row: rowObj, marker: this.marker })
+                },
+                refresh() {
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList()
+                    })
+                },
+                queryFilter() {
+                    this.$refs.dialog.showDialog()
+                },
+                handleDoQuery(form) {
+                    this.queryParams = form
+                    this.$nextTick().then(() => {
+                        this.$refs.panel.showPanel()
+                    })
+                    this.refresh()
+                },
+                onLoad(data) {
+                    this.removeMarkers()
+                    if (data && data.total && data.total > 0) {
+                        this.pubVue.$emit('showMarker', { rows: data.rows, marker: this.marker, layerType: this.layerType })
+                    }
+                }
+            }
+        })
+    </script>
+    <style>
+        /*dialog*/
+        .nsrcxDialogClass {
+            width: 500px;
+        }
+        .nsrcxDialogClass .el-dialog__body {
+            max-height: 55vh;
+        }
+        /*dialog>form*/
+        .nsrcxDialogClass .el-form {
+            width: 460px;
+        }
+        .nsrcxDialogClass .el-select .el-input {
+            width: 340px;
+        }
+    </style>
+    <!-- 查询条件 -->
+    <template id="nsrcxDialogTemplate">
+        <el-dialog
+            title="查询条件"
+            custom-class="nsrcxDialogClass"
+            :append-to-body="false"
+            :fullscreen="false"
+            :modal="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogTableVisible"
+            :before-close="handleDialogClose"
+        >
+            <el-form :model="form" size="medium" :label-width="formLabelWidth">
+                <el-form-item label="社会信用代码">
+                    <el-input v-model="form.shxydm" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="纳税人名称">
+                    <el-input v-model="form.nsrmc" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="纳税人类型">
+                    <el-select v-model="form.sfybnsr" placeholder="请选择纳税人类型">
+                        <el-option label="" value=""></el-option>
+                        <el-option label="一般纳税人" value="1"></el-option>
+                        <el-option label="其他纳税人" value="0"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="纳税人状态">
+                    <el-select v-model="form.nsrzt" placeholder="请选择纳税人状态" th:with="type=${@dict.getType('dm_nsrzt')}">
+                        <el-option label="" value=""></el-option>
+                        <el-option th:each="dict : ${type}" th:label="${dict.dictLabel}" th:value="${dict.dictLabel}"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="课征主体登记类型">
+                    <el-select v-model="form.kzztdjlx" placeholder="请选择课征主体登记类型" th:with="type=${@dict.getType('dm_kzztdjlx')}">
+                        <el-option label="" value=""></el-option>
+                        <el-option th:each="dict : ${type}" th:label="${dict.dictLabel}" th:value="${dict.dictLabel}"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="登记注册类型">
+                    <el-select v-model="form.djzclx" placeholder="请选择登记注册类型" th:with="type=${@dict.getType('dm_djzclx')}">
+                        <el-option label="" value=""></el-option>
+                        <el-option th:each="dict : ${type}" th:label="${dict.dictLabel}" th:value="${dict.dictLabel}"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="街道乡镇">
+                    <el-select v-model="form.jdxz" placeholder="请选择街道乡镇" th:with="type=${@dict.getType('dm_jdxz')}">
+                        <el-option label="" value=""></el-option>
+                        <el-option th:each="dict : ${type}" th:label="${dict.dictLabel}" th:value="${dict.dictLabel}"></el-option>
+                    </el-select>
+                </el-form-item>
+                <!--/*-->
+                <el-form-item label="主管税务机关">
+                    <el-select v-model="form.zgswjg" placeholder="请选择主管税务机关" th:with="type=${@dict.getType('dm_zgswjg')}">
+                        <el-option label="" value=""></el-option>
+                        <el-option th:each="dict : ${type}" th:label="${dict.dictLabel}" th:value="${dict.dictLabel}"></el-option>
+                    </el-select>
+                </el-form-item>
+                <!--*/-->
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="handleDialogClose">取 消</el-button>
+                <el-button type="primary" @click="handleSumbit">确 定</el-button>
+            </div>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component('nsrcxDialog', {
+            template: '#nsrcxDialogTemplate',
+            data() {
+                return {
+                    dialogTableVisible: true,
+                    form: {
+                        sfybnsr: "1",
+                        nsrzt: "正常",
+                        shxydm: '',
+                        nsrmc: '',
+                        djzclx: '',
+                        jdxz: '',
+                        zgswjg: ''
+                    },
+                    formLabelWidth: '125px'
+                }
+            },
+            methods: {
+                showDialog() {
+                    this.dialogTableVisible = true
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false
+                },
+                handleSumbit() {
+                    this.dialogTableVisible = false
+                    let params = {}
+                    $.extend(params, this.form)
+                    this.$emit('do-query', params)
+                }
+            }
+        })
+    </script>
+    <!-- 地图信息框 -->
+    <style>
+        /* marker样式 */
+        .nsrcx_popup_content {
+            padding: 0;
+        }
+
+        .nsrcx_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 310px;
+        }
+
+        .nsrcx_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .nsrcx_info_container .title:after {
+            clear: both;
+            content: '';
+            display: table;
+        }
+
+        .nsrcx_info_container .props p {
+            margin: 10px 0;
+        }
+
+        .nsrcx_info_container p {
+            font-size: 12px;
+        }
+    </style>
+    <template id="nsrcxMarkerTemplate">
+        <div class="nsrcx_popup_content">
+            <div class="nsrcx_info_container">
+                <div class="title">
+                    <span><a href="#" @click="showYhs">{{markerData.nsrmc}}</a></span>
+                </div>
+                <div class="props">
+                    <p><span>注册地址：</span> <span>{{markerData.zcdz}}</span></p>
+                    <p><span>经营地址：</span> <span>{{markerData.jydz}}</span></p>
+                    <p><span>登记注册类型：</span> <span>{{markerData.djzclx}}</span></p>
+                    <p><span>社会信用代码：</span> <span>{{markerData.shxydm}}</span></p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let nsrcxMarkerContentCmp = Vue.extend({
+            template: '#nsrcxMarkerTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                },
+                markerData: {
+                    type: Object
+                }
+            },
+            data: function () {
+                return {}
+            },
+            methods: {
+                showYhs() {
+                    this.pubVue.$emit('showYhs', { shxydm: this.markerData.shxydm, nsrmc: this.markerData.nsrmc })
+                }
+            }
+        })
+    </script>
+</div>

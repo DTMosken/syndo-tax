@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('旅馆酒店中间表维护')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse in">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">企业名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="qymc" name="qymc"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">纳税人名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="nsrmc" name="nsrmc"/>
+									</div>
+								</div>
+							</div>
+			        		<!-- <div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">关系对象： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="flag" name="flag"/>
+									</div>
+								</div>
+							</div> -->
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+	        <!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+	            <a class="btn btn-primary single disabled" onclick="$.operate.edit()">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+	        </div>
+	        
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+ 	    var editFlag = [[${@permission.hasPermi('module:dbfxxt:xtgl:lgjdzjbwh:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('module:dbfxxt:xtgl:lgjdzjbwh:remove')}]];
+        var prefix = ctx + "zhzs/dbfxxt/xtgl/lgjdzjbwh";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                modalName: "旅馆酒店中间表维护",
+                showSearch: false,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false,
+					formatter: function(value, row, index) {// 格式化函数 value:字段值，row:行数据,index:索引
+						return value;
+					}
+				},
+				{
+					field : 'qymc', 
+					title : '企业名称',
+					sortable: true
+				},
+				{
+					field : 'nsrmc', 
+					title : '纳税人名称',
+					sortable: true
+				},
+				{
+					field : 'flag', 
+					title : '关系对象',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+        });
+
+    </script>
+</body>
+</html>

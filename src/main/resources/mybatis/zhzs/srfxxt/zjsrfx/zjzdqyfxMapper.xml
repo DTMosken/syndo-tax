@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.zjsrfx.ZjzdqyfxMapper">
+	<!-- 镇街重点企业分析 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjzdqyfx" parameterType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjzdqyfx">	
+		WITH RECURSIVE sj1(dt, num) AS (
+			SELECT DATE_FORMAT(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sj1 WHERE num &lt; 
+			TIMESTAMPDIFF(MONTH, STR_TO_DATE(CONCAT(#{qsrq},'-01'),'%Y-%m-%d'), STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'))+1
+		), 
+		sj2(dt, num) AS (
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), INTERVAL 12 MONTH), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), INTERVAL num+12 MONTH), '%Y-%m'), @num := @num + 1 FROM sj2 WHERE num &lt; 
+			TIMESTAMPDIFF(MONTH, STR_TO_DATE(CONCAT(#{qsrq},'-01'),'%Y-%m-%d'), STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'))+1
+		), 
+		sj AS (
+			SELECT dt FROM sj1 UNION SELECT dt FROM sj2
+		)
+
+		SELECT jdxz, qymc, ROUND(bqs/#{dw},2)bqs, ROUND(tqs/#{dw},2)tqs, ROUND(zje/#{dw},2)zje, zjl FROM(
+			SELECT ttt.*, 
+					ROW_NUMBER() OVER(PARTITION BY JDXZ ORDER BY CAST(BQS AS DECIMAL) DESC) bq_rn,
+					ROW_NUMBER() OVER(PARTITION BY JDXZ ORDER BY CAST(TQS AS DECIMAL) DESC) tq_rn
+				FROM(
+					SELECT jdxz, nsrmc QYMC, ROUND(SUM(bq),2) BQS, ROUND(SUM(tq),2) TQS, ROUND(IFNULL(SUM(bq),0)-IFNULL(SUM(tq),0),2) ZJE, ROUND((IFNULL(SUM(bq),0)-IFNULL(SUM(tq),0))/NULLIF(IFNULL(ABS(SUM(tq)),0),0)*100,2) ZJL FROM (
+						SELECT IFNULL(t.JDXZ,"") JDXZ,t.NSRMC,
+							SUM(IF(SUBSTR(RKRQ,1,7) BETWEEN #{qsrq} AND #{zzrq}, REPLACE(SJJE,',','')*0.0001, 0)) bq,
+							SUM(IF(SUBSTR(RKRQ,1,7) BETWEEN concat(substr(#{qsrq},1,4)-1, substr(#{qsrq},5,7)) AND concat(substr(#{zzrq},1,4)-1, substr(#{zzrq},5,7)), REPLACE(SJJE,',','')*0.0001, 0)) tq
+						FROM t_db_swj_jrkxx t
+						WHERE zsxm IS NOT NULL
+						AND jdxz != ''and jdxz is not null
+						AND zsxm != ''
+						AND tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+						AND yskm NOT IN('出口业务退增值税')
+						AND ((SUBSTR(RKRQ,1,7) BETWEEN #{qsrq} AND #{zzrq}) OR (SUBSTR(RKRQ,1,7) BETWEEN concat(substr(#{qsrq},1,4)-1, substr(#{qsrq},5,7)) AND concat(substr(#{zzrq},1,4)-1, substr(#{zzrq},5,7))))
+						GROUP BY IFNULL(t.JDXZ,""),NSRMC
+
+						UNION ALL
+						SELECT IFNULL(t.JDXZ,"") JDXZ,t.NSRMC, 
+							SUM(IF(SUBSTR(RTKRQ,1,7) BETWEEN #{qsrq} AND #{zzrq}, REPLACE(sjjetkje,',','')*0.0001, 0)) bq,
+							SUM(IF(SUBSTR(RTKRQ,1,7) BETWEEN concat(substr(#{qsrq},1,4)-1, substr(#{qsrq},5,7)) AND concat(substr(#{zzrq},1,4)-1, substr(#{zzrq},5,7)), REPLACE(sjjetkje,',','')*0.0001, 0)) tq
+						FROM t_db_swj_swjrkgsgr t
+						WHERE zsxm IS NOT NULL
+						AND jdxz != ''and jdxz is not null
+						AND zsxm != ''
+						AND ((SUBSTR(RTKRQ,1,7) BETWEEN #{qsrq} AND #{zzrq}) OR (SUBSTR(RTKRQ,1,7) BETWEEN concat(substr(#{qsrq},1,4)-1, substr(#{qsrq},5,7)) AND concat(substr(#{zzrq},1,4)-1, substr(#{zzrq},5,7))))
+						GROUP BY IFNULL(t.JDXZ,""),NSRMC
+
+						UNION ALL
+						SELECT IFNULL(t.JDXZ,"") JDXZ,t.NSRMC,
+							SUM(IF(SUBSTR(RTKRQ,1,7) BETWEEN #{qsrq} AND #{zzrq}, REPLACE(sjjetkje,',','')*0.0001, 0)) bq,
+							SUM(IF(SUBSTR(RTKRQ,1,7) BETWEEN concat(substr(#{qsrq},1,4)-1, substr(#{qsrq},5,7)) AND concat(substr(#{zzrq},1,4)-1, substr(#{zzrq},5,7)), REPLACE(sjjetkje,',','')*0.0001, 0)) tq
+						FROM t_db_swj_swjrkgsqy t
+						WHERE zsxm IS NOT NULL
+						AND jdxz != ''and jdxz is not null
+						AND zsxm != ''
+						AND ((SUBSTR(RTKRQ,1,7) BETWEEN #{qsrq} AND #{zzrq}) OR (SUBSTR(RTKRQ,1,7) BETWEEN concat(substr(#{qsrq},1,4)-1, substr(#{qsrq},5,7)) AND concat(substr(#{zzrq},1,4)-1, substr(#{zzrq},5,7))))
+						GROUP BY IFNULL(t.JDXZ,""),NSRMC
+
+					) tt GROUP BY JDXZ,NSRMC
+				) ttt
+		) tmp 
+		WHERE (tmp.bq_rn&lt;11 OR tmp.tq_rn&lt;11)
+		ORDER BY 1, 3 DESC
+	</select>
+</mapper>

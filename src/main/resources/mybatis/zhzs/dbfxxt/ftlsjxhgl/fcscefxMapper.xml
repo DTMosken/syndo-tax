@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.FcscefxMapper">
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="nf != null and nf!= ''"> and T.NF = #{nf}</if>
+				<if test="yjfcsmax != null and yjfcsmax!= ''"> AND T.YJFCS &gt;=#{yjfcsmax}</if>
+				<if test="yjfcsmin != null and yjfcsmin!= ''"> AND T.YJFCS &lt;=#{yjfcsmin}</if>
+				<if test="sjfcsmax != null and sjfcsmax != ''"> AND T.SJFCS &gt;=#{sjfcsmax}</if>
+				<if test="sjfcsmin != null and sjfcsmin != ''"> AND T.SJFCS &lt;=#{sjfcsmin}</if>
+				<if test="cemax != null and cemax != ''"> AND T.CE &gt;=#{cemax}</if>
+				<if test="jdlist!=null">
+					AND T.JD IN
+					<foreach item="item" index="index" collection="jdlist" open="("
+						separator="," close=")">
+						#{item}
+					</foreach>
+				</if>
+			</trim>
+		</where>
+	</sql>	
+	<!-- 子句  -->
+	<sql id="withView">
+		WITH DICT AS (
+		     SELECT DICT_LABEL FROM SYS_DICT_DATA
+		     WHERE DICT_TYPE = 'dm_dbfxxt_ftlsjxhgl_tdsysyztz_jd'
+		),
+			FTLSTAX AS (
+			 SELECT W1.JD,NVL(W1.YJFCS, 0) YJFCS,NVL(W2.SJFCS, 0) SJFCS,
+			 NVL(YJFCS, 0) - NVL(SJFCS, 0) AS CE,W1.NF FROM (
+			 	SELECT BB.DICT_LABEL AS JD, SUM(WW.YJFCS2016) YJFCS, '2016' AS NF 
+		        FROM CS_FTLSGZGL WW RIGHT JOIN DICT BB
+		        ON WW.STADDRESS LIKE '%' || BB.DICT_LABEL || '%' AND WW.ISCHECKED IS NOT NULL 
+		        GROUP BY BB.DICT_LABEL
+		     ) W1,
+		     (
+		     	SELECT BB.DICT_LABEL AS JD, SUM(WW.SJE) SJFCS
+		        FROM CS_FTLSZSGLTAX WW RIGHT JOIN DICT BB
+		        ON WW.DZ LIKE '%' || BB.DICT_LABEL || '%' AND WW.SZ = '房产税'
+		        GROUP BY BB.DICT_LABEL
+		     ) W2
+		 	WHERE W1.JD = W2.JD
+		)
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Fcscefx"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Fcscefx">
+		<include refid="withView"/>	
+		SELECT T.JD,T.YJFCS,T.SJFCS,T.CE,T.NF FROM FTLSTAX T
+		<include refid="whereClause" />
+	</select>
+</mapper>

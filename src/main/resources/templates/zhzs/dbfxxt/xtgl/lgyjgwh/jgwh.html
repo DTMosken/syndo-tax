@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('价格维护')" />
+	<th:block th:include="include :: bootstrap-editable-css" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse in">
+					<form id="query-form" class="form-horizontal m">
+						<input type="hidden" id='flagjgwh' name='flagjgwh' value='1'/>
+			        	<div class="row">
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">企业名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="qymc" name="qymc"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">年度： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" readonly="readonly" id="nd" name="nd" th:value="${nd}"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">上半年或下半年： </label>
+									<div class="col-sm-9">
+										<!-- <select id="flag" name="flag" th:with="type=${@dict.getType('dm_dbfxxt_xtgl_lgyjgwh_sbnhxbn')}" th:value="${flag}" class="form-control input-sm">
+											<option value=""></option>
+											<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+										</select> -->
+										<select id="flag" name="flag" class="form-control input-sm">
+											<option value=""></option>
+											<option value="0" th:selected="${flag}=='0'">上半年</option>
+											<option value="1" th:selected="${flag}=='1'">下半年</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-default btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: bootstrap-table-editable-js" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/xtgl/lgyjgwh";
+        $("#query-form").validate({
+			// 表单验证，参考notes文件
+			rules:{
+				nd:{
+					required:true
+				},
+				flag:{
+					required: true
+				}
+			}
+		});
+
+        $(function() {
+        	var options = {
+				url: prefix + "/list",
+				modalName: "旅馆业价格维护",
+   		        showExport: true,
+   		        showSearch: false,
+   		     	ignoreColumn: [0],
+                columns: [{
+   		            checkbox: true
+   		        },
+   				{
+   					field : 'objid', 
+   					visible: false
+   				},
+   				{
+   					field : 'qymc', 
+   					title : '企业名称',
+   					sortable: true
+   				},
+   				{
+   					field : 'jg', 
+   					title : '价格（元）',
+   					sortable: true,
+   					editable: {
+	                    type: 'text',
+	                    title: '价格',
+	                    validate: function (v) {
+	                        if (!v) return '价格不能为空';
+	                    }
+	                }
+   				},
+   				{
+   					field : 'kssj', 
+   					title : '开始时间',
+   					sortable: true
+   				},
+   				{
+   					field : 'jssj', 
+   					title : '结束时间',
+   					sortable: true
+   				}],
+   				onEditableSave: function (field, row, oldValue, $el) {
+	                $.ajax({
+	                    type: "post",
+	                    url: prefix + '/updateJg',
+	                    data: row,
+	                    dataType: 'JSON',
+	                    success: function(data) {
+	                    	if (data && data.code==0){
+								$.modal.alertSuccess(data.msg);
+								//$.table.refresh();
+		                    }else{
+								$.modal.alertError(data.msg);
+								//$.table.refresh();
+							}
+	                    }
+	                }); 
+	            }
+			};
+			$.table.init(options);
+        });
+        
+        //日期选择
+        layui.use('laydate', function(){
+			var laydate = layui.laydate;
+      	  	//执行一个laydate实例
+			laydate.render({ 
+				elem: '#nd', //指定元素
+				type: 'year',
+				format:'yyyy'
+			});
+      	});
+        
+    </script>
+</body>
+</html>

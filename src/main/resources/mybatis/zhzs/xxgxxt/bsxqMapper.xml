@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.xxgxxt.mapper.BsxqMapper">
+
+	<!-- 报送详情 -->
+
+	<!-- 查询 -->
+	<select id="selectBsxqList" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bsxq" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bsxq" databaseId="mysql">
+		select date_Time, dept_name, chdesc, user_name, count, (case when count&lt;0 then '删除' else '新增' end) type ,log_date 
+		from pub_meta_data_log where 1=1 
+		<if test="dateTime != null and dateTime != ''"> and date_Time=#{dateTime}</if>
+		<if test="deptName != null and deptName != ''"> and dept_Name=#{deptName}</if>
+		<!-- <if test="bsTimeStart != null and bsTimeStart != ''"> and date_format(log_date, '%Y-%m')&gt;=#{bsTimeStart} </if>
+		<if test="bsTimeEnd != null and bsTimeEnd != ''"> and date_format(log_date, '%Y-%m')&lt;=#{bsTimeEnd} </if> -->
+		order by date_Time desc, dept_name, date_format(log_date,'%Y-%m')desc
+	</select>
+	
+	<select id="selectBsxqList" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bsxq" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bsxq" databaseId="oracle">
+		select date_Time, dept_name, chdesc, user_name, count, (case when count&lt;0 then '删除' else '新增' end) type ,log_date 
+		from pub_meta_data_log where 1=1 
+		<if test="dateTime != null and dateTime != ''"> and date_Time=#{dateTime}</if>
+		<if test="deptName != null and deptName != ''"> and dept_Name=#{deptName}</if>
+		<!-- <if test="bsTimeStart != null and bsTimeStart != ''"> and to_char(log_date, 'YYYY-MM')&gt;=#{bsTimeStart} </if>
+		<if test="bsTimeEnd != null and bsTimeEnd != ''"> and to_char(log_date, 'YYYY-MM')&lt;=#{bsTimeEnd} </if> -->
+		order by date_Time desc, dept_name, to_char(log_date,'yyyy-MM')desc 
+	</select>
+	
+</mapper>

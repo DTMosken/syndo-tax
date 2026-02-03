@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.xxgxxt.mapper.BstjMapper">
+
+	<!-- 报送统计 -->
+	
+    <!-- 数据部门数-->
+    <select id="getSjbm" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" resultType="Integer">
+    	select count(*) sjbm from sys_dept where status = '0' and del_flag != '2' and dept_id != '100'
+    </select>
+    
+	<!-- 数据资源数-->
+    <select id="getSjzy" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" resultType="Integer">
+    	select count(*) sjzy from pub_meta_data
+    </select>
+    
+    <!-- 数据总量-->
+    <select id="getSjzl" statementType="CALLABLE" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" databaseId="mysql">    
+    	<![CDATA[  
+		call prc_table_count(#{sjzl,mode=OUT,jdbcType=INTEGER})
+		]]>  
+	</select>
+	
+	<!-- 数据总量-->
+    <select id="getSjzl" statementType="CALLABLE" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" databaseId="oracle">    
+    	<![CDATA[  
+		{call prc_table_count(#{sjzl,mode=OUT,jdbcType=INTEGER})}
+		]]>  
+	</select>
+    
+    <!-- 图表数据 -->
+     <select id="getChartData" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" databaseId="mysql">
+     	with recursive sj(dt, num) as (
+			select date_format(now(), '%Y-%m'), @num := 1
+			union all
+			select date_format(date_sub(now(), interval num month), '%Y-%m'), @num := @num + 1 from sj where num &lt; 12
+		),
+		bs as (
+			select substr(date_time,1,7)rq, sum(count) bssl from pub_meta_data_log t group by substr(date_time,1,7)
+		)
+		select CONCAT('[',group_concat(CONCAT('''', dt, '''')),']')rq, CONCAT('[',group_concat(IFNULL(bssl,0)),']')bssl from (
+			select sj.dt,bs.bssl from sj left join bs on sj.dt = bs.rq order by sj.dt
+		)t
+     </select>
+     
+     <!-- 图表数据 -->
+     <select id="getChartData" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" databaseId="oracle">
+		with sj as(
+			select TO_CHAR(ADD_MONTHS(sysdate, -ROWNUM+1), 'yyyy-mm')rq from DUAL connect by ROWNUM &lt;= 12
+		),
+		bs as (
+			select substr(date_time,0,7)rq, sum(count) bssl from pub_meta_data_log t group by substr(date_time,0,7)
+		)
+		select ('['||wm_concat('''' || rq || '''')||']')rq, ('['||wm_concat(nvl(bssl,0))||']')bssl from (
+			select sj.rq,bs.bssl from sj, bs where sj.rq = bs.rq(+) order by sj.rq
+		)
+     </select>
+     
+    <!-- 获取报送日志 -->
+    <select id="getBsrz" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" databaseId="mysql">
+    	SELECT * FROM (
+			SELECT t.*,@rownum:=@rownum+1 rownum FROM (
+				SELECT CONCAT(dept_name,':',log_date,'报送',date_time,'【',chdesc,'】',SUM(COUNT),'条数据')bsxq 
+				FROM pub_meta_data_log 
+				WHERE 1=1 GROUP BY dept_name,log_date,date_time,chdesc
+				ORDER BY log_date DESC
+			)t,(SELECT @rownum:=0) r
+    	)res LIMIT 20
+    </select>
+    
+    <!-- 获取报送日志 -->
+    <select id="getBsrz" resultType="com.syndo.project.zhzs.xxgxxt.domain.Bstj" databaseId="oracle">
+       select t.*,rownum from (
+	       select (dept_name||':'||to_char(log_date,'yyyy-MM')||'报送【'||chdesc||'】'||sum(count)||'条数据')bsxq 
+	       from pub_meta_data_log 
+	       where 1=1 group by dept_name,to_char(log_date,'yyyy-MM'),chdesc
+	       order by to_char(log_date,'yyyy-MM') desc
+       )t where rownum &lt;= 20
+    </select>
+</mapper>

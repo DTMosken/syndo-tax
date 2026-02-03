@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 车船税缴纳趋势分析 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.CcsjnqsfxMapper">
+
+    <select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ccsjnqsfx"
+            parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ccsjnqsfx" databaseId="mysql">
+        WITH
+        bq AS(
+	        SELECT NSRMC, SUM(SJJE) SJJE
+	        FROM t_db_swj_jrkxx
+	        WHERE ZSXM = '车船税'
+	        AND ZSPM NOT IN ('滞纳金', '罚款')
+	        AND SUBSTRING(SKSSQQ, 1, 4) >= #{ssnd}
+	        AND SUBSTRING(SKSSQQ, 1, 4) &lt;= #{ssnd}
+	        <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE CONCAT('%',CONCAT(#{nsrmc}, '%'))</if>
+	        GROUP BY NSRMC
+        ),
+        tq AS (
+	        SELECT NSRMC, SUM(SJJE) SJJE
+	        FROM t_db_swj_jrkxx
+	        WHERE ZSXM = '车船税'
+	        AND ZSPM NOT IN ('滞纳金', '罚款')
+	        AND SUBSTRING(SKSSQQ, 1, 4) >= #{ssnd}-1
+	        AND SUBSTRING(SKSSQQ, 1, 4) &lt;= #{ssnd}-1
+	        <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE CONCAT('%',CONCAT(#{nsrmc}, '%'))</if>
+	        GROUP BY NSRMC
+        ),
+        jg AS (
+        	SELECT * FROM (
+		        SELECT tq.NSRMC NSRMC,
+		        IFNULL(tq.SJJE, 0) qnjn,
+		        IFNULL(bq.SJJE, 0) bnjn,
+		        IFNULL(bq.SJJE, 0) -  IFNULL(tq.SJJE, 0) ce
+		        FROM tq LEFT JOIN bq
+		        ON tq.NSRMC = bq.NSRMC
+		        WHERE tq.NSRMC IS NOT NULL
+	        )T WHERE 1=1
+	        <if test="sfsj !=null and sfsj != ''">
+				<if test="sfsj == 1">
+					AND ce &lt; 0
+				</if>
+				<if test="sfsj == 2">
+					AND ce &gt;= 0
+				</if>
+			</if>
+        )
+        SELECT nsrmc, FORMAT(qnjn,2) qnjn, FORMAT(bnjn,2) bnjn, FORMAT(ce,2) ce 
+			FROM (
+				SELECT '合计' NSRMC, SUM(qnjn) qnjn, SUM(bnjn) bnjn, SUM(ce) ce,'1' XH
+				FROM jg
+				UNION ALL
+				SELECT NSRMC, qnjn, bnjn, ce,'99' xh 
+				FROM jg
+			)T 
+			ORDER BY xh, cast(ce as DECIMAL)
+    </select>
+
+</mapper>

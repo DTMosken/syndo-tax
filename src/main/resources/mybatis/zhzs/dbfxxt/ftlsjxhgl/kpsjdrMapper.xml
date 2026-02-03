@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.KpsjdrMapper">
+	<!-- 房土两税精细化管理-开票数据导入 -->
+	
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<where>
+		<if test="pjbh != null and pjbh != ''"> and pjbh = #{pjbh}</if>
+		<if test="dz != null and dz != ''"> and dz like '%'||#{dz}||'%'</if>
+		<if test="nsrsbh != null and nsrsbh != ''"> and nsrsbh = #{nsrsbh}</if>
+		<if test="nsrmc != null and nsrmc != ''"> and nsrmc like '%'||#{nsrmc}||'%'</if>
+		<if test="tpr != null and tpr != ''"> and tpr like '%'||#{tpr}||'%'</if>
+		<if test="dzdw != null and dzdw != ''"> and dzdw like '%'||#{dzdw}||'%'</if>
+		<if test="bszqq != null and bszqq != ''"> and bszq &gt;=#{bszqq}</if>
+		<if test="bszqz != null and bszqz != ''"> and bszq &lt;= #{bszqz}</if>
+		</where>
+	</sql>
+
+	<!-- 查询 -->
+	<select id="selectList" 
+			resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjdr"
+			parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjdr">
+		select  obj_id, bszq, pjbh, tfrq, nsrsbh, nsrmc, dz, jehjdx, jehj, sz, pmmc, 
+				kssl, jssr, sl, skssq, kce, sje, djzclx, swjg, dzdw, tpr, sfyjdy, zt, 
+				bz, wsid 
+		from TMP_FTLS_KPXX
+		<include refid="whereClause" />
+		order by bszq,pjbh,sz desc
+	</select>
+	
+	<!-- 插入 -->
+	<insert id="insert" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjdr">
+		insert into
+		TMP_FTLS_KPXX( bszq, pjbh, tfrq, nsrsbh, nsrmc, dz, jehjdx, jehj, sz, pmmc, kssl, 
+					   jssr, sl, skssq, kce, sje, djzclx, swjg, dzdw, tpr, sfyjdy, zt, bz,
+					   zjr, zjsj, wsid )
+		values( #{bszq}, #{pjbh}, #{tfrq}, #{nsrsbh}, #{nsrmc}, #{dz}, #{jehjdx}, #{jehj},
+				#{sz}, #{pmmc}, #{kssl}, #{jssr}, #{sl}, #{skssq}, #{kce}, #{sje}, #{djzclx},
+				#{swjg}, #{dzdw}, #{tpr}, #{sfyjdy}, #{zt}, #{bz}, #{zjr}, #{zjsj}, #{wsid} )
+	</insert>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjdr"
+		parameterType="string">
+		select 	obj_id, bszq, pjbh, tfrq, nsrsbh, nsrmc, dz, jehjdx, jehj, sz, pmmc, kssl,
+				jssr, sl, skssq, kce, sje, djzclx, swjg, dzdw, tpr, sfyjdy, zt, bz, wsid 
+		from TMP_FTLS_KPXX where obj_Id = #{id}
+	</select>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjdr">
+		update TMP_FTLS_KPXX
+		<set>
+			bszq=#{bszq}, pjbh=#{pjbh}, tfrq=#{tfrq}, nsrsbh=#{nsrsbh}, nsrmc=#{nsrmc},
+			dz=#{dz}, jehjdx=#{jehjdx}, jehj=#{jehj}, sz=#{sz}, pmmc=#{pmmc}, kssl=#{kssl},
+			jssr=#{jssr}, sl=#{sl}, skssq=#{skssq}, xgr=#{xgr}, xgsj=#{xgsj}, kce=#{kce},
+			sje=#{sje}, djzclx=#{djzclx}, swjg=#{swjg}, dzdw=#{dzdw}, tpr=#{tpr}, sfyjdy=#{sfyjdy},
+			zt=#{zt}, bz=#{bz}, wsid=#{wsid}
+		</set>
+		where obj_Id = #{objId}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		delete from TMP_FTLS_KPXX where obj_Id in
+		<foreach item="item" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

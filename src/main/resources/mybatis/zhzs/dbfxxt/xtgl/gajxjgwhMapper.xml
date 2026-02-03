@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.xtgl.GajxjgwhMapper">
+<!-- 对比分析系统-系统维护-公安驾校价格维护 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Gajxjgwh" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Gajxjgwh">
+			select id objid,jxmc,sqzjcx,jg,kssj,jssj
+			from t_tmp_gajxjgwh
+			where 1=1
+			<if test="jxmc != null and jxmc != ''"> and jxmc like '%'||#{jxmc}||'%'</if>
+			<if test="sqzjcx != null and sqzjcx != ''"> and sqzjcx = #{sqzjcx}</if>
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Gajxjgwh">
+		insert into t_tmp_gajxjgwh (jxmc,sqzjcx,jg,kssj,jssj) values (#{jxmc}, #{sqzjcx}, #{jg}, #{kssj}, #{jssj})
+	</insert>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Gajxjgwh" parameterType="string">
+		select id objid,jxmc,sqzjcx,jg,kssj,jssj from t_tmp_gajxjgwh where id = #{objId}
+	</select>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Gajxjgwh">
+		update t_tmp_gajxjgwh
+		<set>
+			jxmc = #{jxmc},sqzjcx = #{sqzjcx},jg = #{jg},kssj= #{kssj},jssj=#{jssj}
+		</set>
+		where id = #{objId}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        delete from t_tmp_gajxjgwh where id = #{objId}
+    </delete>
+    
+	<!-- 批量删除 -->
+    <delete id="deleteByIds" parameterType="String">
+       delete from t_tmp_gajxjgwh where id in 
+        <foreach item="objId" collection="array" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+    </delete>
+</mapper>

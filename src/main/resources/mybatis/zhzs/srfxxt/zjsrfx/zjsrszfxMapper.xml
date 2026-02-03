@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.zjsrfx.ZjsrszfxMapper">
+	<!-- 镇街收入税种分析 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjsrszfx"  parameterType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjsrszfx">
+		WITH RECURSIVE sj1(dt, num) AS (
+			SELECT DATE_FORMAT(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sj1 WHERE num &lt; 
+			TIMESTAMPDIFF(MONTH, STR_TO_DATE(CONCAT(#{qsrq},'-01'),'%Y-%m-%d'), STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'))+1
+		), 
+		sj2(dt, num) AS (
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), INTERVAL 12 MONTH), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'), INTERVAL num+12 MONTH), '%Y-%m'), @num := @num + 1 FROM sj2 WHERE num &lt; 
+			TIMESTAMPDIFF(MONTH, STR_TO_DATE(CONCAT(#{qsrq},'-01'),'%Y-%m-%d'), STR_TO_DATE(CONCAT(#{zzrq},'-01'),'%Y-%m-%d'))+1
+		), 
+		sj AS (
+			SELECT dt FROM sj1 UNION SELECT dt FROM sj2
+		),
+-- 		fc AS(
+-- 			SELECT kk.tyshxydm, kk.nsrmc, kk.jdxz, kk.fcbl, sj.dt FROM (
+-- 			SELECT k.*, LEAD(qsrq) OVER(PARTITION BY tyshxydm, nsrmc, jdxz ORDER BY qsrq) AS jsrq FROM(
+-- 				SELECT tyshxydm, nsrmc, jdxz, gsrq qsrq, fcbl, ROW_NUMBER() OVER(PARTITION BY tyshxydm, nsrmc, jdxz, gsrq ORDER BY create_time DESC) AS rownum
+-- 				FROM t_srfxxt_qyk WHERE gsrq IS NOT NULL) k
+-- 			WHERE k.rownum = 1 ) kk, sj
+-- 			WHERE kk.qsrq&lt;=sj.dt AND (kk.jsrq IS NULL OR kk.jsrq>sj.dt)
+-- 		),
+		rk as(
+			SELECT IFNULL(t.JDXZ,"") JDXZ, SUM(replace(sjje,',','')*1) SJJE,
+			SUM(IF(ZSXM = '增值税', replace(sjje,',','')*1, 0)) AS ZZS,
+			SUM(IF(ZSXM = '消费税', replace(sjje,',','')*1, 0)) AS XFS,
+			SUM(IF(ZSXM = '营业税', replace(sjje,',','')*1, 0)) AS YYS,
+			SUM(IF(ZSXM = '企业所得税', replace(sjje,',','')*1, 0)) AS QYSDS,
+			SUM(IF(ZSXM = '个人所得税', replace(sjje,',','')*1, 0)) AS GRSDS,
+			SUM(IF(ZSXM = '资源税', replace(sjje,',','')*1, 0)) AS ZYS,
+			SUM(IF(ZSXM = '城市维护建设税', replace(sjje,',','')*1, 0)) AS CSWHJSS,
+			SUM(IF(ZSXM = '房产税', replace(sjje,',','')*1, 0)) AS FCS,
+			SUM(IF(ZSXM = '印花税', replace(sjje,',','')*1, 0)) AS YHS,
+			SUM(IF(ZSXM = '城镇土地使用税', replace(sjje,',','')*1, 0)) AS CZTDSYS,
+			SUM(IF(ZSXM = '土地增值税', replace(sjje,',','')*1, 0)) AS TDZZS,
+			SUM(IF(ZSXM = '车船税', replace(sjje,',','')*1, 0)) AS CCS,
+			SUM(IF(ZSXM = '耕地占用税', replace(sjje,',','')*1, 0)) AS GDZYS,
+			SUM(IF(ZSXM = '契税', replace(sjje,',','')*1, 0)) AS QS,
+			SUM(IF(ZSXM = '环境保护税', replace(sjje,',','')*1, 0)) AS HJBHS,
+	
+			SUM(IF(ZSXM = '车辆购置税', replace(sjje,',','')*1, 0)) AS CLGZS,
+			SUM(IF(ZSXM = '烟叶税', replace(sjje,',','')*1, 0)) AS YY,
+			SUM(IF(ZSXM = '教育费附加', replace(sjje,',','')*1, 0)) AS JYFFJ,
+			SUM(IF(ZSXM = '地方教育附加', replace(sjje,',','')*1, 0)) AS DFJYFJ,
+			SUM(IF(ZSXM = '残疾人就业保障金', replace(sjje,',','')*1, 0)) AS CJRJYBZJ,
+			SUM(IF(ZSXM = '文化事业建设费', replace(sjje,',','')*1, 0)) AS WHSJJSF,
+			SUM(IF(ZSXM = '税务部门罚没收入', replace(sjje,',','')*1, 0)) AS SWBMFMSR,
+			SUM(IF(ZSXM = '水利建设专项收入', replace(sjje,',','')*1, 0)) AS SLJSZXSR,
+			SUM(IF(ZSXM = '其他收入', replace(sjje,',','')*1, 0)) AS QTSR
+			FROM t_db_swj_jrkxx t
+		-- LEFT JOIN fc k ON t.NSRSBH=k.tyshxydm AND t.NSRMC=k.nsrmc AND SUBSTR(t.rkrq, 1, 7) = k.dt
+			WHERE 1=1
+		AND t.jdxz != ''and t.jdxz is not null
+			AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+			AND t.yskm not in('出口业务退增值税')
+			AND t.zsxm != '' 
+			AND t.zsxm is not null
+			<if test="qsrq != null and qsrq != ''">
+				AND SUBSTR(RKRQ,1,7) >= #{qsrq}
+			</if>
+			<if test="zzrq != null and zzrq != ''">
+				AND SUBSTR(RKRQ,1,7) &lt;= #{zzrq}
+			</if>
+			GROUP BY IFNULL(t.JDXZ,"")
+			union all
+			select IFNULL(t.JDXZ,"") jdxz, SUM(replace(sjjetkje,',','')*1) SJJE,
+			0 zzs, 0 xfs, 0 yys, 0 qysds, 
+			SUM(IF(ZSXM = '个人所得税', replace(sjjetkje,',','')*1, 0)) AS GRSDS,
+			0 zys, 0 cswhjss, 0 fcs, 0 yhs, 0 cztdsys, 0 tdzzs, 0 ccs, 0 gdzys, 0 qs, 0 gdzys,
+			0 clgzs, 0 yy, 0 jyffj, 0 dfjyfj, 0 cjrjybzj, 0 whsjjsf, 0 swbmfmsr, 0 sljszxsr, 0 qtsr
+			from t_db_swj_swjrkgsgr t
+		-- LEFT JOIN fc k ON t.NSRSBH=k.tyshxydm AND t.NSRMC=k.nsrmc AND SUBSTR(t.RTKRQ, 1, 7) = k.dt
+			where zsxm !='' and zsxm is not null
+			<if test="qsrq != null and qsrq != ''">
+				AND SUBSTR(RTKRQ,1,7) >= #{qsrq}
+			</if>
+			<if test="zzrq != null and zzrq != ''">
+				AND SUBSTR(RTKRQ,1,7) &lt;= #{zzrq}
+			</if>
+			group by IFNULL(t.JDXZ,"")
+			union all
+			select IFNULL(t.JDXZ,"") jdxz, SUM(replace(sjjetkje,',','')*1) SJJE,
+			0 zzs, 0 xfs, 0 yys, 0 qysds, 
+			SUM(IF(ZSXM = '个人所得税', replace(sjjetkje,',','')*1, 0)) AS GRSDS,
+			0 zys, 0 cswhjss, 0 fcs, 0 yhs, 0 cztdsys, 0 tdzzs, 0 ccs, 0 gdzys, 0 qs, 0 gdzys,
+			0 clgzs, 0 yy, 0 jyffj, 0 dfjyfj, 0 cjrjybzj, 0 whsjjsf, 0 swbmfmsr, 0 sljszxsr, 0 qtsr
+			from t_db_swj_swjrkgsqy t
+		-- LEFT JOIN fc k ON t.NSRSBH=k.tyshxydm AND t.NSRMC=k.nsrmc AND SUBSTR(t.RTKRQ, 1, 7) = k.dt
+			where zsxm !='' and zsxm is not null
+			<if test="qsrq != null and qsrq != ''">
+				AND SUBSTR(RTKRQ,1,7) >= #{qsrq}
+			</if>
+			<if test="zzrq != null and zzrq != ''">
+				AND SUBSTR(RTKRQ,1,7) &lt;= #{zzrq}
+			</if>
+			group by IFNULL(t.JDXZ,"")
+		)
+		SELECT JDXZ,
+			FORMAT(IFNULL(sum(SJJE)/#{dw},0),2) SJJE,
+			FORMAT(IFNULL(sum(ZZS)/#{dw},0),2) ZZS,
+			FORMAT(IFNULL(sum(XFS)/#{dw},0),2) XFS,
+			FORMAT(IFNULL(sum(YYS)/#{dw},0),2) YYS,
+			FORMAT(IFNULL(sum(QYSDS)/#{dw},0),2) QYSDS,
+			FORMAT(IFNULL(sum(GRSDS)/#{dw},0),2) GRSDS,
+			FORMAT(IFNULL(sum(ZYS)/#{dw},0),2) ZYS,
+			FORMAT(IFNULL(sum(CSWHJSS)/#{dw},0),2) CSWHJSS,
+			FORMAT(IFNULL(sum(FCS)/#{dw},0),2) FCS,
+			FORMAT(IFNULL(sum(YHS)/#{dw},0),2) YHS,
+			FORMAT(IFNULL(sum(CZTDSYS)/#{dw},0),2) CZTDSYS,
+			FORMAT(IFNULL(sum(TDZZS)/#{dw},0),2) TDZZS,
+			FORMAT(IFNULL(sum(CCS)/#{dw},0),2) CCS,
+			FORMAT(IFNULL(sum(GDZYS)/#{dw},0),2) GDZYS,
+			FORMAT(IFNULL(sum(QS)/#{dw},0),2) QS,
+			FORMAT(IFNULL(sum(HJBHS)/#{dw},0),2) HJBHS,
+			FORMAT(IFNULL(sum(CLGZS)/#{dw},0),2) CLGZS,
+			FORMAT(IFNULL(sum(YY)/#{dw},0),2) YY,
+			FORMAT(IFNULL(sum(JYFFJ)/#{dw},0),2) JYFFJ,
+			FORMAT(IFNULL(sum(DFJYFJ)/#{dw},0),2) DFJYFJ,
+			FORMAT(IFNULL(sum(CJRJYBZJ)/#{dw},0),2) CJRJYBZJ,
+			FORMAT(IFNULL(sum(WHSJJSF)/#{dw},0),2) WHSJJSF,
+			FORMAT(IFNULL(sum(SWBMFMSR)/#{dw},0),2) SWBMFMSR,
+			FORMAT(IFNULL(sum(SLJSZXSR)/#{dw},0),2) SLJSZXSR,
+			FORMAT(IFNULL(sum(QTSR)/#{dw},0),2) QTSR
+		FROM  rk 
+		group by jdxz
+		ORDER BY CAST(replace(sjje,',','') AS Decimal) DESC
+	</select>
+	
+</mapper>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 土地出让使用税分析 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.TdcrsysfxMapper">
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdcrsysfx"
+			parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdcrsysfx" databaseId="mysql">
+			WITH recursive sj(dt, num) AS (
+				SELECT DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 1 MONTH), '%Y-%m'), @num := 1
+				UNION ALL
+				SELECT DATE_FORMAT(DATE_SUB(DATE_SUB(NOW(),INTERVAL 1 MONTH), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sj WHERE num &lt; 
+				TIMESTAMPDIFF(MONTH,CONCAT('2019-01','-01'),DATE_SUB(NOW(),INTERVAL 1 MONTH))+1
+			),
+			ts AS(
+			SELECT id, ywid, nsrmc, zt, fklx FROM(
+			SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='tdcrsysfx'
+			) ts WHERE rn=1
+			),
+			td AS (
+				SELECT nsrmc, SUM(CRMJ) CRMJ, SUM(yjsk) ynse FROM (
+					SELECT yddw NSRMC,
+						MAX(crmjgq) crmj, MAX(qdrq), COUNT(sj.dt),
+						MAX(crmjgq) * COUNT(sj.dt) * 8 /12 yjsk
+					FROM
+					sj, t_db_zrzyghj_tdcrxx t
+					WHERE crfs != '划拨'
+					<!-- AND sfsh = '否'  -->
+					AND DATE_FORMAT(qdrq, '%Y-%m') &lt; sj.dt
+					<if test="qdrq != null and qdrq != ''">
+						AND SUBSTR(sj.dt,1,4) = #{qdrq}
+					</if>
+					<if test="nsrmc != '' and nsrmc != null ">
+					  AND yddw LIKE CONCAT('%',#{nsrmc},'%')
+					</if>	
+					and yddw in(select nsrmc from t_db_swj_ybnsrdjxx)
+					GROUP BY yddw, id
+				) tt
+				GROUP BY nsrmc
+			),
+			sw AS (
+				SELECT 
+					nsrmc,
+					SUM(REPLACE(sjje,',','')) sjje 
+				FROM t_db_swj_jrkxx t 
+				WHERE ZSPM NOT IN ('滞纳金','罚款') 
+				AND ZSXM = '城镇土地使用税' 
+				AND tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+				<if test="qdrq != null and qdrq != ''">
+					AND SUBSTR(t.SKSSQQ,1,4)=#{qdrq}
+				</if>
+				GROUP BY nsrmc
+			),
+			sy AS (
+				SELECT nsrmc, SUM(jmstdmj) msmj, SUM(yjmsje) jmje 
+				FROM (
+					SELECT nsrmc, jmstdmj, SUM(yjmsje) yjmsje
+					FROM (
+						SELECT row_number() over(PARTITION BY nsrmc, tdbh, num ORDER BY yxqq DESC) AS rownum,
+						nsrmc, tdbh, tdyt,zytdmj, yxqq, yxqz, tddj, jmstdmj, yjmsje
+						FROM t_db_swj_tdsyxx t, sj
+						WHERE SUBSTR(t.yxqq, 1, 7) &lt;= sj.dt
+						AND SUBSTR(t.yxqz, 1, 7) &gt;= sj.dt
+						<if test="qdrq != null and qdrq != ''">
+							AND SUBSTR(t.yxqq, 1, 4) &lt;= #{qdrq}
+							AND SUBSTR(t.yxqz, 1, 4) &gt;= #{qdrq}
+							AND SUBSTR(sj.dt,1,4) = #{qdrq}
+						</if>
+					) t
+					WHERE rownum=1
+					GROUP BY nsrmc, jmstdmj
+				) tt
+				GROUP BY nsrmc
+			)
+			<if test="nsrmc==null or nsrmc==''">
+			SELECT #{qdrq} qdrq,
+				'合计' nsrmc, FORMAT(SUM(TD.CRMJ),2) crmj, 
+				FORMAT(SUM(IFNULL(td.ynse, 0)),2) ynse,
+				FORMAT(SUM(IFNULL(sy.msmj,0)), 2) msmj,
+				FORMAT(SUM(IFNULL(sy.jmje,0)), 2) jmse,
+				FORMAT(SUM(IFNULL(sw.sjje,0)), 2) sjje,
+				FORMAT(SUM(IFNULL(sw.sjje, 0) + IFNULL(sy.jmje,0) - IFNULL(td.ynse,0)),2) ce , '' zt, null fkid
+			FROM td LEFT JOIN sw ON td.nsrmc = sw.nsrmc 
+				LEFT JOIN sy ON td.nsrmc = sy.nsrmc
+				<if test="sfqj !=null and sfqj != ''">
+					<if test="sfqj == 1">
+						where IFNULL(sw.sjje, 0) + IFNULL(sy.jmje,0) - IFNULL(td.ynse,0) &lt; 0
+					</if>
+					<if test="sfqj == 2">
+						where IFNULL(sw.sjje, 0) + IFNULL(sy.jmje,0) - IFNULL(td.ynse,0) &gt;= 0
+					</if>
+				</if>
+			UNION ALL
+			</if>
+			SELECT #{qdrq} qdrq,
+				td.nsrmc, FORMAT(TD.CRMJ,2) crmj, 
+				FORMAT(IFNULL(td.ynse, 0),2) ynse,
+				FORMAT(IFNULL(sy.msmj,0), 2) msmj,
+				FORMAT(IFNULL(sy.jmje,0), 2) jmse,
+				FORMAT(IFNULL(sw.sjje,0), 2) sjje,
+				FORMAT(IFNULL(sw.sjje, 0) + IFNULL(sy.jmje,0) - IFNULL(td.ynse,0),2) ce , ifnull(ts.zt,'0') zt, ts.id fkid
+			FROM td LEFT JOIN sw ON td.nsrmc = sw.nsrmc 
+				LEFT JOIN sy ON td.nsrmc = sy.nsrmc
+				LEFT JOIN ts ON td.nsrmc=ts.nsrmc AND MD5(td.nsrmc)=ts.ywid
+			where 1=1
+			<if test='zt == "0"'>
+				and ts.id is null
+			</if>
+			<if test='zt == "1"'>
+				and ts.zt in ('1', '3.1')
+			</if>
+			<if test='zt == "2"'>
+				and ts.zt = #{zt}
+			</if>
+			<if test='zt == "3"'>
+				and ts.zt in ('3', '3.0','3.2','3.3')
+			</if>
+			<if test="sfqj !=null and sfqj != ''">
+				<if test="sfqj == 1">
+					and IFNULL(sw.sjje, 0) + IFNULL(sy.jmje,0) - IFNULL(td.ynse,0) &lt; 0
+				</if>
+				<if test="sfqj == 2">
+					and IFNULL(sw.sjje, 0) + IFNULL(sy.jmje,0) - IFNULL(td.ynse,0) &gt;= 0
+				</if>
+			</if>
+
+	</select>
+
+	<select id="getTdxxList" resultType="TdcrTdxx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdcrsysfx" databaseId="mysql">
+		SELECT t.id,
+			  <!-- t.xmmc, -->
+			  t.qdrq qdrq,
+			  t.yddw srr,
+			  t.tdzl zdwz,
+			  format(t.crmjgq, 2) zmj,
+			  <!-- format(t.zygdmj * 10000, 2) zygdmj, -->
+			  format(t.crjkwy * 10000, 2) crhbjk,
+			  format(t.crjkwy * 10000 * 0.04, 2) ynse
+			FROM
+			  t_db_zrzyghj_tdcrxx t
+			WHERE crfs != '划拨'
+			 <!--  AND sfsh = '否'  -->
+			<if test="nsrmc != '' and nsrmc != null and nsrmc != '合计'">
+				AND yddw = #{nsrmc}
+			</if>
+	</select>
+
+	<select id="getSyxxList" resultType="Tdsyxx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdcrsysfx" databaseId="mysql">
+		SELECT
+			id,
+			nsrsbh shxydm,
+			nsrmc,
+			nsrlx,
+			tdbh,
+			dh,
+			tdsyqzbh,
+			tdmc,
+			tdsyqrnsrsbh,
+			tdsyqrmc,
+			tdxz,
+			tdqdfs,
+			tdyt,
+			jdxz,
+			zgswskfj,
+			tdzldz,
+			zytdmj,
+			qzqdtdsyqzfje,
+			qztdkfcb,
+			csqdsj,
+			'' nsywzzsj,
+			 yxqq,
+			 yxqz,
+			zspm,
+			tddji tddj,
+			sebz,
+			jmstdmj,
+			yjmsje
+		FROM t_db_swj_tdsyxx t
+		<where>
+			<if test="qdrq != null and qdrq != ''">
+				AND SUBSTR(t.yxqq, 1, 4) &lt;= #{qdrq}
+				AND SUBSTR(t.yxqz, 1, 4) &gt;= #{qdrq}
+			</if>
+			<if test="nsrmc != '' and nsrmc != null and nsrmc != '合计'">
+				and nsrmc = #{nsrmc}
+			</if>
+		</where>
+		order by tdbh, yxqq, yxqz
+	</select>
+
+	<select id="getRkxxList" resultType="Rkxx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdcrsysfx" databaseId="mysql">
+		SELECT 
+			id,
+			t.nsrsbh,
+			t.nsrmc,
+			t.dzsphm,
+			t.pzhm,
+			t.zsxm,
+			t.zspm,
+			t.skssqq,
+			t.skssqz,
+			t.hy,
+			t.zsdlfs,
+			t.jsyj,
+			t.kssl,
+			t.sl,
+			t.sjje,
+			t.rkrq,
+			t.yskm,
+			t.ysfpbl,
+			t.skssswjg,
+			t.zgswskfj,
+			t.pzzl,
+			t.skzl,
+			t.sbfs,
+			t.zsfs,
+			t.jdxz,
+			t.djxh
+		FROM
+			t_db_swj_jrkxx t 
+		WHERE ZSPM NOT IN ('滞纳金','罚款') 
+			AND ZSXM = '城镇土地使用税' 
+			AND tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+			<if test="qdrq != null and qdrq != ''">
+				AND SUBSTR(t.SKSSQQ,1,4)=#{qdrq}
+			</if>
+			<if test="nsrmc != '' and nsrmc != null and nsrmc != '合计'">
+				and t.nsrmc = #{nsrmc}
+			</if>
+	</select>
+</mapper>

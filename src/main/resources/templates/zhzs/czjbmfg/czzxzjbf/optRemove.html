@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head th:include="include :: header('批量删除')"></head>
+	<head>
+		<style>
+			.control-label {
+				padding-top: 7px;
+				text-align: right;
+			}
+		</style>
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form id="form-remove" class="form-horizontal m">
+	        	<input type="hidden" id="gucode" name="gucode" th:value="${gucode}"/>
+	        	<div class="form-group">
+					<label class="col-sm-2 col-xs-2 control-label is-required">删除条件：</label>
+					<div class="col-sm-10 col-xs-10">
+						<select id="delMode" name="delMode" class="form-control" onchange="onDelMode()">
+							<option value="0">数据所属期</option>
+							<option value="1">增加时间</option>
+						</select>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 数据所属期：根据数据所属期进行删除；
+						</span>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 增加时间：根据数据增加时间进行删除；
+						</span>
+					</div>
+				</div>
+				<div class="form-group" id="dt">
+					<label class="col-sm-2 col-xs-2 control-label is-required">选择日期：</label>
+					<div class="col-sm-10 col-xs-10">
+				        <div class="input-group"> 
+				        	<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+				            <input id="dateTime" name="dateTime" type="text"  readonly="readonly" class="form-control"/>
+				        </div>
+					</div>
+				</div>
+				<div class="form-group" id="ct">
+					<label class="col-sm-2 col-xs-2 control-label is-required">选择日期：</label>
+					<div class="col-sm-10 col-xs-10">
+				        <div class="input-group"> 
+				        	<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+				            <input id="createTime" name="createTime" type="text"  readonly="readonly" class="form-control"/>
+				        </div>
+					</div>
+				</div>
+			</form>
+		</div>
+	    <div th:include="include::footer"></div>
+	    <script th:inline="javascript">
+			
+	    	$(function() {
+	    		onDelMode();
+	        });
+			
+			// 格式验证
+			$("#form-remove").validate({
+				rules:{
+					dateTime: {
+						required: true
+					},
+					createTime: {
+						required: true
+					}
+				}
+			});
+			
+			function submitHandler() {
+				if($.validate.form()) {
+					const url = ctx + 'module/dataImp/batchRemove'
+					let data = $('#form-remove').serializeArray();
+					$.modal.loading("正在删除中，请稍后...");
+	            	const config = {
+	        	        url: url,
+	        	        type: "post",
+	        	        dataType: "json",
+	        	        data: data,
+	        	        success: function(result) {
+	        	        	if(result.code === 0) {
+	        	        		$.modal.alertSuccess(result.msg);
+	        	        		parent.$.table.refresh();
+	        	        	}else {
+	                        	$.modal.alertError(result.msg);
+	                        }
+	        	        	$.modal.closeLoading();
+	        	        }
+	        	    };
+	        	    $.ajax(config);
+				}
+		    }
+			
+			function onDelMode() {
+				const delMode = $("#delMode").val();
+				if (delMode === "0") {
+					hideEl(["ct"]);
+	                showEl(["dt"]);
+	            } else {
+	            	hideEl(["dt"]);
+	                showEl(["ct"]);
+	            }
+			}
+			
+			function hideEl(elIds){
+                for (let i = 0; i < elIds.length; i++) {
+					let _elIds = $("#" + elIds[i])
+					_elIds.hide();
+					_elIds.find(":input").attr("disabled", true);
+                }
+            }
+            function showEl(elIds) {
+                for (let i = 0; i < elIds.length; i++) {
+					let _elIds = $("#" + elIds[i])
+					_elIds.show();
+					_elIds.find(":input").attr("disabled", false);
+                }
+            }
+			
+			layui.use('laydate', function() {
+				const laydate = layui.laydate
+				laydate.render({ elem: '#dateTime', type:'month', format: 'yyyy-MM'});
+           		laydate.render({ elem: '#createTime', type:'date', format: 'yyyy-MM-dd'});
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--土地权利人比对 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.TdqlrbdMapper">
+
+    <!-- 查询 -->
+    <select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Tdqlrbd"
+            parameterType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Tdqlrbd">
+        WITH ts AS(
+        SELECT id, ywid, nsrmc, zt, fklx FROM(
+        SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='tdqlrbd'
+        ) ts WHERE rn=1
+        )
+        SELECT gy.qlrmc qlrmc,
+                bdcyt,
+               cast(gy.bdcmj as decimal) mj,
+               td.nsrmc nsrmc,
+               td.nsrsbh nsrsbh,
+               IF(td.nsrmc IS NULL  ,'未匹配','匹配') ppzt, ifnull(ts.zt,'0') zt, ts.id fkid
+        FROM  t_db_zrghj_bdcdjxx gy
+        LEFT JOIN (SELECT t.nsrmc, GROUP_CONCAT(DISTINCT t.nsrsbh) nsrsbh FROM t_db_swj_tdsyxx t GROUP BY t.nsrmc) td ON gy.qlrmc = td.nsrmc
+        LEFT JOIN ts ON gy.qlrmc=ts.nsrmc AND MD5(gy.qlrmc)=ts.ywid
+        where gy.bdcyt NOT IN ('住宅')
+        <if test="qlrmc != null and qlrmc != ''">
+            and qlrmc like concat(concat('%',#{qlrmc}),'%')
+        </if>
+        <!--<if test="nsrmc != null and nsrmc != ''">-->
+            <!--and nsrmc = #{nsrmc}-->
+        <!--</if>-->
+        <if test='zt == "0"'>
+            and ts.id is null
+        </if>
+        <if test='zt == "1"'>
+            and ts.zt in ('1', '3.1')
+        </if>
+        <if test='zt == "2"'>
+            and ts.zt = #{zt}
+        </if>
+        <if test='zt == "3"'>
+            and ts.zt in ('3', '3.0','3.2','3.3')
+        </if>
+        <if test="ppzt != null and ppzt != ''">
+            <if test="ppzt == '匹配'">
+                and td.nsrmc is not null
+            </if>
+            <if test="ppzt == '未匹配'">
+                and td.nsrmc is null
+            </if>
+        </if>
+    </select>
+
+</mapper>

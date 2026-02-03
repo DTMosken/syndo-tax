@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('财政收入完成情况')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+			padding:7px;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+   	 		<form id="query-form" class="layui-form">
+	        	<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-inline layui-col-sm2 layui-col-md2">
+						<label class="layui-form-label">日期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="rkrq" name="rkrq" th:value="${rkrq}"
+									readonly="readonly" autocomplete="off"
+									data-type="month" data-format="yyyy-MM"
+									class="layui-input time-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm2 layui-col-md3">
+						<label class="layui-form-label">征收项目：</label>
+						<div class="layui-input-block">
+							<select id="zsxm" name="zsxm" th:with="type=${@dict.getType('dm_zsxm')}"
+									class="form-control input-sm">
+								<option value=""></option>
+								<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictLabel}"></option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm2 layui-col-md2">
+						<label class="layui-form-label">单位：</label>
+						<div class="layui-input-block">
+							<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+								<option value="1">元</option>
+								<option value="10000">万元</option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">统计口径：</label>
+						<div class="layui-input-block">
+							<select id="tjkj" name="tjkj"
+									class="form-control input-sm">
+								<option value="0">全口径</option>
+								<option value="1">一般预算</option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm2 layui-col-md3">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+								<i class="layui-icon">&#xe615;</i> 查询
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/czsrfx/czsrwcqk";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				loadUrl: prefix + "/list",
+				exportUrl: prefix + "/expExcel",
+				title: "财政收入完成情况",
+				ataType: "json",
+				height: 'full-85',
+
+				cols: [
+                	[
+                		{
+    						type : 'numbers',
+    						title : '序号',
+    						align: 'center',    //水平居中
+    						colspan: 1,
+                            rowspan: 2
+    					},
+                        {
+                        	field : 'zsxm', 
+                            title : '征收项目',
+                            align: 'center',    //水平居中
+                            colspan: 1,
+                            rowspan: 2
+                        },
+                        {
+                        	field : 'ncjh', 
+                            title : '年初计划',
+							templet:'#ncjh',
+                            align: 'center',
+                            colspan: 1,
+                            rowspan: 2
+                        },
+                        {
+                        	title : '完成数',
+                            align: 'center',
+
+                            colspan: 2,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zjh', 
+                            title : '占计划%',
+
+                            align: 'center',
+                            colspan: 1,
+                            rowspan: 2
+                        },
+                        /* {
+                        	field : 'sntq', 
+                            title : '上年同期',
+							templet:'#sntq',
+                            align: 'center',
+                            colspan: 1,
+                            rowspan: 2
+                        },
+                        {
+                        	field : 'bsnzjs', 
+                            title : '比上年增减数',
+							templet:'#bsnzjs',
+                            align: 'center',
+                            colspan: 1,
+                            rowspan: 2
+                        },
+                        {
+                        	field : 'bsn', 
+                            title : '比上年%',
+                            align: 'center',
+                            colspan: 1,
+                            rowspan: 2
+                        } */
+                    ],
+                    [
+                        {
+                        	field : 'bywcs', 
+                            title : '本月',
+                            align: 'center',
+							templet:'#bywcs',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'ljwcs', 
+                            title : '累计',
+							templet:'#ljwcs',
+                            align: 'center',
+                            colspan: 1,
+                            rowspan: 1
+                        }
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#rkrq',type:'month',format:'yyyy-MM'});
+        });
+
+		function fixed(str){
+			if (str !== '' && str != null){
+				if(str === 0){  //当为0时，不用处理
+					return 0 ;
+				}else {
+					return str.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				}
+			} else {
+				return '';
+			}
+		}
+	</script>
+	 <script type="text/html" id="bywcs">{{fixed(d.bywcs)}}</script>
+	 <script type="text/html" id="ljwcs">{{fixed(d.ljwcs)}}</script>
+	 <script type="text/html" id="bsnzjs">{{fixed(d.bsnzjs)}}</script>
+	 <script type="text/html" id="sntq">{{fixed(d.sntq)}}</script>
+	 <script type="text/html" id="ncjh">{{fixed(d.ncjh)}}</script>
+</body>
+</html>

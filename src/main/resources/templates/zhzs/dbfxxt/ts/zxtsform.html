@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('自选推送风险表单')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-gajxjgwh-edit" th:object="${entity}">
+	            <div class="form-group">	
+	                <label class="col-sm-2 control-label">指标名称：</label>
+	                <div class="col-sm-4">
+	                    <input id="zbmc" name="zbmc" th:field="*{zbmc}" class="form-control" type="text">
+	                </div>
+	            </div>
+
+                <div class="form-group">	
+	                <label class="col-sm-2 control-label">指标数据：</label>
+	                <div class="col-sm-10">
+	                    <table class="layui-table" lay-data="{height:150,id:'table1'}" style="table-layout:fixed;overflow:scroll">
+                            <thead>
+                                <tr>
+                                    <th lay-data="{type:'numbers'}"></th>
+                                    <th th:each="item:*{cols}" th:attr="lay-data='{field:\''+${item['column']}+'\', width:200}'" th:text="${item['label']}"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!--/*-->
+                                <tr th:each="row:${rows}">
+                                    <td></td>
+                                    <td th:each="item:${cols}" th:text="${row[item[column]]}"></td>
+                                </tr>
+                                <!--*/-->
+                            </tbody>
+                        </table>
+	                </div>
+	            </div>
+				
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">推送说明： </label>
+					<div class="col-sm-10">
+						<textarea name="tssm" autocomplete="off" maxlength="500" class="form-control" rows="3"></textarea>
+					</div>
+				</div>
+
+				<div class="form-group">
+                    <label class="col-sm-2 control-label">推送人： </label>
+					<div class="col-sm-4">
+						<input id="tsrmc" name="tsrmc" th:field="*{tsrmc}" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">推送时间： </label>
+					<div class="col-sm-4">
+						<input id="tssj" name="tssj" th:field="*{tssj}" class="form-control" type="text">
+					</div>
+				</div>
+			</form>
+	    </div>
+	    <th:block th:include="include :: footer" />
+        <script th:inline="javascript">
+            var zbdm = /*[[${entity.zbdm}]]*/
+            function getLocalData() {
+                var data = [];
+                var store = JSON.parse(sessionStorage.getItem(zbdm));
+                var col = '';
+                for(var i=0;i<store.length;i++) {
+                    var row={};
+                    /*[# th:each="item:${entity.cols}"]*/
+                    col = /*[[${item['column']}]]*/'';
+                    row[col] =  store[i][col];
+                    /*[/]*/
+                    data.push(row)
+                }
+                return data;
+            }
+            
+        </script>
+	    <script type="text/javascript">
+			var prefix = ctx + "zhzs/dbfxxt/xtgl/gajxjgwh";
+			$("#form-gajxjgwh-edit").validate({
+				// 表单验证，参考notes文件
+				rules:{	
+					jxmc:{
+						required:true
+					},
+					sqzjcx:{
+						required:false
+					},
+					jg:{
+						required:false,
+						number:true
+					},
+					kssj:{
+						required:false
+					},
+					jssj:{
+						required:false
+					}
+				}
+			});
+			
+			function submitHandler() {
+                alert('submitHandler!');
+		        // if ($.validate.form()) {
+		        // 	$.operate.save(prefix + "/edit", $('#form-gajxjgwh-edit').serialize());
+		        // }
+		    }
+            layui.use(['table'], function() {
+                var table = layui.table;
+                table.reload('table1', {data: getLocalData()})
+            });
+			layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#kssj', type: 'month', format: 'yyyy-MM'});
+	    	  	laydate.render({elem: '#jssj', type: 'month', format: 'yyyy-MM'});
+		    });
+		</script>
+	</body>
+</html>

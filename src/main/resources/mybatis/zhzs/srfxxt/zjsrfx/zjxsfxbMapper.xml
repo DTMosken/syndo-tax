@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.zjsrfx.ZjxsfxbMapper">
+	<!-- 镇街协税分析表 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjxsfxb" parameterType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjxsfxb">
+	  	SELECT BQ.JDXZ,
+		   FORMAT(ROUND(IFNULL(BQ.SJJE,0)/#{dw},2),2)BNLJ,
+		   FORMAT(ROUND(IFNULL(TZ.TZE,0)/#{dw},2),2) XTSS,
+	       FORMAT(ROUND((IFNULL(BQ.SJJE,0)+IFNULL(TZ.TZE,0))/#{dw},2),2) SJSS 
+		   FROM (
+				SELECT JDXZ,
+					SUM(SJJE) SJJE  
+				FROM t_db_swj_jrkxx
+				WHERE 1=1
+		AND jdxz != ''and jdxz is not null
+			<if test="rkrq != null and rkrq != ''">
+				AND SUBSTR(RKRQ,1,7) >= CONCAT(SUBSTR(#{rkrq},1,4),'-01')
+			</if>
+			<if test="rkrq != null and rkrq != ''">
+				AND SUBSTR(RKRQ,1,7) &lt;= #{rkrq}
+			</if>
+				GROUP BY JDXZ
+			) BQ
+			LEFT JOIN (
+				SELECT JDXZ,
+					SUM(SJJE) TZE 
+				FROM t_srfxxt_xtsstz
+				WHERE 1=1
+			<if test="rkrq != null and rkrq != ''">
+				AND SUBSTR(TZYF,1,7) >= CONCAT(SUBSTR(#{rkrq},1,4),'-01')
+			</if>
+			<if test="rkrq != null and rkrq != ''">
+				AND SUBSTR(TZYF,1,7) &lt;= #{rkrq}
+			</if>
+				GROUP BY JDXZ
+			) TZ ON BQ.JDXZ = TZ.JDXZ
+		ORDER BY CAST(SJJE AS Decimal) DESC
+	</select>
+	
+</mapper>

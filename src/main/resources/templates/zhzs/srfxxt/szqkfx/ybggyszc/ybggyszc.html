@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('一般公共预算支出执行情况')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+			        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">日期 ： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" th:value="${cxsj}" readonly="readonly" id="cxsj" name="cxsj"/>
+										</div>
+									</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-resizable="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/szqkfx/ybggyszc";
+
+        $(function() {
+            var options = {
+                //url: prefix + "/list",
+                modalName: "一般公共预算支出执行情况",
+		        showExport: true,
+		        showSearch:false,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					width : '50',
+					visible: false
+				},
+				{
+					field : 'hh',
+					title : '行号',
+					width : '60',
+					formatter:function(value,row,index) {
+						return $.table.serialNumber(index);
+					}
+				},
+				{
+					field : 'jdxz', 
+					title : '乡镇（街道）',
+					width : '100',
+					sortable: false
+				},
+				{
+					field : 'snybggyszc', 
+					title : '上年一般公共预算支出数',
+					width : '200',
+					sortable: true
+				},
+				{
+					field : 'bnybggyszc', 
+					title : '本年一般公共预算支出数',
+					width : '200',
+					sortable: true
+				},
+				{
+					field : 'yszjl', 
+					title : '预算数较上年数增（减）百分比',
+					width : '220',
+					sortable: true
+				},
+				{
+					field : 'tqzxs', 
+					title : '同期执行数',
+					width : '120',
+					sortable: true
+				},
+				{
+					field : 'bqzxs', 
+					title : '本期执行数',
+					width : '120',
+					sortable: true
+				},
+				{
+					field : 'zxszjl', 
+					title : '较去年同期增（减）百分比',
+					width : '200',
+					sortable: true
+				},
+				{
+					field : 'wcysjd', 
+					title : '完成年预算进度',
+					width : '150',
+					sortable: true
+				},
+				{
+					field : 'cysjd', 
+					title : '超（欠）预算进度',
+					width : '150',
+					sortable: true
+				},
+				{
+					field : 'bz', 
+					title : '备注',
+					width : '100'
+				}]
+            };
+            $.table.init(options);
+        });
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#cxsj',type:'month',format: 'yyyy-MM'});
+        });
+    </script>
+</body>
+</html>

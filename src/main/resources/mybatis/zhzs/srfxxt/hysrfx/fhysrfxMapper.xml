@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.hysrfx.FhysrfxMapper">
+	<!-- 全口径查询 -->
+	<select id="selectHyQkj" resultType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhysrfx" 
+           parameterType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhysrfx">
+           with bnlj as(
+				select hyml, round(sum(sjje)) sjje from ( 
+					select t.HYML, sum(replace(t.SJJE,',','')/#{dw}) sjje
+					from t_db_swj_jrkxx t
+					where t.zsxm != '' and zsxm is not null
+						AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+						AND t.yskm not in('出口业务退增值税')
+						and SUBSTRING(t.RKRQ,1,7) <![CDATA[ >= ]]> #{qsrq}
+						and SUBSTRING(t.RKRQ,1,7) <![CDATA[ <= ]]> #{zzrq}
+						<if test="hymc != null and hymc != ''">
+							AND t.HYML = #{hymc}
+						</if>
+					group by t.HYML
+
+					UNION ALL
+					select hydm.HYML, sum(replace(t.sjjetkje,',','')/#{dw}) sjje
+					from t_db_swj_swjrkgsgr t left join dm_hy_kz hydm on t.hy=hydm.hymc
+					where t.zsxm != '' and zsxm is not null
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> #{qsrq}
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> #{zzrq}
+					<if test="hymc != null and hymc != ''">
+						AND hydm.HYML = #{hymc}
+					</if>
+					group by hydm.hyml
+
+					UNION ALL
+					select hydm.HYML, sum(replace(t.sjjetkje,',','')/#{dw}) sjje
+					from t_db_swj_swjrkgsqy t left join dm_hy_kz hydm on t.hy=hydm.hymc
+					where t.zsxm != '' and zsxm is not null
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> #{qsrq}
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> #{zzrq}
+					<if test="hymc != null and hymc != ''">
+						AND hydm.HYML = #{hymc}
+					</if>
+					group by hydm.hyml
+
+				) tmp group by hyml
+		    ),
+		    sntq as(
+				select hyml, round(sum(sjje)) sjje from (
+					select 
+						t.HYML,
+						ROUND(sum(replace(t.SJJE,',','')/#{dw}),2) sjje
+					from t_db_swj_jrkxx t
+					where t.zsxm != '' and zsxm is not null
+						AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+						AND t.yskm not in('出口业务退增值税')
+						and SUBSTRING(t.RKRQ,1,7) <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq}, 1, 4)-1,substring(#{qsrq}, 5, 7))
+						and SUBSTRING(t.RKRQ,1,7) <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq}, 1, 4)-1,SUBSTRING(#{zzrq}, 5, 7))
+						<if test="hymc != null and hymc != ''">
+							AND t.HYML = #{hymc}
+						</if>
+					group by t.HYML
+
+					UNION ALL
+					select hydm.HYML, sum(replace(t.sjjetkje,',','')/#{dw}) sjje
+					from t_db_swj_swjrkgsgr t left join dm_hy_kz hydm on t.hy=hydm.hymc
+					where t.zsxm != '' and zsxm is not null
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq}, 1, 4)-1,substring(#{qsrq}, 5, 7))
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq}, 1, 4)-1,SUBSTRING(#{zzrq}, 5, 7))
+					<if test="hymc != null and hymc != ''">
+						AND hydm.HYML = #{hymc}
+					</if>
+					group by hydm.hyml
+
+					UNION ALL
+					select hydm.HYML, sum(replace(t.sjjetkje,',','')/#{dw}) sjje
+					from t_db_swj_swjrkgsqy t left join dm_hy_kz hydm on t.hy=hydm.hymc
+					where t.zsxm != '' and zsxm is not null
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq}, 1, 4)-1,substring(#{qsrq}, 5, 7))
+					and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq}, 1, 4)-1,SUBSTRING(#{zzrq}, 5, 7))
+					<if test="hymc != null and hymc != ''">
+						AND hydm.HYML = #{hymc}
+					</if>
+					group by hydm.hyml
+				) tmp group by hyml
+		    ),dict AS (
+			SELECT * FROM sys_dict_data WHERE dict_type='dm_ml'
+			)
+		    select b.HYML hymc,
+		           b.sjje bnljs,
+		           s.sjje sntqs,
+		           b.sjje - s.sjje zje,
+		           round((b.sjje - s.sjje)/nullif(abs(s.sjje),0)*100,2) zjl
+			FROM bnlj b LEFT JOIN sntq s ON b.HYML = s.HYML
+						left join dict d on b.HYML=d.dict_label
+			where b.hyml is not null and b.hyml!=''
+			ORDER BY d.dict_sort
+	</select>
+
+	<!-- 一般预算查询 -->
+	<select id="selectHyYbys" resultType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhysrfx" 
+           parameterType="com.syndo.project.zhzs.srfxxt.domain.hysrfx.Fhysrfx">
+        with bnlj as(
+			select hyml, round(sum(qxj)) qxj from ( 
+				select t.HYML, ROUND(sum(replace(t.qxj,',','')/#{dw}),2) qxj
+				from t_db_swj_jrkxx t
+				where t.zsxm != '' and zsxm is not null
+					AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+					AND t.yskm not in('出口业务退增值税')
+					and SUBSTRING(t.RKRQ,1,7) <![CDATA[ >= ]]> #{qsrq}
+					and SUBSTRING(t.RKRQ,1,7) <![CDATA[ <= ]]> #{zzrq}
+				<if test="hymc != null and hymc != ''">
+					AND t.HYML = #{hymc}
+				</if>
+				group by t.HYML
+
+				UNION ALL
+				select hydm.HYML, sum(replace(t.qxsre,',','')/#{dw}) qxj
+				from t_db_swj_swjrkgsgr t left join dm_hy_kz hydm on t.hy=hydm.hymc
+				where t.zsxm != '' and zsxm is not null
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> #{qsrq}
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> #{zzrq}
+				<if test="hymc != null and hymc != ''">
+					AND hydm.HYML = #{hymc}
+				</if>
+				group by hydm.hyml
+
+				UNION ALL
+				select hydm.HYML, sum(replace(t.qxsre,',','')/#{dw}) qxj
+				from t_db_swj_swjrkgsqy t left join dm_hy_kz hydm on t.hy=hydm.hymc
+				where t.zsxm != '' and zsxm is not null
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> #{qsrq}
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> #{zzrq}
+				<if test="hymc != null and hymc != ''">
+					AND hydm.HYML = #{hymc}
+				</if>
+				group by hydm.hyml
+			) tmp group by hyml
+		),
+		sntq as(
+			select hyml, round(sum(qxj)) qxj from ( 
+				select t.HYML, ROUND(sum(replace(t.qxj,',','')/#{dw}),2) qxj
+				from t_db_swj_jrkxx t
+				where t.zsxm != '' and zsxm is not null
+					AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+					AND t.yskm not in('出口业务退增值税')
+					and SUBSTRING(t.RKRQ,1,7) <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq}, 1, 4)-1,substring(#{qsrq}, 5, 7))
+					and SUBSTRING(t.RKRQ,1,7) <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq}, 1, 4)-1,SUBSTRING(#{zzrq}, 5, 7))
+					<if test="hymc != null and hymc != ''">
+						AND t.HYML = #{hymc}
+					</if>
+				group by t.HYML
+
+				UNION ALL
+				select hydm.HYML, sum(replace(t.qxsre,',','')/#{dw}) qxj
+				from t_db_swj_swjrkgsgr t left join dm_hy_kz hydm on t.hy=hydm.hymc
+				where t.zsxm != '' and zsxm is not null
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq}, 1, 4)-1,substring(#{qsrq}, 5, 7))
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq}, 1, 4)-1,SUBSTRING(#{zzrq}, 5, 7))
+				<if test="hymc != null and hymc != ''">
+					AND hydm.HYML = #{hymc}
+				</if>
+				group by hydm.hyml
+
+				UNION ALL
+				select hydm.HYML, sum(replace(t.qxsre,',','')/#{dw}) qxj
+				from t_db_swj_swjrkgsqy t left join dm_hy_kz hydm on t.hy=hydm.hymc
+				where t.zsxm != '' and zsxm is not null
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq}, 1, 4)-1,substring(#{qsrq}, 5, 7))
+				and SUBSTRING(t.RTKRQ,1,7) <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq}, 1, 4)-1,SUBSTRING(#{zzrq}, 5, 7))
+				<if test="hymc != null and hymc != ''">
+					AND hydm.HYML = #{hymc}
+				</if>
+				group by hydm.hyml
+			) tmp group by hyml
+		),
+		dict AS (
+			SELECT * FROM sys_dict_data WHERE dict_type='dm_ml'
+		)
+		select b.HYML hymc,
+		       b.qxj bnljs,
+		       s.qxj sntqs,
+		       b.qxj - s.qxj zje,
+			   round((b.qxj - s.qxj)/nullif(abs(s.qxj),0)*100,2) zjl
+		FROM bnlj b LEFT JOIN sntq s ON b.HYML = s.HYML
+					left join dict d on b.HYML=d.dict_label
+		where b.hyml is not null and b.hyml!=''
+		ORDER BY d.dict_sort
+    </select>
+	
+</mapper>

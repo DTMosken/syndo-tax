@@ -1,0 +1,234 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 管理区域查询 -->
+<div th:fragment="glqycx">
+    <style>
+        .glqycxTreeContainer {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 86px);
+            overflow: auto;
+        }
+        .glqycxTreeContainer .treeNode {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            padding-right: 8px;
+        }
+    </style>
+    <template id="glqycxTemplate">
+        <my-panel :width.sync="width" :height="leftHeight">
+            <glqycx-dialog ref="dialog" @on-close="onClose"></glqycx-dialog>
+            <div>
+                <h3 style="padding-left: 20px">管理区域查询</h3>
+                <el-button @click="refresh" icon="fa fa-refresh" style="position: absolute; top: 10px; right: 10px" circle title="刷新"></el-button>
+                <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{selected.label}}</i></div>
+                <div class="glqycxTreeContainer">
+                    <el-tree
+                        :data="data"
+                        node-key="id"
+                        :expand-on-click-node="false"
+                        default-expand-all
+                        :props="defaultProps"
+                        @node-click="handleNodeClick"
+                    >
+                        <span class="treeNode" slot-scope="{ node, data }">
+                            <span v-if="data.lx==='2'" class="fa fa-university" :title="data.name"> {{ data.label }}</span>
+                            <span v-if="data.lx==='3'" class="fa fa-map" :title="data.name"> {{ data.label }}</span>
+                            <span>
+                                <span v-if="!data.geo" class="fa fa-map-o" title="未标注"></span>
+                                <span v-if="data.geo&&data.geo.length>0" class="fa fa-map" size="mini" title="已标注"></span>
+                            </span>
+                        </span>
+                    </el-tree>
+                </div>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component("glqycxComponent", {
+            template: "#glqycxTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+            },
+            data() {
+                let defaultSelected = { label: "", id: "", lx: "" };
+                return {
+                    width: 330,
+                    layerType: "glqycx",
+                    leftHeight: '100%',
+                    queryUrl: "/module/taxgis/GlqywhTreeData",
+                    data: [],
+                    expandedKeys: [],
+                    defaultSelected: defaultSelected,
+                    selected: $.extend({}, defaultSelected),
+                    defaultProps: {
+                        children: "children",
+                        label: "label",
+                    },
+                };
+            },
+            mounted() {
+                this.refresh();
+            },
+            destroyed: function () {
+                this.pubVue.$emit("removeMarkers", { layerType: this.layerType });
+            },
+            methods: {
+                onClose() {
+                    this.leftHeight = '100%'
+                },
+                handleNodeClick(data) {
+                    if(data.geo&&data.geo.length>0) {
+                        this.selected = $.extend({}, data);
+                        let obj = {};
+                        $.extend(obj, data);
+                        // this.pubVue.$emit("drawPolygon", {
+                        //     data: obj,
+                        //     marker: glqycxMarkerContentCmp,
+                        //     layerType: this.layerType
+                        // });
+
+                        // 地图显示
+                        let that = this.$parent.$refs.leafletMap
+                        let layerId = that.genLayerId(obj.id, this.layerType)
+                        let markerData = obj
+                        // 清除之前正在编辑的相同Polygon
+                        that.deleteEditingPolygon(layerId)
+                        // 删除已有相同标记
+                        that.delFromDrawGroup(layerId)
+                        that.map.pm.disableDraw()
+                        let wkt = new Wkt.Wkt()
+                        wkt.read(markerData.geo)
+                        let geometry = L.GeoJSON.geometryToLayer(L.GeoJSON.asFeature(wkt.toJson()))
+                        geometry.id = layerId
+                        geometry.on('click', e => this.showDialog(obj.geo, obj.label))
+                        this.showDialog(obj.geo, obj.label);
+                        let center = geometry.getBounds().getCenter()
+                        that.drawGroup.addLayer(geometry)
+                        that.pmPolygon.selected = geometry
+                        // 往右偏移1/10屏以避开列表
+                        // that.map.panTo([center.lat, center.lng - (that.map.getBounds().getEast() - that.map.getBounds().getWest()) / 10])
+                        that.map.panTo([center.lat - (that.map.getBounds().getNorth() - that.map.getBounds().getSouth()) / 4, center.lng - (that.map.getBounds().getEast() - that.map.getBounds().getWest()) / 10])
+
+                    } else {
+                        this.$alert(data.label + "未标注!", "提醒", {
+                            confirmButtonText: "确定",
+                        });
+                    }
+                },
+                showDialog(polygon, label) {
+                    this.leftHeight = '50%'
+                    this.$refs.dialog.showDialog(polygon, label)
+                },
+                refresh() {
+                    // this.$nextTick().then(() => {
+                    let params = new URLSearchParams();
+                    this.axios
+                        .post(this.queryUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            let data = response.data;
+                            this.data = data;
+                            if (data.length > 0) this.expandedKeys = [data[0].id];
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                    // });
+                },
+            },
+        });
+    </script>
+
+    <style>
+        /*dialog*/
+        .glqycxDialogClass {
+            position:absolute;
+            width: 100%;
+            bottom: -50px;
+        }
+        .glqycxDialogClass .el-dialog__body {
+            height: 500px;
+            max-height: 40vh;
+            overflow: hidden;
+        }
+        .syfbTable {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <!-- 管理区域查询结果 -->
+    <template id="glqycxDialogTemplate">
+        <el-dialog
+                :title="title"
+                custom-class="glqycxDialogClass"
+                :append-to-body="false"
+                :fullscreen="false"
+                :modal="false"
+                :modal-append-to-body="false"
+                :close-on-click-modal="false"
+                close-on-press-escape
+                :visible="dialogTableVisible"
+                :before-close="handleDialogClose"
+        >
+            <my-el-table ref="qyqd" table-class="syfbTable" :columns="qyqd.columns" :data-url="qyqd.queryUrl" :query-params="queryParams">
+            </my-el-table>
+
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component('glqycxDialog', {
+            template: '#glqycxDialogTemplate',
+            data() {
+                return {
+                    title: '查询结果',
+                    dialogTableVisible: false,
+                    queryParams: {
+                        polygon: "",
+                    },
+                    qyqd: {
+                        queryUrl: "/module/taxgis/glqyAnalyze",
+                        columns: [
+                            { prop: "nsrsbh", label: "纳税人识别号", width: "200" },
+                            { prop: "nsrmc", label: "纳税人名称", width: "250" },
+                            { prop: "nsrzt", label: "纳税人状态", width: "150" },
+                            { prop: "kzztdjlx", label: "登记类型", width: "150" },
+                            { prop: "djzclx", label: "登记注册类型", width: "150" },
+                            { prop: "kyslrq", label: "开业设立日期", width: "120" },
+                            { prop: "cyrs", label: "从业人数", width: "120", align: 'right'},
+                            { prop: "zzjglx", label: "组织机构类型", width: "200" },
+                            { prop: "jyfw", label: "经营范围", width: "200" },
+                            { prop: "hy", label: "行业", width: "200" },
+                            { prop: "jdxz", label: "街道乡镇", width: "150" },
+                            { prop: "zczb", label: "注册资本", width: "150", align: 'right' },
+                            { prop: "zcdz", label: "注册地址", width: "260" },
+                            { prop: "jydz", label: "经营地址", width: "260" },
+                            { prop: "djjg", label: "登记机关", width: "360" }
+                        ]
+                    }
+
+                }
+            },
+            methods: {
+                showDialog(polygon, label) {
+                    this.dialogTableVisible = true
+                    this.title = '查询结果（' + label+'）'
+                    this.queryParams.polygon = polygon
+                    this.$nextTick().then(() => {
+                        this.$refs.qyqd.queryList();
+                    });
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false
+                    this.$emit('on-close')
+                }
+            }
+        })
+    </script>
+</div>

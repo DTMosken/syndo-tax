@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看详情')" />
+</head>
+<body class="layui-body-table">
+
+			<div class="layui-card-body">
+				<table id="layui-table" lay-filter="layui-table"></table>
+			</div>
+
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+    	var prefix = ctx + "zhzs/dbfxxt/syztfx/ldjdhysybd";
+        var entity = [[${entity}]];
+        
+        $(function() {
+            var options = {
+                url: prefix + '/getTwoList?qymc='+entity.qymc+'&skssqq='+entity.skssqq+'&skssqz='+entity.skssqz,
+                modalName: "查看详情",
+
+                cols: [ [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+					field : 'qymc', 
+					title : '企业名称',
+					sortable: true
+				},
+				{
+				     field : 'sj', 
+				     title : '时间',
+				     sortable: true
+				},
+				{
+					field : 'rzrc', 
+					title : '入住人次',
+					sortable: true
+				},
+				{
+					field : 'dj', 
+					title : '单价',
+					sortable: true
+				},
+				{
+					field : 'yye', 
+					title : '营业额',
+					sortable: true
+				},
+				{
+					field : 'yjje', 
+					title : '应缴金额',
+					sortable: true
+				},
+				{
+					field : 'sjje', 
+					title : '实缴金额',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					sortable: true
+				},
+				{
+				    field : 'ck', 
+					title : '查看详情',
+					align: 'center',
+					templet: function(row) {
+		                var actions = [];
+		                actions.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\''  + row.qymc+'\',\'' + row.sj +'\')"><i class="fa fa-edit"></i>查看详情</a> ');
+		                return actions.join('');
+		            }
+				}] ]
+            };
+            $.table.init(options);
+            
+        });
+		/*查看明细*/
+        function ckxq(qymc,sj) {   
+        	var url = prefix + '/threeList?qymc=' + qymc+'&sj='+sj;
+        	$.modal.openFull("查看明细", url, false);
+		} 
+    </script>
+</body>
+</html>

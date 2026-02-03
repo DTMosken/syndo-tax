@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--有施工许可未办理跨区域登记 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.WblkqyMapper">
+
+    <!-- 查询 -->
+    <select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Wblkqy"
+            parameterType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Wblkqy">
+        WITH ts AS(
+        SELECT id, ywid, nsrmc, zt, fklx FROM(
+        SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='wblkqy'
+        ) ts WHERE rn=1
+        )
+        select 	distinct sg.xmmc gcmc,
+        sg.sgxkbh sgxkzh,
+        sg.sgdw sgdwmc,
+        DATE_FORMAT(substr(sg.sgxkbh,7,8),'%Y-%m-%d') fzrq,
+        DATEDIFF(now(),DATE_FORMAT(substr(sg.sgxkbh,7,8),'%Y-%m-%d'))fzts,
+        '有施工许可未办理跨区域登记' dblx
+        , ifnull(ts.zt,'0') zt, ts.id fkid
+        from t_db_xzspj_sgxktz sg LEFT JOIN ts ON sg.sgdw=ts.nsrmc AND MD5(sg.sgdw)=ts.ywid
+        where 1 = 1
+        AND NOT EXISTS(SELECT 0 FROM t_db_swj_kqybydjxx sw WHERE instr(sw.NSRMC, replace(replace(replace(replace(replace(sg.sgdw,'建设集团有限公司',''),'集团有限公司',''),'有限责任公司',''),'有限公司',''),'有限分公司','')  )&gt;0)
+        AND NOT EXISTS(SELECT 1 FROM t_db_swj_swdjxx d WHERE instr(d.nsrmc, replace(replace(replace(replace(replace(sg.sgdw,'建设集团有限公司',''),'集团有限公司',''),'有限责任公司',''),'有限公司',''),'有限分公司','') )&gt;0)
+        and sg.sgdw not like '%德州%'
+        and sg.sgdw not like '%陵城%'
+        and sg.sgdw not like '%陵县%'
+        and sg.sgdw not like '%临邑%'
+
+        <if test="sgdwmc != null and sgdwmc != ''">
+            and sgdw LIKE concat(concat('%',#{sgdwmc}),'%')
+        </if>
+        <if test='zt == "0"'>
+            and ts.id is null
+        </if>
+        <if test='zt == "1"'>
+            and ts.zt in ('1', '3.1')
+        </if>
+        <if test='zt == "2"'>
+            and ts.zt = #{zt}
+        </if>
+        <if test='zt == "3"'>
+            and ts.zt in ('3', '3.0','3.2','3.3')
+        </if>
+    </select>
+
+</mapper>

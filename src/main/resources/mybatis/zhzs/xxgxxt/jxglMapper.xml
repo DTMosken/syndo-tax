@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.xxgxxt.mapper.JxglMapper">
+
+	<!-- 绩效管理 -->
+	
+	<!-- 查询 -->
+	<select id="query" resultType="com.syndo.project.zhzs.xxgxxt.domain.Zhibiao" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Zhibiao" databaseId="mysql">
+		<![CDATA[
+		with aa as (
+				SELECT md_code zbbh, NAME zbmc, dept_id dept, gather_date bssj, #{yscsj} bszqq FROM pub_data_menu
+			 )
+		     select a.zbmc, CONCAT(a.bszqq , '-' , a.bssj) yscsj, b.log_date sjscsj     
+		     from aa a 
+			 LEFT JOIN (SELECT gucode, date_time, MIN(log_date) log_date FROM pub_meta_data_log where count>=0 GROUP BY gucode, date_time) b 
+			 ON a.zbbh=b.gucode AND DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(a.bszqq,'-01'),'%Y-%m-%d'), INTERVAL 1 MONTH),'%Y-%m')=b.date_time
+		 ]]>
+		 <where>
+			<if test="dept != null and dept != '' "> and a.dept=#{dept} </if>
+		</where>
+		order by a.dept asc
+	</select>
+	<select id="query" resultType="com.syndo.project.zhzs.xxgxxt.domain.Zhibiao" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Zhibiao" databaseId="oracle">
+		<![CDATA[
+		with aa as (
+				select gucode zbbh,tmp_name zbmc, dept,submit_time bssj, #{yscsj} bszqq from pub_meta_data
+			 )
+		     select a.zbmc, a.bszqq || '-' || a.bssj yscsj, b.log_date sjscsj     
+		     from aa a, xxgxxt_zblog b
+		     where  a.zbbh = b.zbbh(+) 
+             and a.bszqq = b.bszq(+)
+             and ((to_char(b.log_date,'yyyy-MM') = substr(bszqq,0,7)) or (b.log_date is null))
+		 ]]>
+		<if test="dept != null and dept != '' "> and a.dept=#{dept} </if>
+		order by a.dept asc
+	</select>
+	
+	<!-- 插入分数 -->
+	<insert id="insertfenshu" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu">
+		insert into xxgxxt_khdf values(#{dept},#{khrq},#{fs1},#{fs2},#{fs3},#{fs4},#{fs5},#{fs6},#{pjfs},#{countfs})
+	</insert>
+	
+	<!-- 查询分数 -->
+	<select id="getFenshu" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu" resultType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu">
+		select * from xxgxxt_khdf where 1=1 and khrq=#{khrq} and dept=#{dept}
+	</select>
+	
+	<!-- 修改分数 -->
+	<update id="updatefenshu" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu" >
+		update xxgxxt_khdf 
+		set fs1=#{fs1},fs2=#{fs2},fs3=#{fs3},fs4=#{fs4},fs5=#{fs5},fs6=#{fs6},pjfs=#{pjfs},countfs=#{countfs} 
+		where dept=#{dept} 
+		and khrq=#{khrq}
+	</update>
+	
+	<!-- 查询排名 -->
+	<select id="getpmFenshu" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu" resultType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu">
+		select a.countfs pmfs ,a.khrq ,b.dept_name from xxgxxt_khdf a join sys_dept b on(a.dept=b.dept_id) where 1=1 
+		<if test="dept != null and dept != '' "> 
+		    and a.dept=#{dept}
+		</if>
+		<if test="khrq != null and khrq != '' "> 
+		    and a.khrq=#{khrq}
+		</if>
+		order by a.countfs desc
+	</select>
+	
+	<!-- 查分 -->
+	<select id="getfen" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Zhibiao" resultType="com.syndo.project.zhzs.xxgxxt.domain.Fenshu" >
+		select * from xxgxxt_khdf a where 1=1 and a.dept=#{dept} and a.khrq=#{yscsj}
+	</select>
+
+</mapper>

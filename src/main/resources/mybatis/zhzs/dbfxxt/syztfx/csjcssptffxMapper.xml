@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.CsjcssptffxMapper">
+	<!-- 城市基础设施配套费分析 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Csjcssptffx" 
+			parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Csjcssptffx" databaseId="oracle">
+		WITH QS AS(
+			SELECT SFXM QYMC, SUM(T.FDCKFXM) ZJE, SUM(T.FDCKFXM) * 0.03 YJQS
+			FROM MD_ZJW_CSJCSSPTF T
+			WHERE SUBSTR(T.SFYJ, 0, 7) >= #{ssqq}
+			AND SUBSTR(T.SFYJ, 0, 7) &lt;= #{ssqz}
+			AND NOT EXISTS (SELECT 0 FROM TMP_DB_DSCSJCPTFQS B WHERE T.SFXM = B.QYMC AND STATE='1')
+			GROUP BY SFXM
+		),
+		DSRK AS(
+			SELECT NSRMC, SUM(SJJE) SJJE
+			FROM MD_SWJ_RKXX
+			WHERE ZSXM = '契税'
+			AND SUBSTR(SKSSQQ, 0, 7) >= #{ssqq}
+			AND SUBSTR(SKSSQQ, 0, 7) &lt;= #{ssqz}
+			<!-- AND YZPZZL = '《土地交易申报表》' -->
+			GROUP BY NSRMC
+		),
+		HJ AS(
+			SELECT SYS_GUID() OBJ_ID,Q.QYMC,#{ssqq} SSQQ,#{ssqz} SSQZ,Q.ZJE,Q.YJQS,NVL(D.SJJE, 0) SJJE, NVL(D.SJJE, 0) - NVL(YJQS,0) CE
+			FROM QS Q, DSRK D
+			WHERE Q.QYMC = D.NSRMC(+)
+		)
+		SELECT * FROM HJ
+		WHERE 1=1
+		<if test="qymc != null and qymc != ''">
+			AND QYMC LIKE '%'||#{qymc}||'%'
+		</if>
+		ORDER BY TO_NUMBER(CE)
+	</select>
+
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Csjcssptffx"
+			parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Csjcssptffx" databaseId="mysql">
+		SELECT jc.`jfdw`AS nsrmc,
+       		   jc.`ptf`AS ptfje,
+       		   jc.`jfsj` AS jnrq,
+       		   (jc.`ptf` * 0.03) AS yjqs,
+       		   jr.SJJE AS sjqs,
+       		   (jc.`ptf` * 0.03) - jr.SJJE AS ce
+		FROM t_db_zjj_csjcssptf jc
+		LEFT JOIN t_db_swj_jrkxx jr ON jc.`jfdw` = jr.`NSRMC`
+		WHERE jc.jfsj LIKE concat(#{ssnd},'%')
+		<if test="nsrmc != null and nsrmc != ''">
+		   AND jc.jfdw = #{nsrmc}
+		</if>
+	</select>
+</mapper>

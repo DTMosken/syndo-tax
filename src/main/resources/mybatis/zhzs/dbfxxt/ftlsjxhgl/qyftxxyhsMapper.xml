@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.QyftxxyhsMapper">
+	<!-- 查询条件 这里是户籍比对分析 使用 -->
+	<sql id="whereClause">
+
+		<if test="bszq != null and bszq != ''"> and bszq = #{bszq}</if>
+		<if test="title != null and title != ''"> and title like '%'||#{title}||'%'</if>
+		<if test="nsrsbh != null and nsrsbh != ''"> and nsrsbh = #{nsrsbh}</if>
+		<if test="nsrmc != null and nsrmc != ''"> and nsrmc like '%'||#{nsrmc}||'%'</if>
+		<if test="staddress != null and staddress != ''"> and staddress like '%'||#{staddress}||'%'</if>
+		<if test="sbyh != null and sbyh != ''"> and y.user_name like '%'||#{sbyh}||'%'</if>
+		<if test="ownername != null and ownername != ''"> and ownername like '%'||#{ownername}||'%'</if>
+		<if test="businessstate != null and businessstate != ''"> and businessstate = #{businessstate}</if>
+		<!-- <if test="account != null and account != ''"> and y.user_code = #{account}</if> -->
+		<if test="checkeduserid != null and checkeduserid != ''"> and z.user_name like '%'||#{checkeduserid}||'%'</if>
+		<if test="checktime != null and checktime != ''"> and substr(checktime,0,10) = #{checktime}</if>
+		<if test="address != null and address != ''"> and address like '%'||#{address}||'%'</if>
+		<if test="bzzt != null and bzzt != ''">
+			<if test="bzzt == '未标注'">
+				and (longitude in('null','0.0') or latitude in('null','0.0'))
+			</if>
+			<if test="bzzt == '已标注'">
+				and longitude != 'null'
+				and longitude != '0.0'
+				and latitude != 'null'
+				and latitude != '0.0'
+			</if>
+		</if>
+		<if test="account != null and account != ''"> and y.user_code = #{account}</if>
+		<!-- 乡镇开票需求：乡镇只能查看该乡镇的数据，包括上报和增加的 -->
+		<if test="username != null and username != ''"> and (y.user_name like  #{username}||'%' or zjr like #{username}||'%')</if>
+
+	</sql>
+
+	<!-- 查询条件2 这里是数据查看（地税局）使用 -->
+	<sql id="whereClause2">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="bszq != null and bszq != ''"> and bszq = #{bszq}</if>
+				<if test="title != null and title != ''"> and title like '%'||#{title}||'%'</if>
+				<if test="nsrsbh != null and nsrsbh != ''"> and nsrsbh = #{nsrsbh}</if>
+				<if test="nsrmc != null and nsrmc != ''"> and nsrmc like '%'||#{nsrmc}||'%'</if>
+				<if test="frmc != null and frmc != ''"> and frmc like '%'||#{frmc}||'%'</if>
+				<if test="xcqr != null and xcqr != ''"> and xcqr like '%'||#{xcqr}||'%'</if>
+				<if test="ownnumber != null and ownnumber != ''"> and ownnumber = #{ownnumber}</if>
+			</trim>
+		</where>
+	</sql>
+
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs">
+		select
+		t.obj_id,t.title,t.staddress,t.address,t.remark,t.userid,t.longitude,t.latitude,t.electricitynumber,t.waternumber,t.taxnumber,t.sbsj,t.imgfilepath,t.
+		imgfilepath2,t.businesstitle,t.businessnumber,t.businessstate,t.businessphone,t.gasnumber,t.ownnumber,t.ownername,t.owneridnumber,t.
+		ownerphnumber,t.industryname,t.policehotel,t.nsrsbh,t.nsrmc,t.scjydz,t.frmc,t.lxdh,t.jyfw,t.cyrs,t.jye,t.fwly,t.xcqr,t.cqrzjh,t.fwjz,t.czfcyz,t.fcmj,t.
+		czfcmj,t.fczlje,t.fcszxbz,t.tddjbz,t.qnynftls,t.jmftse,t.yjnftls,t.sbhm,t.glbm,t.bszq,t.zjr,t.zjsj,t.xgr,t.xgsj,t.taxacreage,t.notaxacreage,t.businesstitle2,t.
+		businessnumber2,t.ownnumber2,'撤销已核对' as
+		ischecked,t.ISPRINT,t.ISRAR,t.PRINTUSERID,t.PRINTTIME,t.RARTIME,z.user_name
+		as
+		checkeduserid,t.checktime,t.zl,t.dc,t.tdlb,t.mj1,t.mj2,t.mj3,
+		y.user_name as sbyh from cs_ftlsgzgl
+		t,gis_users y,sys_user z
+		where
+		t.userid = y.user_id
+		and t.checkeduserid = z.login_name
+		and t.ischecked is
+		not null
+
+		<!-- select t.*,y.user_name as sbyh from ( select * from cs_ftlsgzgl where 
+			1=1 -->
+		<include refid="whereClause" />
+		<!-- ) t left join gis_users y on t.userid = y.user_id -->
+
+	</select>
+
+	<!-- 按照条件查询 -->
+	<select id="queryqydwxxList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs">
+		select * from cs_ftlsgzgl
+		<include refid="whereClause2" />
+	</select>
+
+	<!-- 获取文书信息 -->
+	<select id="getwsList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs">
+		select
+		t.obj_id,t.title,t.staddress,t.address,t.remark,t.userid,t.longitude,t.latitude,t.electricitynumber,t.waternumber,t.taxnumber,t.sbsj,t.imgfilepath,t.
+		imgfilepath2,t.businesstitle,t.businessnumber,t.businessstate,t.businessphone,t.gasnumber,t.ownnumber,t.ownername,t.owneridnumber,t.
+		ownerphnumber,t.industryname,t.policehotel,t.nsrsbh,t.nsrmc,t.scjydz,t.frmc,t.lxdh,t.jyfw,t.cyrs,t.jye,t.fwly,t.xcqr,t.cqrzjh,t.fwjz,t.czfcyz,t.fcmj,t.
+		czfcmj,t.fczlje,t.fcszxbz,t.tddjbz,t.qnynftls,t.jmftse,t.yjnftls,t.sbhm,t.glbm,t.bszq,t.zjr,t.zjsj,t.xgr,t.xgsj,t.taxacreage,t.notaxacreage,t.businesstitle2,t.
+		businessnumber2,t.ownnumber2,'已核对' as
+		ischecked,z.user_name,t.ISPRINT,case when t.ISRAR is null then '未生成'
+		else t.ISRAR end as ISRAR,
+		t.PRINTUSERID,t.PRINTTIME,t.RARTIME,RARUSERID,WSID,t.mj1,t.mj2,t.mj3,
+		checkeduserid,t.checktime,t.zl,t.dc,t.tdlb,
+		y.user_name as sbyh from
+		cs_ftlsgzgl
+		t,gis_users y,sys_user z
+		where t.userid = y.user_id
+		and
+		t.checkeduserid = z.account
+		and t.ischecked is not null
+		<!-- and t.OWNERNAME is not null -->
+		<include refid="whereClause" />
+	</select>
+
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs"
+		parameterType="string">
+		<!-- select * from cs_ftlsgzgl where obj_Id = #{objId} -->
+		select
+		obj_id,title,staddress,address,remark,userid,longitude,latitude,electricitynumber,waternumber,
+		taxnumber,sbsj,'http://25.52.132.101/'||substr(imgfilepath,15) as
+		imgfilepath,businesstitle,businessnumber,businessstate,businessphone,
+		gasnumber,ownnumber,ownername,owneridnumber,ownerphnumber,industryname,policehotel,nsrsbh,nsrmc,
+		scjydz,frmc,lxdh,jyfw,cyrs,jye,fwly,xcqr,cqrzjh,fwjz,czfcyz,fcmj,czfcmj,fczlje,fcszxbz,tddjbz,zl,dc,tdlb,
+		qnynftls,jmftse,yjnftls,sbhm,glbm,bszq,zjr,zjsj,xgr,xgsj,taxacreage,notaxacreage,businesstitle2,businessnumber2,ownnumber2
+		from cs_ftlsgzgl where obj_Id = #{objId}
+	</select>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxyhs">
+		update cs_ftlsgzgl
+		<set>
+			title =#{title},staddress =#{staddress},nsrmc =#{nsrmc},nsrsbh
+			=#{nsrsbh},address =#{address},remark =#{remark},longitude
+			=#{longitude},
+			latitude =#{latitude},electricitynumber
+			=#{electricitynumber},waternumber =#{waternumber},
+			taxnumber
+			=#{taxnumber},businesstitle =#{businesstitle},businessnumber
+			=#{businessnumber},
+			businessstate =#{businessstate},businessphone
+			=#{businessphone},gasnumber =#{gasnumber},taxAcreage =
+			#{taxAcreage},noTaxAcreage=#{noTaxAcreage},
+			ownnumber
+			=#{ownnumber},ownername =#{ownername},owneridnumber
+			=#{owneridnumber},ownerphnumber =#{ownerphnumber},
+			industryname
+			=#{industryname},scjydz =#{scjydz},jyfw =#{jyfw},cyrs =#{cyrs},frmc
+			=#{frmc},lxdh =#{lxdh},
+			jye =#{jye},fwly =#{fwly},xcqr =#{xcqr},cqrzjh
+			=#{cqrzjh},fwjz =#{fwjz},czfcyz =#{czfcyz},fcmj =#{fcmj},
+			czfcmj
+			=#{czfcmj},fczlje =#{fczlje},fcszxbz =#{fcszxbz},tddjbz
+			=#{tddjbz},qnynftls =#{qnynftls},
+			jmftse =#{jmftse},yjnftls
+			=#{yjnftls},sbhm =#{sbhm},glbm
+			=#{glbm},bszq=#{bszq},businesstitle2=#{businesstitle2},businessnumber2=#{businessnumber2},
+			ownnumber2=#{ownnumber2},xgr=#{xgr},xgsj=#{xgsj},zl=#{zl},dc=#{dc},tdlb=#{tdlb}
+		</set>
+		where obj_Id = #{objId}
+	</update>
+
+</mapper>

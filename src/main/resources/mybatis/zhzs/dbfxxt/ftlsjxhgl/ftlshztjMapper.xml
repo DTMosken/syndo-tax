@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.FtlshztjMapper">
+	<!-- 查询 -->
+	<sql id="whereClause">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="tdsysgt != null and tdsysgt!= ''"> AND TDSYS &gt;=#{tdsysgt}</if>
+				<if test="tdsyslt != null and tdsyslt!= ''"> AND TDSYS &lt;=#{tdsyslt}</if>
+				<if test="fcsgt != null and fcsgt != ''"> AND FCS &gt;=#{fcsgt}</if>
+				<if test="fcslt != null and fcslt != ''"> AND FCS &lt;=#{fcslt}</if>
+				<if test="hjgt != null and hjgt != ''"> AND HJ &gt;=#{hjgt}</if>
+				<if test="hjlt != null and hjlt != ''"> AND HJ &lt;=#{hjlt}</if>
+				<if test="jdnumgt != null and jdnumgt != ''"> AND JDNUM &gt;=#{jdnumgt}</if>
+				<if test="jdnumlt != null and jdnumlt != ''"> AND JDNUM &lt;=#{jdnumlt}</if>
+				<if test="jdlist!=null">
+					AND JD IN
+					<foreach item="item" index="index" collection="jdlist" open="("
+						separator="," close=")">
+						#{item} 
+					</foreach>
+				</if>
+			</trim>
+		</where>
+	</sql>
+	<!-- 查询 其他查询 -->
+	<sql id="otherClause">
+		<if test="jdlist!=null">
+			<foreach item="item" index="index" collection="jdlist" open=""
+				separator=" " close="">
+				 AND T.DZ NOT LIKE '%' ||#{item}|| '%' 
+			</foreach>
+		</if>
+	</sql>
+	<!-- 子句  -->
+	<sql id="withView">
+		WITH DICT AS (
+			SELECT DICT_LABEL FROM SYS_DICT_DATA
+			WHERE DICT_TYPE = 'dm_dbfxxt_ftlsjxhgl_tdsysyztz_jd'
+    	),
+		FTLSHZTJ AS (
+			SELECT BB.DICT_LABEL AS JD,
+			COUNT(DISTINCT PJBH) AS JDNUM,
+			ROUND(SUM(CASE WHEN T.SZ='房产税' THEN TO_NUMBER(T.SJE) END), 2) FCS,
+			ROUND(SUM(CASE WHEN T.SZ='个人所得税' THEN TO_NUMBER(T.SJE) END), 2) GRSDS,
+			ROUND(SUM(CASE WHEN T.SZ='城镇土地使用税' THEN TO_NUMBER(T.SJE) END), 2) TDSYS,
+			ROUND(SUM(CASE WHEN T.SZ='印花税' THEN TO_NUMBER(T.SJE) END), 2) YHS,
+			ROUND(SUM(CASE WHEN T.SZ='滞纳金' THEN TO_NUMBER(T.SJE) END), 2) ZNJ,
+			ROUND(SUM(SJE), 2) HJ 
+			FROM CS_FTLSZSGLTAX T  
+			RIGHT JOIN DICT BB 
+			ON 
+			(
+				BB.DICT_LABEL &lt;&gt; '其它' AND T.DZ LIKE '%' || BB.DICT_LABEL || '%'
+			) 
+			OR 
+    		(
+    			BB.DICT_LABEL = '其它'
+				<include refid="otherClause" />
+    		)
+			GROUP BY BB.DICT_LABEL 
+		)
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Ftlshztj"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Ftlshztj">
+		<include refid="withView"/>
+		SELECT JD,JDNUM,FCS,GRSDS,TDSYS,YHS,ZNJ,HJ FROM FTLSHZTJ
+		<include refid="whereClause" />
+	</select>
+</mapper>

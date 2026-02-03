@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.xtwh.WrqyknsrMapper">
+	<!-- 未入企业库纳税人 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Wrqyknsr" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Wrqyknsr">
+			WITH ls_jdxzss AS
+			(SELECT t.id,t.nsrsbh,t.nsrmc,t.sjje,t.rkrq,t.jdxz
+			FROM t_db_swj_jrkxx t
+			WHERE 1=1
+			AND NOT EXISTS (
+			SELECT 1 FROM t_srfxxt_qyk r WHERE t.nsrsbh=r.tyshxydm AND t.nsrmc=r.nsrmc
+			)
+			UNION ALL
+			SELECT t.id,t.nsrsbh,t.nsrmc,t.sjjetkje,t.rtkrq,t.jdxz
+			FROM t_db_swj_swjrkgsqy t
+			WHERE 1=1
+			AND NOT EXISTS (
+			SELECT 1 FROM t_srfxxt_qyk r WHERE t.nsrsbh=r.tyshxydm AND t.nsrmc=r.nsrmc
+			)
+			UNION ALL
+			SELECT t.id,t.nsrsbh,t.nsrmc,t.sjjetkje,t.rtkrq,t.jdxz
+			FROM t_db_swj_swjrkgsgr t
+			WHERE 1=1
+			AND NOT EXISTS (
+			SELECT 1 FROM t_srfxxt_qyk r WHERE t.nsrsbh=r.tyshxydm AND t.nsrmc=r.nsrmc
+			)) 
+			SELECT nsrsbh tyshxydm,nsrmc,format(SUM(sjje),2) sjje,GROUP_CONCAT(DISTINCT jdxz) jdxz FROM ls_jdxzss
+			WHERE 1=1
+			<if test="dateTimeStart != null and dateTimeStart != ''">
+				AND SUBSTR(RKRQ,1,10) >= #{dateTimeStart}
+			</if>
+			<if test="dateTimeEnd != null and dateTimeEnd != ''">
+				AND SUBSTR(RKRQ,1,10) &lt;= #{dateTimeEnd}
+			</if>
+			<if test="nsrmc != null and nsrmc != ''">
+	          AND NSRMC LIKE '%'||#{nsrmc}||'%'
+	        </if>
+	        <if test="jdxz != null and jdxz != ''">
+	          AND JDXZ = #{jdxz}
+	        </if>
+		  	GROUP BY NSRSBH, NSRMC
+	</select>
+	
+</mapper>

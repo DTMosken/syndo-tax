@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+	
+<!-- 户籍比对 - 建筑施工企业未在税务纳税 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.JzsgqyMapper">
+	<!-- 查询 -->
+	<select id="selectList" resultType="JzsgqySw" parameterType="JzsgqySw">
+		WITH ts AS(
+		SELECT id, ywid, nsrmc, zt, fklx FROM(
+		SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='jzsgqy'
+		) ts WHERE rn=1
+		)
+		SELECT distinct SGDW QYMC,xmmc, '税务局' CLDW, '建筑施工企业未在税务进行纳税' INFO, ifnull(ts.zt,'0') zt, ts.id fkid
+		FROM t_db_xzspj_sgxktz A LEFT JOIN ts ON a.SGDW=ts.nsrmc AND MD5(A.SGDW)=ts.ywid
+		WHERE
+		<!-- AND DBZT != '1' -->
+		NOT EXISTS (SELECT 0 FROM t_db_swj_jrkxx D WHERE A.SGDW = D.NSRMC)
+		
+			<!--<if test="ssnd != null and ssnd != ''">-->
+				<!--and SUBSTR(A.fzsj, 1, 4) = #{ssnd}-->
+			<!--</if>-->
+			<if test="qymc != null and qymc != ''"> 
+				and A.SGDW like concat(concat('%',#{qymc}),'%')
+			</if>
+			<if test='zt == "0"'>
+				and ts.id is null
+			</if>
+			<if test='zt == "1"'>
+				and ts.zt in ('1', '3.1')
+			</if>
+			<if test='zt == "2"'>
+				and ts.zt = #{zt}
+			</if>
+			<if test='zt == "3"'>
+				and ts.zt in ('3', '3.0','3.2','3.3')
+			</if>
+<!--			<if test='tsfs == "1" and cysl > 0 '>-->
+<!--				and (ts.zt in ('0','2') or ts.id is null)-->
+<!--				order by rand() limit #{cysl}-->
+<!--			</if>-->
+	</select>
+</mapper>

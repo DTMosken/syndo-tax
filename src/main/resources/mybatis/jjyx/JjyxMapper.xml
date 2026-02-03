@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.syndo.project.jjyx.mapper.JjyxMapper">
+    <select id="qyxxRltQy" resultType="Rlt">
+        select lon, lat, cnt `count` from t_jjyx_rlt where lx='1'
+    </select>
+
+    <select id="qyxxRltSs" resultType="Rlt">
+        select lon, lat, cnt `count` from t_jjyx_rlt where lx='2'
+    </select>
+
+    <select id="selectJjyxData" resultType="JjyxData">
+        select `key`, `value` from t_jjyx_data
+        where `name`=#{name}
+    </select>
+    <select id="selectJjyxDataByKey" resultType="JjyxData">
+        select `key`, `value` from t_jjyx_data
+        where `name`=#{name}
+        <if test="key!=null and key!=''"> and `key` = #{key} </if>
+    </select>
+
+</mapper>

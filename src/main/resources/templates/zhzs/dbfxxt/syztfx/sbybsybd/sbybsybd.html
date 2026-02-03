@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('社保医保刷卡税源比对')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">所属期起： </label>
+					<div class="layui-input-block">
+						<input type="text" id="ssqq" name="ssqq" th:value="${ssqq}"
+							   readonly="readonly" autocomplete="off"
+							   data-type="month" data-format="yyyy-MM"
+							   class="layui-input time-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<label class="layui-form-label">所属期止： </label>
+					<div class="layui-input-block">
+						<input type="text" id="ssqz" name="ssqz" th:value="${ssqz}"
+							   readonly="readonly" autocomplete="off"
+							   data-type="month" data-format="yyyy-MM"
+							   class="layui-input time-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md3">
+					<label class="layui-form-label">刷卡金额乘积：</label>
+					<div class="layui-input-block">
+						<input type="text" id="skjecj" name="skjecj" th:value="${skjecj}" autocomplete="off" class="layui-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md3">
+					<label class="layui-form-label">纳税人名称：</label>
+					<div class="layui-input-block">
+						<input type="text" id="nsrmc" name="nsrmc" autocomplete="off" class="layui-input">
+					</div>
+				</div>
+			</div>
+
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">疑似差额大于：</label>
+					<div class="layui-input-block">
+						<input type="text" id="yscedy" name="yscedy" autocomplete="off" class="layui-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">疑似差额小于：</label>
+					<div class="layui-input-block">
+						<input type="text" id="yscexy" name="yscexy" autocomplete="off" class="layui-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm12 layui-col-md2">
+					<div class="layui-form-btn" style="text-align: left">
+						<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+							<i class="layui-icon">&#xe615;</i> 查询
+						</a>
+						<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+							<i class="layui-icon">&#xe669;</i> 重置
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/syztfx/sbybsybd";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+				exportUrl: prefix + "/expExcel",
+                title: "社保医保刷卡税源比对",
+				height:"full-110",
+		        showExport: true,
+                cols: [[{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+
+				},
+				{
+				     field : 'nsrmc',
+				     title : '纳税人名称',
+					 align: 'center',
+					 width: 300,
+				     sort: true,
+
+				},
+				{
+				     field : 'skje',
+				     title : '刷卡金额',
+					 align: 'right',
+				     sort: true
+				},
+				{
+				     field : 'ynzzs',
+				     title : '应纳增值税',
+					 align: 'right',
+				     sort: true
+				},
+				{
+				     field : 'sjzzs',
+				     title : '实缴增值税',
+					 align: 'right',
+				     sort: true
+				},
+				{
+				     field : 'ysce',
+				     title : '疑似差额',
+					 align: 'right',
+				     sort: true
+				}
+				/*,{
+				    field : 'ck', 
+					title : '查看详情',
+					align: 'center',
+					templet: function(row) {
+		                var actions = [];
+		                actions.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\''  + row.ydmc+'\',\'' + row.skssqq+'\',\'' + row.skssqz +'\')"><i class="fa fa-edit"></i>查看详情</a> ');
+		                return actions.join('');
+		            }
+				}*/
+				] ]
+            };
+            $.table.init(options);
+        });
+		/*查看详情*/
+        function ckxq(ydmc,skssqq,skssqz) {   
+        	var url = prefix + '/twoList?ydmc=' + ydmc+'&skssqq='+skssqq+'&skssqz='+skssqz+'&xsje='+$("#xsje").val()+'&type='+$("#type").val()+'&cedy='+$("#cedy").val()+'&cexy='+$("#cexy").val();
+        	$.modal.openFull("查看详情", url, false);
+		}  
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#ssqq',format: 'yyyy-MM',type:'month'});
+    	  	laydate.render({elem: '#ssqz',format: 'yyyy-MM',type:'month'});
+        });
+        
+    </script>
+</body>
+</html>

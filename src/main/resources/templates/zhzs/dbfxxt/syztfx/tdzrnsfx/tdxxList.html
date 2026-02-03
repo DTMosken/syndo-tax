@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <meta charset="utf-8" />
+    <head>
+        <th:block th:include="include :: layui-header('查看详情')" />
+    </head>
+    <body class="layui-body-table">
+        <div class="layui-card-body">
+            <table id="layui-table" lay-filter="layui-table"></table>
+        </div>
+
+        <th:block th:include="include :: layui-footer" />
+        <script th:inline="javascript">
+            var prefix = ctx + 'zhzs/dbfxxt/syztfx/tdzrnsfx'
+            var nsrmc = /*[[${param.nsrmc}]]*/ ''
+            var qdrq = /*[[${param.qdrq}]]*/ ''
+
+            $(function () {
+                var options = {
+                    url: prefix + '/getTdxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq,
+                    modalName: '查看详情',
+                    bottomToolbar: [],
+                    cols: [
+                        [
+                            {
+                                checkbox: true
+                            },
+                            {
+                                field: 'id',
+                                hide: true
+                            },
+                            {
+                                field: 'zrf',
+                                title: '转让方',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'zrffddbr',
+                                title: '转让方法定代表人',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'srf',
+                                title: '受让方',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'srffddbr',
+                                title: '受让方法定代表人',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'tdwz',
+                                title: '土地位置',
+                                align: 'center',
+                                sort: true
+                            },
+                            {
+                                field: 'tdmj',
+                                title: '土地面积',
+                                align: 'right',
+                                sort: true
+                            },
+                            {
+                                field: 'zrsj',
+                                title: '转让时间',
+                                align: 'right',
+                                sort: true
+                            },
+                            {
+                                field: 'zrzje',
+                                title: '转让总金额',
+                                align: 'right',
+                                sort: true
+                            }
+                        ]
+                    ]
+                }
+                $.table.init(options)
+            })
+        </script>
+    </body>
+</html>

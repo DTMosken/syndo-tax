@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.JyzxsnsfxMapper">
+	<!-- 子句  -->
+	<sql id="withView">
+	WITH 
+		K1 AS(
+			SELECT JYZMC,QY92,QY98,QY95,CY0,CY10,MAX(XGSJ)XGSJ,SSYF	FROM( 
+				SELECT XL.JYZMC,
+				CASE WHEN XL.SSYF>=W.SJQ AND XL.SSYF &lt;=W.SJZ THEN W.QY92 ELSE '6.52' END QY92,
+				CASE WHEN XL.SSYF>=W.SJQ AND XL.SSYF &lt;=W.SJZ THEN W.QY95 ELSE '6.72' END	QY95,
+				CASE WHEN XL.SSYF>=W.SJQ AND XL.SSYF &lt;=W.SJZ THEN W.QY98 ELSE '7.66' END	QY98,
+				CASE WHEN XL.SSYF>=W.SJQ AND XL.SSYF &lt;=W.SJZ THEN W.CY0  ELSE '6.24' END CY0,
+				CASE WHEN XL.SSYF>=W.SJQ AND XL.SSYF &lt;=W.SJZ THEN W.CY10 ELSE '7.5'  END CY10,
+				W.XGSJ,W.SJQ,XL.SSYF,W.SJZ
+				FROM CS_JMJ_JYZXSTJ XL,TMP_JYZ W
+			) GROUP BY JYZMC,QY92,QY98,QY95,CY0,CY10,SSYF
+		),
+		K2 AS(
+			SELECT JYZMC,QY92,QY98,QY95,CY0,CY10,XGSJ,SSYF FROM K1 WHERE XGSJ IN(
+				SELECT MAX(XGSJ) FROM K1 GROUP BY JYZMC,SSYF
+			)
+		),
+		K3 AS(
+			SELECT T.JYZMC,
+			MAX(T.OBJID)OBJID,
+			NVL(SUM(T.QY92),0) QY92,
+			NVL(SUM(T.QY92 * NVL(W.QY92,6.4)),0) XSE92,
+			NVL(SUM(T.QY92 *NVL(W.QY92,6.4)*0.03),0) QYYJSK92,
+			NVL(SUM(T.QY95),0)QY95,
+			NVL(SUM(T.QY95 *NVL(W.QY95,6.77)),0) XSE95,
+			NVL(SUM(T.QY95 * NVL(W.QY95,6.77)*0.03),0) QYJYSK95,
+			NVL(SUM(T.QY98),0)QY98,
+			NVL( SUM(T.QY98 *NVL(W.QY98,7.66)),0) XSE98,
+			NVL( SUM(T.QY98 * NVL(W.QY98,7.66)*0.03),0)QYJYSK98,
+			NVL(SUM(T.CY0),0) CY0,
+			NVL(SUM(T.CY0 * NVL(W.CY0,6.24)),0) XSE0,
+			NVL(SUM(T.CY0 *NVL(W.CY0,6.24)*0.03),0) CYJYSK0,
+			NVL( SUM(T.CY10),0)CY10,
+			NVL(SUM(T.CY10 * NVL(W.CY10,7.5)),0) XSE10,
+			NVL(SUM(T.CY10 * NVL(W.CY10*0.03,7.5)*0.03),0)CYJYSK10,
+			MAX(T.XSQYL)XSQYL,MAX(T.XSCYL)XSCYL,
+			T.SSYF
+			FROM (
+				(SELECT T.JYZMC JYZMC, T.QY92, T.QY95, T.QY98, T.CY0,T.CY10,T.SSYF,T.XSQYL,T.XSCYL,T.ID OBJID FROM CS_JMJ_JYZXSTJ T)
+				 T LEFT JOIN (K2) W ON T.JYZMC = W.JYZMC
+			) GROUP BY T.JYZMC,T.SSYF
+		),
+		K6 AS(
+			SELECT K3.*,D.JYZMC JYZNAME FROM K3 LEFT OUTER JOIN TMP_ZJB_JYZ_RKXX D ON
+			K3.JYZMC=D.JYZNAME
+		),
+		K4 AS(
+			SELECT N.JYZMC, SUM(N.SHUIE)SHUIE,N.SSQQ,N.NSRSBH,N.ZGSWS
+	      	FROM (
+		      	SELECT T.JYZMC, SUBSTR(G.SKSSQQ, 0, 7) SSQQ, NVL(G.SJJE,0) SHUIE,G.NSRSBH NSRSBH,G.ZGSWSKFJ ZGSWS
+		      	FROM TMP_ZJB_JYZ_RKXX T, MD_SWJ_RKXX G
+		      	WHERE G.NSRMC = T.JYZMC
+		      	AND SUBSTR(G.SKSSQQ, 0, 7) >= '2016-01'
+		      	AND G.ZSXM = '增值税'
+		      	GROUP BY T.JYZMC,G.NSRSBH,G.ZGSWSKFJ, SUBSTR(G.SKSSQQ, 0, 7), NVL(G.SJJE,0)
+	      	) N
+	      GROUP BY N.JYZMC,N.SSQQ,N.NSRSBH,N.ZGSWS
+		)
+	</sql>
+	<select id="getTwoList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Jyzxsnsfx"
+		parameterType="string">
+		<include refid="withView"/>	
+		SELECT JYZNAME,
+		SUM(XSCYL) XSCYL,
+		SUM(XSQYL) XSQYL,
+		SUM(XSE92) XSE92,
+		SUM(XSE95) XSE95,
+		SUM(XSE98) XSE98,
+		SUM(XSE0) XSE0,
+		SUM(XSE10) XSE10,
+		SUM(QYYJSK92) YJSK92,
+		SUM(QYJYSK95) YJSK95,
+		SUM(QYJYSK98) YJSK98,
+		SUM(CYJYSK0) YJSK0,
+		SUM(CYJYSK10) YJSK10,
+		SUM(SHUIE) SHUIE,
+		SUM(CY0) CY0,
+		SUM(CY10) CY10,
+		SUM(QY92) QY92,
+		SUM(QY95) QY95,
+		SUM(QY98) QY98,
+		SUM(SHUIE) - SUM(QYYJSK92 + QYJYSK95 + QYJYSK98 + CYJYSK0 + CYJYSK10) CE,
+		SSYF FROM(SELECT K6.*,NVL(K4.SHUIE,0)SHUIE FROM K6 LEFT JOIN K4 ON
+		K6.JYZNAME=K4.JYZMC AND K6.SSYF=K4.SSQQ
+		)WHERE 1=1
+		<if test="jyzname!=null and jyzname !=''">AND JYZNAME LIKE '%'||#{jyzname}||'%'</if>
+		<if test="ssyfq!=null and ssyfq !=''">AND SSYF &gt;=#{ssyfq}</if>
+		<if test="ssyfz!=null and ssyfz !=''">AND SSYF &lt;=#{ssyfz}</if>
+		GROUP BY JYZNAME,SSYF
+	</select>
+
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Jyzxsnsfx"
+		resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Jyzxsnsfx">
+		<include refid="withView"/>	
+		SELECT DD.JYZNAME, ROUND(XSYL,2) XSYL, ROUND(XSE,2)XSE,ROUND(YJSK,2)YJSK,
+		ROUND(SHUIE,2)SHUIE,ROUND(CE,2)CE, DD.SSYFX SSYFX, DD.SSYFD SSYFD,
+		NVL(BD.OBJ_ID,SYS_GUID()) OBJ_ID,CASE WHEN BD.STATE='2' THEN '回退' 
+		WHEN BD.STATE='4' THEN '终止'  ELSE '新建' END SFHT,BD.HTYY,DD.NSRSBH,DD.ZGSWS
+		FROM(
+		    SELECT JYZNAME,SUM(XSYL) XSYL,SUM(XSE) XSE,SUM(YJSK) YJSK,SUM(SHUIE) SHUIE,
+		       SUM(CE) CE,#{ssyfq} SSYFX,#{ssyfz} SSYFD,MAX(OBJID)OBJID,NSRSBH,ZGSWS
+		  	FROM (
+			  		SELECT OBJID,JYZNAME,XSYL,XSE,YJSK,SHUIE,(SHUIE - YJSK) CE,SSYF,NSRSBH,ZGSWS
+	          		FROM (
+	          			SELECT MAX(OBJID) OBJID,JYZNAME,SUM(XSCYL + XSQYL) XSYL,
+	                	SUM(XSE92 + XSE95 + XSE98 + CY0 + CY10) XSE,
+                    	SUM(QYYJSK92 + QYJYSK95 + QYJYSK98 + CYJYSK0 +
+                    	CYJYSK10) YJSK,SUM(SHUIE) SHUIE,SSYF,NSRSBH,ZGSWS
+                 		FROM (
+           					SELECT K6.*, NVL(K4.SHUIE, 0) SHUIE,K4.NSRSBH,K4.ZGSWS
+               				FROM K6 LEFT JOIN K4
+                 			ON K6.JYZNAME = K4.JYZMC AND K6.SSYF = K4.SSQQ 
+                        ) WHERE  JYZNAME NOT IN (
+               				SELECT BD.JYZNAME FROM TMP_DB_JYZDBFX BD
+							WHERE JYZNAME = BD.JYZNAME AND BD.STATE = '1'
+						)
+				        <if test="jyzname!=null and jyzname !=''">AND JYZNAME LIKE '%'||#{jyzname}||'%'</if>
+						<if test="ssyfq!=null and ssyfq !=''">AND SSYF &gt;=#{ssyfq}</if>
+						<if test="ssyfz!=null and ssyfz !=''">AND SSYF &lt;=#{ssyfz}</if>
+      					GROUP BY JYZNAME, SSYF,NSRSBH,ZGSWS
+      				)
+					ORDER BY SSYF
+			)
+ 			GROUP BY JYZNAME,NSRSBH,ZGSWS
+ 		) DD
+ 		LEFT JOIN 
+ 		(SELECT  OBJ_ID,STATE,HTYY,JYZNAME,SSYFX,SSYFD FROM  TMP_DB_JYZDBFX ) BD
+ 		ON DD.JYZNAME=BD.JYZNAME
+	  	<choose>
+			<when test="ssyfq!=null and ssyfq !=''">
+				 AND DD.SSYFX=BD.SSYFX
+			</when>
+	 	    <otherwise>
+	        	 AND BD.SSYFX IS NULL
+	        </otherwise>
+	 	</choose>
+	 	<choose>
+		 	<when test="ssyfz!=null and ssyfz !=''">
+		 		 AND DD.SSYFD=BD.SSYFD
+		 	</when>
+		 	<otherwise>
+		 		 AND BD.SSYFD IS NULL
+		 	</otherwise>
+	 	</choose>
+	</select>
+</mapper>

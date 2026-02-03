@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('报送详情')" />
+</head>
+<body class="gray-white">
+    <style>
+    	.select-list label{
+    		text-align:right;
+    		width:100px;
+    	}
+    </style>
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="col-sm-12 search-collapse">
+				<form id="post-form">
+					<div class="select-list">
+						<ul>
+							<!-- <li>
+								报送时间：<input type="text" id="bsTime" name="bsTime" th:value="${dateTime + ' 至 ' + dateTime}" readonly="readonly"/>
+							</li> -->
+							<li>
+								数据所属期：<input type="text" id="dateTime" name="dateTime" readonly="readonly"/>
+							</li>
+							<li>
+								部门名称：
+        						<input name="deptId"  type="hidden" id="treeId"/>
+								<input type="text" id="treeName" name="deptName" onclick="selectDeptTree()" readonly="readonly" >
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+	        <div class="btn-group-sm" id="toolbar" role="group">
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/xxgxxt/bsxq";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                modalName: "报送详情",
+		        showExport: true,
+		        showSearch: false,
+				pageSize: 10,
+				pageList: [10, 30, 50, 100],
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'dateTime', 
+					title : '数据所属期',
+					sortable: true
+				},
+				{
+					field : 'deptName', 
+					title : '部门',
+					sortable: true
+				},
+				{
+					field : 'chdesc', 
+					title : '指标名称',
+					sortable: true
+				},
+				{
+					field : 'userName', 
+					title : '报送人',
+					sortable: true
+				},
+				{
+					field : 'count', 
+					title : '报送数量',
+					sortable: true
+				},
+				{
+					field : 'type', 
+					title : '报送类型',
+					sortable: true
+				},
+				{
+					field : 'logDate', 
+					title : '报送时间',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+        });
+        
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+      	    laydate.render({elem: '#dateTime', type:'month', format:'yyyy-MM' });
+			laydate.render({elem: '#bsTime', type: 'month', range: '至'});
+        });
+        
+        function selectDeptTree() {
+        	var treeId = $("#treeId").val();
+        	var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+        	var url = ctx + "system/dept/selectDeptTree/" + deptId;
+			var options = {
+				title: '选择部门',
+				width: "380",
+				height: "480",
+				url: ctx + "system/dept/selectDeptTree/" + deptId,
+				callBack: writeBack
+			};
+			$.modal.openOptions(options);
+		}
+
+		function writeBack(index, layero){
+			var tree = layero.find("iframe")[0].contentWindow.$._tree;
+			if ($.tree.notAllowParents(tree)) {
+				var body = layer.getChildFrame('body', index);
+    			$("#treeId").val(body.find('#treeId').val());
+    			$("#treeName").val(body.find('#treeName').val());
+    			layer.close(index);
+			}
+		}
+    </script>
+</body>
+</html>

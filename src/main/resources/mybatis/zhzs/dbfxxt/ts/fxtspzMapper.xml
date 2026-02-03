@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 风险推送配置 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.FxtspzMapper">
+
+    <select id="selectFxtspz" resultType="Fxtspz" databaseId="mysql">
+        SELECT `key`, `value` from t_dbfxxt_fxtspz
+    </select>
+
+    <insert id="saveTsrq" parameterType="Fxtspz">
+        replace into t_dbfxxt_fxtspz(`key`, `value`)
+        values ('tsrq', #{tsrq})
+    </insert>
+
+    <insert id="saveFksx" parameterType="Fxtspz">
+        replace into t_dbfxxt_fxtspz(`key`, `value`)
+        values ('fksx', #{fksx})
+    </insert>
+
+</mapper>

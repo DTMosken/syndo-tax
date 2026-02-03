@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('行业税电指数管理')" />
+    <style type="text/css">
+        .layui-card-header{
+            height: auto;
+        }
+    </style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">行业：</label>
+                    <div class="layui-input-block">
+                        <select id="sshy" name="sshy" th:with="type=${@dict.getType('dm_ml')}" class="form-control select2-multiple">
+                            <option value=""></option>
+                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictLabel}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">税款所属期起： </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="skssqq" name="skssqq" th:value="${skssqq}"
+                               readonly="readonly" autocomplete="off"
+                               data-type="month" data-format="yyyy-MM"
+                               class="layui-input time-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">税款所属期止： </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="skssqz" name="skssqz" th:value="${skssqz}"
+                               readonly="readonly" autocomplete="off"
+                               data-type="month" data-format="yyyy-MM"
+                               class="layui-input time-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm12 layui-col-md5">
+                    <div class="layui-form-btn" style="text-align: right">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.operate.edit()">
+                            <i class="layui-icon">&#xe716;</i> 设置
+                        </a>
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                            <i class="layui-icon">&#xe615;</i> 查询
+                        </a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                            <i class="layui-icon">&#xe669;</i> 重置
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/dbfxxt/ztzhfx/hysdzsgl";
+
+    $(function() {
+        var options = {
+            url: prefix + "/list",
+            exportUrl: prefix + "/expExcel",
+            updateUrl: prefix + "/set?id={id}",
+            title: "行业税电指数管理",
+            height:"full-70",
+            clickToSelect: true,
+            showExport: true,
+            cols:[ [{
+                checkbox: true
+            },
+                {
+                    field : 'id',
+                    title : 'ID',
+                    hide: true
+                },
+                {
+                    field : 'sshy',
+                    title : '所属行业',
+                    sortable: true,
+                    width : 250
+                },
+                {
+                    field : 'sk',
+                    title : '税款合计(元)',
+                    sortable: true,
+                    width: 150,
+                    align: 'right'
+                },
+                {
+                    field : 'ydl',
+                    title : '用电量合计(度)',
+                    sortable: true,
+                    width: 150,
+                    align: 'right'
+                },
+                {
+                    field : 'sdzs',
+                    title : '税电指数',
+                    sortable: true,
+                    width: 150,
+                    align: 'right'
+                }
+            ]]
+        };
+        $.table.init(options);
+    });
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        laydate.render({elem: '#skssqq', type: 'month', format: 'yyyy-MM'});
+        laydate.render({elem: '#skssqz', type: 'month', format: 'yyyy-MM'});
+    });
+</script>
+</body>
+</html>

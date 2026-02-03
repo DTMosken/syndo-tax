@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+	
+<!-- 户籍比对 - 人社局缴纳社保企业未在税务注册 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.RsjjnsbMapper">
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Rsjjnsb"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Rsjjnsb">
+		SELECT * FROM(
+			SELECT ID,'1'TYPE,'1'FLAG,DWMC QYMC,'税务局'CLDW,'人社局参保企业未在税务注册'INFO 
+			FROM T_DB_RSJ_QYYLBXJF A
+			WHERE 1=1
+			AND NOT EXISTS (SELECT 0 FROM T_DB_SWJ_SWDJXX D WHERE A.DWMC = D.NSRMC)
+			GROUP BY DWMC
+		)T
+		WHERE 1=1
+		<if test="type != null and type != ''"> and type=#{type}</if>
+		<if test="qymc != null and qymc != ''"> and qymc like concat(concat('%',#{qymc}),'%')</if>
+	</select>
+</mapper>

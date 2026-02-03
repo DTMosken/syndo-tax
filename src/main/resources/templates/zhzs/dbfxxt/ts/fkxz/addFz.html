@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('添加风控小组分组')"/>
+</head>
+<body>
+<div class="main-content">
+    <form id="form-add" class="form-horizontal">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label is-required">分组名称：</label>
+                    <div class="col-sm-8">
+                        <input id="fzmc" name="fzmc" autocomplete="off" placeholder="请输入分组名称" class="form-control" type="text"
+                               maxlength="30" required>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<th:block th:include="include :: footer"/>
+<script>
+    var prefix = ctx + "zhzs/dbfxxt/ts/fkxz";
+
+    $("#form-add").validate({
+        onkeyup: false,
+        rules: {
+            fzmc: {
+                required: true,
+            },
+        },
+        messages: {
+        },
+        focusCleanup: true
+    });
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            var data = $("#form-add").serializeArray();
+            $.operate.saveModal(prefix + "/addFz", data);
+        }
+    }
+
+</script>
+</body>
+</html>

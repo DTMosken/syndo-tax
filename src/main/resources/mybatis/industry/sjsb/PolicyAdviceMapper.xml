@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 政策建议 -->
+<mapper namespace="com.syndo.project.industry.sjsb.mapper.PolicyAdviceMapper">
+
+    <!-- 查询 -->	
+	<select id="selectList" parameterType="com.syndo.project.industry.sjsb.domain.PolicyAdvice" resultType="com.syndo.project.industry.sjsb.domain.PolicyAdvice">
+		SELECT * FROM T_FILE
+		WHERE FILE_TYPE = '1'
+		<if test="fileName != null and fileName != ''">
+			AND FILE_NAME LIKE '%'||#{fileName}||'%'
+		</if>
+	</select>
+	
+	<!-- 主键查询 -->
+	<select id="selectById" parameterType="String" resultType="com.syndo.project.industry.sjsb.domain.PolicyAdvice">
+		SELECT * FROM T_FILE
+		WHERE FILE_TYPE = '1'
+		AND ID = #{id}
+	</select>
+	
+</mapper>

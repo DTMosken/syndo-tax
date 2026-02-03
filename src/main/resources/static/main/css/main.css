@@ -1,0 +1,41 @@
+/* 首页样式*/
+@font-face {font-family: electronicFont;src: url(../../fonts/DS-DIGIT.TTF)}
+/* 滚动条 */
+::-webkit-scrollbar{width: 5px; height: 10px;}
+::-webkit-scrollbar-button:vertical{display: none;}
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner{background-color: #e2e2e2;}
+::-webkit-scrollbar-thumb{border-radius: 0; background-color: rgba(0,0,0,.3);}
+::-webkit-scrollbar-thumb:vertical:hover{background-color: rgba(0,0,0,.35);}
+::-webkit-scrollbar-thumb:vertical:active{background-color: rgba(0,0,0,.38);}
+/* 全局 */
+html{background-color: #f2f2f2; color: #666;}
+*[template], .layadmin-tabsbody-item{display: none;}
+*[lay-href], *[lay-tips], *[layadmin-event]{cursor: pointer;}
+/*  格局 */
+.layui-fluid {padding: 10px;}
+.layui-card-header {position: relative;height: 40px;line-height: 40px}
+.layui-card-header .layui-icon {line-height: initial;position: absolute;right: 15px;top: 50%;margin-top: -7px;}
+/* 标签 */
+.layuiadmin-badge{position: absolute; top: 50%; margin-top: -9px; right: 15px; color: #01AAED; }
+.layuiadmin-card-list{padding: 10px;}
+.layuiadmin-card-list p.layuiadmin-big-font{font-size: 24px; color: #666; line-height: 24px; padding: 5px 0 10px; overflow: hidden; text-overflow: ellipsis; word-break: break-all; white-space: nowrap;}
+.layuiadmin-span-color{font-size: 14px; position: absolute; right: 15px;}
+.layuiadmin-span-color i{padding-left: 5px;}
+/* 轮播样式 */
+.layadmin-carousel{height: 185px !important; background-color: #fff;}
+.layadmin-carousel .layui-carousel,
+.layadmin-carousel > *[carousel-item] > *{background-color: #fff;}
+/* 数据图表 */
+.layadmin-dataview{height: 300px !important;}
+.layadmin-dataview>*[carousel-item]:before{display: none;}
+.layadmin-dataview>*[carousel-item]>div{height: 300px;}
+/* 进度条 */
+.layadmin-takerates{padding-top: 5px;height: 280px;}
+.layadmin-takerates .layui-progress{margin: 30px 0 50px;}
+.layadmin-takerates .layui-progress:last-child{margin-bottom: 10px;}
+.layadmin-takerates .layui-progress h3{position: absolute; right: 0; top: -30px; color: #999; font-size: 14px;}
+.layadmin-takerates .layui-progress-bar{text-align: left;}
+.layadmin-takerates .layui-progress-text{top: -30px; line-height: 26px; font-size: 26px;}
+/* 加载 */
+.layadmin-loading{position: absolute; left: 50%; top: 50%; margin: -16px -15px; font-size: 30px; color: #c2c2c2;}
+

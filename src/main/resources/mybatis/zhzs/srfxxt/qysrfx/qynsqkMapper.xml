@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.qysrfx.QynsqkMapper">
+	
+	<!--企业纳税增长额查询  -->
+	<select id="selectZze" resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qynsqk" parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qynsqk">
+		WITH BQ AS(
+			SELECT GROUP_CONCAT(DISTINCT NSRSBH)NSRSBH, NSRMC,
+			SUM(JE) BQHJ,SUM(ZTS) BQZTS FROM (
+	
+			<if test="tjkj == 0">
+				SELECT NSRSBH,NSRMC,replace(SJJE,',','') JE,
+				CASE
+				WHEN ZSXM = '增值税' THEN replace(SJJE,',','')
+				WHEN ZSXM = '企业所得税' THEN replace(SJJE,',','')
+				WHEN ZSXM = '个人所得税' THEN replace(SJJE,',','')
+				ELSE 0
+				END AS ZTS
+			</if>
+			<if test="tjkj == 1">
+				SELECT NSRSBH,NSRMC,replace(QXJ,',','') JE,
+				CASE
+				WHEN ZSXM = '增值税' THEN replace(QXJ,',','')
+				WHEN ZSXM = '企业所得税' THEN replace(QXJ,',','')
+				WHEN ZSXM = '个人所得税' THEN replace(QXJ,',','')
+				ELSE 0
+				END AS ZTS
+			</if>
+	
+	
+			FROM t_srfxrkxx
+			WHERE 1=1
+			<if test="qsrq != null and qsrq != ''"> 
+				AND rkrq >= #{qsrq}
+			</if>
+			<if test="zzrq != null and zzrq != ''"> 
+				AND rkrq &lt;= #{zzrq}
+			</if>
+			<if test="nsrmc != null and nsrmc != ''">
+				AND nsrmc LIKE CONCAT(CONCAT('%',#{nsrmc}),'%')
+			</if>
+			) tt GROUP BY NSRMC
+		),
+		TQ AS (
+			SELECT GROUP_CONCAT(DISTINCT NSRSBH)NSRSBH, NSRMC,
+			SUM(JE) TQHJ,SUM(ZTS) TQZTS FROM (
+	
+			<if test="tjkj == 0">
+				SELECT NSRSBH,NSRMC,replace(SJJE,',','') JE,
+				CASE
+				WHEN ZSXM = '增值税' THEN replace(SJJE,',','')
+				WHEN ZSXM = '企业所得税' THEN replace(SJJE,',','')
+				WHEN ZSXM = '个人所得税' THEN replace(SJJE,',','')
+				ELSE 0
+				END AS ZTS
+			</if>
+			<if test="tjkj == 1">
+				SELECT NSRSBH,NSRMC,replace(QXJ,',','') JE,
+				CASE
+				WHEN ZSXM = '增值税' THEN replace(QXJ,',','')
+				WHEN ZSXM = '企业所得税' THEN replace(QXJ,',','')
+				WHEN ZSXM = '个人所得税' THEN replace(QXJ,',','')
+				ELSE 0
+				END AS ZTS
+			</if>
+			FROM t_srfxrkxx
+			WHERE 1=1
+	
+			<if test="qsrq != null and qsrq != ''"> 
+				AND rkrq >= concat(substring(#{qsrq},1,4)-1, substring(#{qsrq},5,7))
+			</if>
+			<if test="zzrq != null and zzrq != ''"> 
+				AND rkrq &lt;= concat(substring(#{zzrq},1,4)-1, substring(#{zzrq},5,7))
+			</if>
+			<if test="nsrmc != null and nsrmc != ''">AND nsrmc LIKE CONCAT(CONCAT('%',#{nsrmc}),'%')</if>
+	
+			) tt GROUP BY NSRMC
+		),
+		JS AS (
+			SELECT b.NSRSBH, b.NSRMC,
+			ROUND(IFNULL(b.BQHJ, 0)/#{dw},2) BQHJ,
+			ROUND(IFNULL(b.BQZTS, 0)/#{dw},2) BQZTS,
+			ROUND(IFNULL(t.TQHJ,0)/#{dw},2)  TQHJ,
+			ROUND(IFNULL(t.TQZTS,0)/#{dw},2) TQZTS,
+			ROUND((IFNULL(b.BQHJ, 0)-IFNULL(t.TQHJ, 0))/#{dw},2) ZZE
+			FROM BQ b LEFT JOIN TQ  t
+			ON b.NSRMC = t.NSRMC
+			ORDER BY ZZE DESC
+		),
+		JG AS (
+			SELECT JS.NSRSBH, JS.NSRMC, JS.BQHJ, JS.BQZTS, JS.TQHJ, JS.TQZTS, JS.ZZE,
+			ROUND(JS.ZZE/IF(IFNULL(abs(JS.TQHJ),0)=0, 1, abs(JS.TQHJ))*100,2) ZS
+			FROM JS WHERE ZZE>0
+		)
+		SELECT * <!-- JG.NSRSBH, JG.NSRMC,
+		ROUND((CASE WHEN JG.BQHJ='0' THEN '' ELSE JG.BQHJ END ),2)BQHJ,
+		ROUND((CASE WHEN JG.BQZTS='0' THEN '' ELSE JG.BQZTS END ),2)BQZTS,
+		ROUND((CASE WHEN JG.TQHJ='0' THEN '' ELSE JG.TQHJ END ),2)TQHJ,
+		ROUND((CASE WHEN JG.TQZTS='0' THEN '' ELSE JG.TQZTS END ),2)TQZTS,
+		ROUND((CASE WHEN JG.ZZE='0' THEN '' ELSE JG.ZZE END ),2)ZZE,
+		ROUND((CASE WHEN JG.ZS='0' THEN '' ELSE JG.ZS END ),2)ZS -->
+		FROM JG <!-- WHERE (ZJY !=0 OR ZTSY !=0 OR ZJE !=0 OR ZTSE !=0 ) -->
+	</select>
+
+	<!--企业纳税下降额查询  -->
+	<select id="selectXje" resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.QynsqkxjlExcel" parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.QynsqkxjlExcel">
+		WITH BQ AS(
+ 			SELECT GROUP_CONCAT(DISTINCT NSRSBH)NSRSBH, NSRMC,
+ 			SUM(JE) BQHJ,SUM(ZTS) BQZTS FROM (
+ 			<if test="tjkj == 0">
+				SELECT NSRSBH,NSRMC,replace(SJJE,',','') JE,
+					   CASE
+						   WHEN ZSXM = '增值税' THEN replace(SJJE,',','')
+						   WHEN ZSXM = '企业所得税' THEN replace(SJJE,',','')
+						   WHEN ZSXM = '个人所得税' THEN replace(SJJE,',','')
+						   ELSE 0
+					   END AS ZTS
+ 			</if>
+ 			<if test="tjkj == 1">
+				SELECT NSRSBH,NSRMC,replace(QXJ,',','') JE,
+					   CASE
+						   WHEN ZSXM = '增值税' THEN replace(QXJ,',','')
+						   WHEN ZSXM = '企业所得税' THEN replace(QXJ,',','')
+						   WHEN ZSXM = '个人所得税' THEN replace(QXJ,',','')
+						   ELSE 0
+					   END AS ZTS
+ 			</if>
+				FROM t_srfxrkxx
+				WHERE 1=1 <!-- AND ZSXM NOT IN('教育费附加','地方教育附加','文化事业建设费','税务部门罚没收入','残疾人就业保障金','其他收入') -->
+				<if test="qsrq != null and qsrq != ''"> 
+					AND rkrq >= #{qsrq}
+				</if>
+				<if test="zzrq != null and zzrq != ''"> 
+					AND rkrq &lt;= #{zzrq}
+				</if>
+				<if test="nsrmc != null and nsrmc != ''">and nsrmc like CONCAT(CONCAT('%',#{nsrmc}),'%')</if>
+			) a GROUP BY NSRMC
+		),
+		TQ AS (
+			SELECT GROUP_CONCAT(DISTINCT NSRSBH)NSRSBH, NSRMC,
+ 			SUM(JE) TQHJ,SUM(ZTS) TQZTS FROM (
+ 			<if test="tjkj == 0">
+				SELECT NSRSBH,NSRMC,replace(SJJE,',','') JE,
+					   CASE
+						   WHEN ZSXM = '增值税' THEN replace(SJJE,',','')
+						   WHEN ZSXM = '企业所得税' THEN replace(SJJE,',','')
+						   WHEN ZSXM = '个人所得税' THEN replace(SJJE,',','')
+						   ELSE 0
+					   END AS ZTS
+ 			</if>
+ 			<if test="tjkj == 1">
+				SELECT NSRSBH,NSRMC,replace(QXJ,',','') JE,
+					   CASE
+						   WHEN ZSXM = '增值税' THEN replace(QXJ,',','')
+						   WHEN ZSXM = '企业所得税' THEN replace(QXJ,',','')
+						   WHEN ZSXM = '个人所得税' THEN replace(QXJ,',','')
+						   ELSE 0
+					   END AS ZTS
+ 			</if>
+				FROM t_srfxrkxx 
+				WHERE 1=1 <!-- AND ZSXM NOT IN('教育费附加','地方教育附加','文化事业建设费','税务部门罚没收入','残疾人就业保障金','其他收入') -->
+				<if test="qsrq != null and qsrq != ''"> 
+					AND rkrq >= concat(substring(#{qsrq},1,4)-1, substring(#{qsrq},5,7))
+				</if>
+				<if test="zzrq != null and zzrq != ''"> 
+					AND rkrq &lt;= concat(substring(#{zzrq},1,4)-1, substring(#{zzrq},5,7))
+				</if>
+				<if test="nsrmc != null and nsrmc != ''">and nsrmc like CONCAT(CONCAT('%',#{nsrmc}),'%')</if>
+			) b GROUP BY NSRMC
+		),
+		JS AS (
+			SELECT BQ.NSRSBH, BQ.NSRMC NSRMC,
+				ROUND(IFNULL(BQ.BQHJ, 0)/#{dw},2) BQHJ,
+				ROUND(IFNULL(BQ.BQZTS, 0)/#{dw},2) BQZTS,
+				ROUND(IFNULL(TQ.TQHJ,0)/#{dw},2)  TQHJ,
+				ROUND(IFNULL(TQ.TQZTS,0)/#{dw},2) TQZTS,
+				ROUND((IFNULL(BQ.BQHJ, 0)-IFNULL(TQ.TQHJ, 0))/#{dw},2) ZZE
+			FROM BQ LEFT JOIN TQ 
+			ON BQ.NSRMC = TQ.NSRMC
+			ORDER BY ZZE
+		),
+		JG AS (
+			SELECT JS.NSRSBH, JS.NSRMC, JS.BQHJ, JS.BQZTS, JS.TQHJ, JS.TQZTS, JS.ZZE,
+			ROUND(JS.ZZE/IF(IFNULL(abs(JS.TQHJ),0)=0, 1, abs(JS.TQHJ))*100,2) ZS
+			FROM JS WHERE ZZE&lt;0
+		)
+		SELECT *<!-- JG.NSRSBH, JG.NSRMC,
+			ROUND(IF(JG.BQHJ = '0','',JG.BQHJ),2)BQHJ,
+			ROUND(IF(JG.BQZTS = '0','',JG.BQZTS),2)BQZTS,
+			ROUND(IF(JG.TQHJ = '0','',JG.TQHJ),2)TQHJ,
+			ROUND(IF(JG.TQZTS = '0','',JG.TQZTS),2)TQZTS,
+			ROUND(IF(JG.ZZE = '0','',JG.ZZE),2)ZZE,
+			ROUND(IF(JG.ZS = '0','',JG.ZS),2)ZS -->
+		FROM JG <!-- WHERE (ZJY !=0 OR ZTSY !=0 OR ZJE !=0 OR ZTSE !=0 ) -->
+	</select>
+
+</mapper>

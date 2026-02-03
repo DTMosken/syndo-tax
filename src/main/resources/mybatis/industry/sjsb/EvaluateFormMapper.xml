@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 亩产评价表 -->
+<mapper
+	namespace="com.syndo.project.industry.sjsb.mapper.EvaluateFormMapper">
+
+	<!-- 查询基础信息表 -->
+	<select id="selectBaseInfo" parameterType="String"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateBaseInfo">
+		SELECT * FROM T_QY_JBXX
+		WHERE TYSHXYDM = #{loginName}
+		AND
+		PJNF = TO_CHAR(SYSDATE, 'yyyy')
+	</select>
+
+
+	<!-- 查询基础信息表 all -->
+	<select id="selectBaseInfoAll"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateBaseInfo">
+		SELECT * FROM T_QY_JBXX
+	</select>
+
+	<!-- 查询亩产评价表 -->
+	<select id="selectEvaluateForm" parameterType="String"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateForm">
+		SELECT * FROM T_QY_MCPJ
+		WHERE PID = #{id}
+		<if test="id == null">
+			AND 1 = 2
+		</if>
+	</select>
+
+	<!-- 查询用电信息 -->
+	<select id="selectElectricInfo" parameterType="String"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateElectricInfo">
+		SELECT * FROM T_QY_YDHHXX
+		WHERE PID = #{id}
+		<if test="id == null">
+			AND 1 = 2
+		</if>
+	</select>
+
+	<!-- 查询用水信息 -->
+	<select id="selectWaterInfo" parameterType="String"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateWaterInfo">
+		SELECT * FROM T_QY_YSHHXX
+		WHERE PID = #{id}
+		<if test="id == null">
+			AND 1 = 2
+		</if>
+	</select>
+
+	<!-- 查询出租土地信息 -->
+	<select id="selectLeaseLand" parameterType="String"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateLandInfo">
+		SELECT * FROM T_QY_TDXX
+		WHERE SJLX = '1'
+		AND PID = #{id}
+		<if test="id == null">
+			AND 1 = 2
+		</if>
+	</select>
+
+	<!-- 查询承租土地信息 -->
+	<select id="selectRentLand" parameterType="String"
+		resultType="com.syndo.project.industry.sjsb.domain.EvaluateLandInfo">
+		SELECT * FROM T_QY_TDXX
+		WHERE SJLX = '2'
+		AND PID = #{id}
+		<if test="id == null">
+			AND 1 = 2
+		</if>
+	</select>
+
+	<!-- 增加基础信息 -->
+	<insert id="insertBaseInfo"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateForm">
+		INSERT INTO T_QY_JBXX (
+		ID,QYMC,TYSHXYDM,QYDZ,QYDZC,QYDZL,QYDZH,SSHY,HYDM,FRXM,FRSJHM,FRLXDH,TBRXM,
+		TBRSJHM,TBRLXDH,ZYCP,SFZJTX,GYZCZ,NPJZG,LRZE,GSWZ,PJNF,QYGM
+		) VALUES (
+		#{id},#{qymc},#{tyshxydm},#{qydz},#{qydzc},#{qydzl},#{qydzh},#{sshy},#{hydm},#{frxm},
+		#{frsjhm},#{frlxdh},#{tbrxm},#{tbrsjhm},#{tbrlxdh},#{zycp},#{sfzjtx},#{gyzcz},
+		#{npjzg},#{lrze},#{gswz},#{pjnf},#{qygm}
+		)
+	</insert>
+
+	<!-- 修改基础信息 -->
+	<update id="updateBaseInfo"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateForm">
+		UPDATE T_QY_JBXX
+		SET
+		QYMC=#{qymc},TYSHXYDM=#{tyshxydm},QYDZ=#{qydz},QYDZC=#{qydzc},QYDZL=#{qydzl},QYDZH=#{qydzh},
+		SSHY=#{sshy},HYDM=#{hydm},FRXM=#{frxm},FRSJHM=#{frsjhm},FRLXDH=#{frlxdh},TBRXM=#{tbrxm},TBRSJHM=#{tbrsjhm},
+		TBRLXDH=#{tbrlxdh},ZYCP=#{zycp},SFZJTX=#{sfzjtx},GYZCZ=#{gyzcz},NPJZG=#{npjzg},LRZE=#{lrze},
+		GSWZ=#{gswz},PJNF=#{pjnf},QYGM=#{qygm}
+		WHERE ID = #{id}
+	</update>
+
+	<!-- 增加评价指标 -->
+	<insert id="insertEvaluate"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateForm">
+		INSERT INTO T_QY_MCPJ(
+		PID,GYZJZ,NPJZGRS,YFJFZC,NZHNH,ZYYWSR,SJSS,PFL,YDL,YDHYQK,
+		NYSL,YSHYQK,SJYDMJ,JZMJ,SSMJ,YSPDJTDZMJ,SWJHDSSJSS,THJHDSGYZJZ,THJHDSNPJZGRS,THJHDSYFJFZC,THJHDSNZHNH,SWJHDSZYYWSR,STHJJPFL,GDJHDSYDL,GDJHDSYDHYQK,ZRZYJHDHDTDZMJ,SZXQSHYDMJ,SZXQSHYSPMJ,SZXQSHWSPMJ,SZXQSHDCRXM,SZXQSHSHRXM
+		) VALUES (
+		#{id},#{gyzjz},#{npjzgrs},#{yfjfzc},#{nzhnh},#{zyywsr},#{sjss},#{pfl},#{ydl},#{ydhyqk},
+		#{nysl},#{yshyqk},#{sjydmj},#{jzmj},#{ssmj},#{yspdjtdzmj},#{swjhdssjss},#{thjhdsgyzjz},#{thjhdsnpjzgrs},#{thjhdsyfjfzc},#{thjhdsnzhnh},#{swjhdszyywsr},#{sthjjpfl},#{gdjhdsydl},#{gdjhdsydhyqk},#{zrzyjhdhdtdzmj},#{szxqshydmj},#{szxqshyspmj},#{szxqshwspmj},#{szxqshdcrxm},#{szxqshshrxm}
+		 )
+	</insert>
+
+	<!-- 增加用电信息 -->
+	<insert id="insertElectric"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateForm"
+		useGeneratedKeys="false">
+		INSERT INTO T_QY_YDHHXX (ID, PID, YDHM, YHHH)
+		<foreach collection="eeiList" item="item"
+			separator="union all">
+			select sys_guid(), #{id}, #{item.ydhm}, #{item.yhhh} from
+			dual
+		</foreach>
+	</insert>
+
+	<!-- 增加用水信息 -->
+	<insert id="insertWater"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateForm"
+		useGeneratedKeys="false">
+		INSERT INTO T_QY_YSHHXX (ID, PID, YSHM, YSHH)
+		<foreach collection="ewiList" item="item"
+			separator="union all">
+			select sys_guid(), #{id}, #{item.yshm}, #{item.yshh} from
+			dual
+		</foreach>
+	</insert>
+
+	<!-- 增加出租土地信息 -->
+	<insert id="insertLeaseLand"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateLandInfo"
+		useGeneratedKeys="false">
+		INSERT INTO T_QY_TDXX (ID, PID, TYSHXYDM, QYMC, MJ, TDZL, SJLX)
+		<foreach collection="ellList" item="item"
+			separator="union all">
+			select sys_guid(), #{id}, #{item.tyshxydm}, #{item.qymc},
+			#{item.mj}, #{item.tdzl}, '1' from dual
+		</foreach>
+	</insert>
+
+	<!-- 增加承租土地信息 -->
+	<insert id="insertRentLand"
+		parameterType="com.syndo.project.industry.sjsb.domain.EvaluateLandInfo"
+		useGeneratedKeys="false">
+		INSERT INTO T_QY_TDXX (ID, PID, TYSHXYDM, QYMC, MJ, TDZL, SJLX)
+		<foreach collection="erlList" item="item"
+			separator="union all">
+			select sys_guid(), #{id}, #{item.tyshxydm}, #{item.qymc},
+			#{item.mj}, #{item.tdzl}, '2' from dual
+		</foreach>
+	</insert>
+
+	<!-- 删除评价表 -->
+	<delete id="deleteEvaluateByPid" parameterType="String">
+		DELETE FROM
+		T_QY_MCPJ
+		WHERE PID = #{id}
+	</delete>
+
+	<!-- 删除用电信息 -->
+	<delete id="deleteElectricByPid" parameterType="String">
+		DELETE FROM
+		T_QY_YDHHXX
+		WHERE PID = #{id}
+	</delete>
+
+	<!-- 删除用水信息 -->
+	<delete id="deleteWaterByPid" parameterType="String">
+		DELETE FROM
+		T_QY_YSHHXX
+		WHERE PID = #{id}
+	</delete>
+
+	<!-- 删除土地信息 -->
+	<delete id="deleteLandByPid" parameterType="String">
+		DELETE FROM T_QY_TDXX
+		WHERE PID = #{id}
+	</delete>
+
+</mapper>

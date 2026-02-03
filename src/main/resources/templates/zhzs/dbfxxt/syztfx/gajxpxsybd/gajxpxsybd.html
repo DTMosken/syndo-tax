@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('公安驾校培训税源比对')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">查询时间起： </label>
+					<div class="layui-input-block">
+
+							<input type="text" id="cxsjq" name="cxsjq" th:value="${cxsjq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<label class="layui-form-label">查询时间止： </label>
+					<div class="layui-input-block">
+
+							<input type="text" id="cxsjz" name="cxsjz" th:value="${cxsjz}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">驾校名称：</label>
+					<div class="layui-input-block">
+
+							<input type="text" id="jxmc" name="jxmc" autocomplete="off" class="layui-input">
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">差额大于：</label>
+					<div class="layui-input-block">
+
+							<input type="text" id="ceq" name="ceq" autocomplete="off" class="layui-input">
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">差额小于：</label>
+					<div class="layui-input-block">
+
+							<input type="text" id="cez" name="cez" autocomplete="off" class="layui-input">
+
+					</div>
+				</div>
+			</div>
+
+			<div class="layui-form-item layui-row">
+
+				<div class="layui-inline layui-col-sm12 layui-col-md12">
+					<div class="layui-form-btn" style="text-align: right">
+						<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+							<i class="layui-icon">&#xe615;</i> 查询
+						</a>
+						<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+							<i class="layui-icon">&#xe669;</i> 重置
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/syztfx/gajxpxsybd";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+				exportUrl: prefix + "/expExcel",
+                title: "公安驾校培训税源比对",
+				height:"full-110",
+		        showExport: true,
+                cols:[[{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+					field : 'jxmc', 
+					title : '驾校名称',
+					sortable: true,
+
+				},
+				{
+					field : 'xysl', 
+					title : '学员数量',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'dj', 
+					title : '单价',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'zxf', 
+					title : '总学费',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'sl', 
+					title : '税率（%）',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'yjzzs', 
+					title : '应缴增值税',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'sjzzs', 
+					title : '实缴增值税',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					align : 'right',
+					sortable: true
+				},
+				{
+					field : 'xx', 
+					title : '查看详情',
+					align : 'center',
+					templet : function(row) {
+						var action = [];
+						action.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\'' + row.jxmc + '\',\'' + row.cxsjq + '\',\'' + row.cxsjz +'\')"><i class="fa fa-edit"></i>查看详情</a>');
+						return action.join('');
+					}
+				}] ]
+            };
+            $.table.init(options);
+        });
+        
+        /* 查看详情 */
+        function ckxq(jxmc, cxsjq, cxsjz) {
+        	var url = prefix + '/twoList?jxmc='+jxmc+'&cxsjq='+cxsjq+'&cxsjz='+cxsjz;
+        	$.modal.openFull("查看详情", url, false);
+        }
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#cxsjq',type:'month',format: 'yyyy-MM'});
+    	  	laydate.render({elem: '#cxsjz',type:'month',format: 'yyyy-MM'});
+        });
+    </script>
+</body>
+</html>

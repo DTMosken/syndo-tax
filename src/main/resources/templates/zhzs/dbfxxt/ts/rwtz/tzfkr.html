@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('调整反馈人')"/>
+</head>
+<body>
+<div class="main-content">
+    <form id="form-add" class="form-horizontal">
+        <input type="hidden" id="ids" name="ids" th:value="${ids}">
+        <input type="hidden" id="oldFkr" name="oldFkr" th:value="${fkr}">
+        <div class="row">
+            <div class="col-sm-10">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label is-required">调整方式：</label>
+                    <div class="col-sm-8">
+                        <select id="tzfs" name="tzfs" class="form-control" onchange="changeTzfs()">
+                            <option value="">请选择</option>
+                            <option value="1">指定到风控小组成员</option>
+                            <option value="2">均分给其他风控小组成员</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-10">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label is-required">反馈人调整到：</label>
+                    <div class="col-sm-8">
+                        <select id="fkr" name="fkr" class="form-control" th:with="type=${@fkxzService.selectFkxzWithoutId(fkr,'0')}" disabled="disabled">
+                            <option value="">请选择</option>
+                            <option th:each="dict : ${type}" th:text="${dict.name}" th:value="${dict.userId}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<th:block th:include="include :: footer"/>
+<script>
+    var prefix = ctx + "zhzs/dbfxxt/ts/rwtz";
+
+    $("#form-add").validate({
+        onkeyup: false,
+        rules: {
+            tzfs: {
+                required: true,
+            },
+            fkr: {
+                required: true,
+            }
+        },
+        messages: {
+        },
+        focusCleanup: true
+    });
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            var data = $("#form-add").serializeArray();
+            $.operate.save(prefix + "/tzfkr", data);
+        }
+    }
+
+    $(function (){
+        $('#fkr').attr("disabled","disabled").parent().parent().hide()
+    });
+
+    function changeTzfs() {
+        var tzfs = $('#tzfs').val();
+        if(tzfs === "1") {
+            $('#fkr').removeAttr("disabled").parent().parent().show()
+            // $('#fkr').parent().parent().show()
+        } else {
+            $('#fkr').attr("disabled","disabled").parent().parent().hide()
+            // $('#fkr').parent().parent().hide()
+        }
+    }
+
+</script>
+</body>
+</html>

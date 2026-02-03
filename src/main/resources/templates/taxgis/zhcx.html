@@ -1,0 +1,387 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 综合查询 -->
+<div th:fragment="zhcx">
+    <style>
+        .zhcxTreeContainer {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 86px);
+            overflow: auto;
+        }
+        .zhcxTreeContainer .treeNode {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            padding-right: 8px;
+        }
+    </style>
+    <template id="zhcxTemplate">
+        <my-panel :width.sync="width" :height="leftHeight">
+            <zhcx-dialog ref="dialog" @on-close="hideDialog"></zhcx-dialog>
+            <div>
+                <h3 style="padding-left: 20px">综合查询</h3>
+                <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{selected.label}}</i></div>
+                <div class="zhcxTreeContainer">
+                    <el-tree
+                        :data="data"
+                        node-key="id"
+                        :expand-on-click-node="false"
+                        default-expand-all
+                        :props="defaultProps"
+                        @node-click="handleNodeClick"
+                    >
+                    </el-tree>
+                </div>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component('zhcxComponent', {
+            template: '#zhcxTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                }
+            },
+            data() {
+                let defaultSelected = { label: '', id: '' }
+                return {
+                    width: 330,
+                    layerType: 'zhcx',
+                    leftHeight: '100%',
+                    zhcxNd: '2019',
+                    data: [],
+                    expandedKeys: [],
+                    defaultSelected: defaultSelected,
+                    selected: $.extend({}, defaultSelected),
+                    defaultProps: {
+                        children: 'children',
+                        label: 'label'
+                    }
+                }
+            },
+            mounted() {
+                this.setZhcxnd()
+            },
+            destroyed: function () {
+                this.pubVue.$emit('removeMarkers', { layerType: this.layerType })
+            },
+            methods: {
+                setZhcxnd() {
+                    let params = new URLSearchParams()
+                    this.axios
+                        .post('/module/taxgis/zhcxNd', params)
+                        .then((response) => {
+                            // 请求成功
+                            let data = response.data
+                            this.zhcxNd = data
+                            this.loadTree()
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log('请求失败')
+                            console.log(error)
+                        })
+                },
+                loadTree() {
+                    this.data = [
+                        {
+                            id: '0',
+                            label: '税源专题分析',
+                            children: [
+                                {
+                                    id: 'tdcrnsfx',
+                                    label: '土地出让契税分析（' + this.zhcxNd + '）',
+                                    url: '/zhzs/dbfxxt/syztfx/tdcrnsfx/list',
+                                    queryParams: { qdrq: this.zhcxNd },
+                                    paggerUrlType: 'pageTable',
+                                    columns: [
+                                        { prop: 'nsrmc', label: '受让人名称', width: '260' },
+                                        { prop: 'crmj', label: '出让面积（㎡）', width: '160', align: 'right' },
+                                        { prop: 'crzje', label: '出让总金额(元)', width: '150', align: 'right' },
+                                        { prop: 'ptf', label: '配套费(元)', width: '120', align: 'right' },
+                                        { prop: 'ynqs', label: '应纳契税', width: '120', align: 'right' },
+                                        { prop: 'sjqs', label: '实缴契税', width: '120', align: 'right' },
+                                        { prop: 'qsce', label: '契税差额', width: '150', align: 'right' }
+                                    ],
+                                    callback: (rows) => {
+                                        let nsrmcArr = []
+                                        let warnNsrmcs = []
+                                        rows.forEach((row) => {
+                                            if (row.nsrmc !== '合计') {
+                                                nsrmcArr.push(row.nsrmc)
+                                                if (Number(row.qsce.replace(/,/gi, '')) < 0) {
+                                                    warnNsrmcs.push(row.nsrmc)
+                                                }
+                                            }
+                                        })
+                                        this.showMarker(nsrmcArr, warnNsrmcs)
+                                    }
+                                },
+                                {
+                                    id: 'tdcrsysfx',
+                                    label: '土地出让使用税分析（' + this.zhcxNd + '）',
+                                    url: '/zhzs/dbfxxt/syztfx/tdcrsysfx/list',
+                                    queryParams: { qdrq: this.zhcxNd },
+                                    paggerUrlType: 'pageTable',
+                                    columns: [
+                                        { prop: 'nsrmc', label: '受让人名称', width: '260' },
+                                        { prop: 'crmj', label: '出让面积（㎡）', width: '160', align: 'right' },
+                                        { prop: 'msmj', label: '免税面积', width: '150', align: 'right' },
+                                        { prop: 'jmse', label: '减免税额', width: '120', align: 'right' },
+                                        { prop: 'sjje', label: '实缴城镇土地使用税', width: '200', align: 'right' },
+                                        { prop: 'ynse', label: '应纳土地使用税', width: '120', align: 'right' },
+                                        { prop: 'ce', label: '城镇土地使用税差额', width: '200', align: 'right' }
+                                    ],
+                                    callback: (rows) => {
+                                        let nsrmcArr = []
+                                        let warnNsrmcs = []
+                                        rows.forEach((row) => {
+                                            if (row.nsrmc !== '合计') {
+                                                nsrmcArr.push(row.nsrmc)
+                                                if (Number(row.ce.replace(/,/gi, '')) < 0) {
+                                                    warnNsrmcs.push(row.nsrmc)
+                                                }
+                                            }
+                                        })
+                                        this.showMarker(nsrmcArr, warnNsrmcs)
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                showMarker(nsrmcArr, warnNsrmcs) {
+                    let params = new URLSearchParams()
+                    params.append('nsrmcs', nsrmcArr.join(','))
+                    this.axios
+                        .post('/module/taxgis/GetNsrxxBzByNsrmcs', params)
+                        .then((response) => {
+                            // 请求成功
+                            let resRows = response.data
+
+                            // 地图显示
+                            let that = this.$parent.$refs.leafletMap
+
+                            that.cleanDraw()
+                            let minLat = -90,
+                                maxLat = -90,
+                                minLon = -180,
+                                maxLon = -180
+                            resRows.forEach((row) => {
+                                row.layerType = this.layerType
+                                let layerId = that.genLayerId(row.id, this.layerType)
+                                let lat = row.lat
+                                let lon = row.lon
+                                let markerOption = {}
+                                if (warnNsrmcs.indexOf(row.nsrmc) > -1) markerOption = { icon: that.IconRed }
+                                let marker = L.marker([lat, lon], markerOption).bindPopup(
+                                    that.getMarkerContent(
+                                        {
+                                            markerData: $.extend(row, { lat: lat, lon: lon }),
+                                            btnStatus: 0,
+                                            delable: true
+                                        },
+                                        zhcxMarkerContentCmp
+                                    )
+                                )
+                                marker.id = layerId
+                                that.drawGroup.addLayer(marker)
+
+                                if (minLat === -90 || minLat > row.lat) minLat = row.lat
+                                if (minLon === -180 || minLon > row.lon) minLon = row.lon
+                                if (maxLat === -90 || maxLat < row.lat) maxLat = row.lat
+                                if (maxLon === -180 || maxLon < row.lon) maxLon = row.lon
+                            })
+                            if (minLat !== -90 && maxLat !== -90 && minLon !== -180 && maxLon !== -180) {
+                                let centerLat = minLat + (maxLat - minLat) / 2
+                                let centerLon = minLon + ((maxLon - minLon) * 4) / 10
+                                that.map.panTo([centerLat, centerLon])
+                            }
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log('请求失败')
+                            console.log(error)
+                        })
+                },
+                showDialog(params) {
+                    this.leftHeight = '50%'
+                    this.$refs.dialog.showDialog(params)
+                },
+                hideDialog() {
+                    this.leftHeight = '100%'
+                },
+                handleNodeClick(data) {
+                    this.selected = $.extend({}, data)
+                    let obj = {}
+                    $.extend(obj, data)
+
+                    this.showDialog(obj)
+                }
+            }
+        })
+    </script>
+
+    <style>
+        /*dialog*/
+        .zhcxDialogClass {
+            position: absolute;
+            width: 100%;
+            bottom: -50px;
+        }
+        .zhcxDialogClass .el-dialog__body {
+            height: 500px;
+            max-height: 40vh;
+            overflow: hidden;
+        }
+        .zhcxTable {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <!-- 综合查询结果 -->
+    <template id="zhcxDialogTemplate">
+        <el-dialog
+            :title="title"
+            custom-class="zhcxDialogClass"
+            :append-to-body="false"
+            :fullscreen="false"
+            :modal="false"
+            :modal-append-to-body="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogTableVisible"
+            :before-close="handleDialogClose"
+        >
+            <my-el-table
+                ref="table"
+                table-class="zhcxTable"
+                :columns="table.columns"
+                :data-url="table.queryUrl"
+                :query-params="queryParams"
+                :pagger-url-type="table.paggerUrlType"
+                @on-load="onLoad"
+            >
+            </my-el-table>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component('zhcxDialog', {
+            template: '#zhcxDialogTemplate',
+            data() {
+                return {
+                    title: '查询结果',
+                    dialogTableVisible: false,
+                    queryParams: {},
+                    table: {
+                        queryUrl: '',
+                        paggerUrlType: 'startPage',
+                        columns: []
+                    },
+                    loadCallback: function (rows) {}
+                }
+            },
+            methods: {
+                showDialog(params) {
+                    this.dialogTableVisible = true
+                    this.title = '查询结果【' + params.label + '】'
+                    this.table.queryUrl = params.url
+                    this.queryParams = params.queryParams
+                    this.table.paggerUrlType = params.paggerUrlType
+                    // this.table.columns.splice(0, this.table.columns.length)
+                    this.table.columns.splice(0)
+                    for (let i = 0, len = params.columns.length; i < len; i++) {
+                        this.table.columns.push($.extend({ show: true, align: 'center' }, params.columns[i]))                        
+                    }
+                    this.loadCallback = params.callback
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList()
+                    })
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false
+                    this.$emit('on-close')
+                },
+                onLoad(response) {
+                    this.loadCallback(response.data)
+                }
+            }
+        })
+    </script>
+
+    <!-- 地图信息框 -->
+    <style>
+        /* marker样式 */
+        .zhcx_popup_content {
+            padding: 0;
+        }
+
+        .zhcx_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 310px;
+        }
+
+        .zhcx_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .zhcx_info_container .title:after {
+            clear: both;
+            content: '';
+            display: table;
+        }
+
+        .zhcx_info_container .props p {
+            margin: 10px 0;
+        }
+
+        .zhcx_info_container p {
+            font-size: 12px;
+        }
+    </style>
+    <template id="zhcxMarkerTemplate">
+        <div class="zhcx_popup_content">
+            <div class="zhcx_info_container">
+                <div class="title">
+                    <span><a href="#" @click="showYhs">{{markerData.nsrmc}}</a></span>
+                </div>
+                <div class="props">
+                    <p><span>注册地址：</span> <span>{{markerData.zcdz}}</span></p>
+                    <p><span>经营地址：</span> <span>{{markerData.jydz}}</span></p>
+                    <p><span>登记注册类型：</span> <span>{{markerData.djzclx}}</span></p>
+                    <p><span>社会信用代码：</span> <span>{{markerData.shxydm}}</span></p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let zhcxMarkerContentCmp = Vue.extend({
+            template: '#zhcxMarkerTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                },
+                markerData: {
+                    type: Object
+                }
+            },
+            data: function () {
+                return {}
+            },
+            methods: {
+                showYhs() {
+                    this.pubVue.$emit('showYhs', { shxydm: this.markerData.shxydm, nsrmc: this.markerData.nsrmc })
+                }
+            }
+        })
+    </script>
+</div>

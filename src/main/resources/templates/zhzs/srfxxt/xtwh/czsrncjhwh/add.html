@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('新增财政收入年初计划维护')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">所属年度：</label>
+					<div class="col-sm-4">
+						<label for="ssnd"></label><input id="ssnd" name="ssnd" class="form-control" type="text" readonly="readonly" />
+					</div>
+					<label class="col-sm-2 control-label">预算科目：</label>
+					<div class="col-sm-4">
+						<select id="zsxm" name="zsxm" th:with="type=${@dict.getType('dm_yskm')}" class="form-control">
+							<option value=""></option>
+							<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">全口径计划（万元）：</label>
+					<div class="col-sm-4">
+						<input id="qkj" name="qkj" class="form-control" type="number">
+					</div>
+					<label class="col-sm-2 control-label">一般预算计划（万元）：</label>
+					<div class="col-sm-4">
+						<input id="ybys" name="ybys" class="form-control" type="number">
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/czsrncjhwh";
+			$("#form-add").validate({
+				rules:{
+					bszq: {required:true},
+					sz: {required:true},
+					qkj: {required:true, number: true},
+					ybys: {required:true, number: true},
+					ssnd: {required:true}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#ssnd',type:'year',format: 'yyyy',trigger: 'click'});
+	        });
+		</script>
+	</body>
+</html>

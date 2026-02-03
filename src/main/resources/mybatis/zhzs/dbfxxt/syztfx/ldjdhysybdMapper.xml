@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+				
+<!-- ****** 对比分析系统-税源比对-旅店酒店行业税源比对 ****** -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.LdjdhysybdMapper">
+
+	<!-- 查询 -->
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" databaseId="mysql">
+		WITH rz AS(
+			SELECT rzrq,
+				qymc, 
+				SUM(rzrc) rzrc, 
+				IFNULL((SELECT MAX(jg) FROM t_tmp_lgyjgwh j WHERE t.rzrq BETWEEN j.kssj AND j.jssj AND t.qymc=j.qymc GROUP BY qymc), 100) jg
+			FROM t_db_gaj_lgrzxx t
+			<where>
+				<if test="qymc != null and qymc != ''">
+					and qymc like concat('%',#{qymc},'%')
+				</if>
+				AND t.rzrq >= #{skssqq}
+				AND t.rzrq &lt;= #{skssqz}
+			</where>
+			GROUP BY rzrq, qymc
+		), 
+		lg AS(
+			SELECT DISTINCT qymc, nsrmc FROM t_tmp_lgjd
+		),
+		rzkz AS(
+			SELECT rz.*, lg.nsrmc, 
+			IF(y.nsrmc IS NULL, '小规模纳税人', '一般纳税人') nsrlx,
+			IF(y.nsrmc IS NULL, 0.03/1.03, 0.06/1.06) sl
+			FROM rz LEFT JOIN lg ON rz.qymc=lg.qymc
+			LEFT JOIN(SELECT DISTINCT nsrmc FROM t_db_swj_ybnsrdjxx) Y ON IFNULL(lg.nsrmc,rz.qymc)=y.nsrmc
+		),
+		rk AS(
+			SELECT IFNULL(r.nsrmc, qymc) nsrmc, nsrlx, SUBSTR(skssqq,1,7) skssqq, SUBSTR(skssqz,1,7) skssqz, IFNULL(SUM(REPLACE(sjje,',','')),0) sjje, r.rzrc*r.jg yye, r.rzrc, AVG(r.jg) dj, r.rzrc*r.jg*r.sl yjje
+			FROM rzkz r 
+			LEFT JOIN t_db_swj_jrkxx t 
+			ON IFNULL(r.nsrmc, qymc)=t.nsrmc 
+			AND r.rzrq BETWEEN t.skssqq AND t.skssqz
+			AND zsxm='增值税'
+			AND tzlx IN ('未被调账的税款','调账后产生的新税款')
+			AND yskm NOT IN ('出口业务退增值税')
+			AND SUBSTR(skssqq,1,7) >= #{skssqq}
+			AND SUBSTR(skssqq,1,7) &lt;= #{skssqz}
+			GROUP BY IFNULL(r.nsrmc, qymc), SUBSTR(skssqq,1,7), SUBSTR(skssqz,1,7)
+		)
+		SELECT nsrmc qymc, nsrlx, #{skssqq} skssqq,#{skssqz} skssqz, rzrc, dj, FORMAT(yye,2) yye, FORMAT(sjje, 2) sjje, 
+			FORMAT(yjje,2) yjje, FORMAT(IFNULL(yjje,0)-IFNULL(sjje,0),2) ce			
+		FROM rk 
+		<where>
+			<if test="type !=null and type != ''">
+				<if test="type == 1">
+				AND (IFNULL(yjje,0)-IFNULL(sjje,0)) &lt; 0
+					<if test="cedy != null and cedy != ''">
+						AND  (IFNULL(yjje,0)-IFNULL(sjje,0))*-1 &gt;= #{cedy}	
+					</if>
+					<if test="cexy != null and cexy != ''">
+						AND  (IFNULL(yjje,0)-IFNULL(sjje,0))*-1 &lt;= #{cexy}
+					</if>
+				</if>
+				
+				<if test="type == 2">
+				AND  (IFNULL(yjje,0)-IFNULL(sjje,0)) &gt;= 0
+					<if test="cedy != null and cedy != ''">
+						AND  (IFNULL(yjje,0)-IFNULL(sjje,0)) &gt;= #{cedy}	
+					</if>
+					<if test="cexy != null and cexy != ''">
+						AND  (IFNULL(yjje,0)-IFNULL(sjje,0)) &lt;= #{cexy}
+					</if>
+				</if>
+			</if>
+		</where>
+		
+	</select>
+	<select id="selectList_bak" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" databaseId="mysql">
+		WITH RECURSIVE sj(dt, num) AS (
+			SELECT DATE_FORMAT(CONCAT(#{skssqz},'-01'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(CONCAT(#{skssqz},'-01'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sj WHERE num &lt;
+				TIMESTAMPDIFF(MONTH,CONCAT(#{skssqq},'-01'),CONCAT(#{skssqz},'-01'))+1
+		),
+		bt AS(
+			SELECT dt sj,aa.nsrmc,aa.qymc FROM sj
+			LEFT JOIN (
+			SELECT DISTINCT qymc,nsrmc FROM t_tmp_lgsw f
+			WHERE 1=1
+			<if test="qymc != null and qymc != ''">
+				and qymc like concat(concat('%',#{qymc}),'%')
+			</if>
+		)aa ON 1=1
+		),
+		ss AS(
+			SELECT nsrmc,SUM(REPLACE(sjje,',','')) sjje,SUBSTR(skssqq,1,7) skssqq
+			FROM t_db_swj_jrkxx
+			WHERE zsxm='增值税'
+			AND SUBSTR(skssqq,1,7) >= #{skssqq}
+			AND SUBSTR(skssqq,1,7) &lt;= #{skssqz}
+			AND nsrmc IN (SELECT nsrmc FROM bt)
+			GROUP BY nsrmc,SUBSTR(skssqq,1,7)
+		),
+		sr AS(
+			SELECT bt.sj,bt.qymc,bt.nsrmc,IFNULL(ss.sjje,0) sjje
+			FROM bt LEFT JOIN ss
+			ON bt.nsrmc = ss.nsrmc
+			AND bt.sj = ss.skssqq
+		),
+		zs AS(
+			SELECT lgmc qymc, IFNULL(SUM(rzlk * price),0) je,IFNULL(SUM(rzlk),0) rzrc,MAX(price) dj,SUBSTR(sj,1,7) sj FROM (
+			SELECT CASE WHEN SUBSTR(l.sj,1,7) >= j.kssj AND SUBSTR(l.sj,1,7) &lt;= j.jssj THEN j.jg ELSE '100' END AS price,l.*
+			FROM t_db_gaj_jdrzxx l
+			LEFT JOIN t_tmp_lgyjgwh j ON (l.lgmc = j.qymc AND SUBSTR(l.sj,1,7) >= j.kssj AND SUBSTR(l.sj,1,7) &lt;= j.jssj)
+			)t WHERE
+			SUBSTR(sj,1,7) >= #{skssqq}
+			AND SUBSTR(sj,1,7) &lt;= #{skssqz}
+			GROUP BY lgmc,SUBSTR(sj,1,7)
+		),
+		hj AS(
+			SELECT g.qymc,g.sj,IFNULL(z.rzrc,0) rzrc,IFNULL(z.dj,100) dj,IFNULL(z.je,0) yye,IFNULL(z.je * 0.03,0) yjje,IFNULL(g.sjje,0) sjje,IFNULL(IFNULL(g.sjje,0) - IFNULL(z.je * 0.03,0),0) ce,'小规模纳税人' nsrlx
+			FROM sr g LEFT JOIN zs z
+			ON g.qymc = z.qymc
+			AND g.sj = z.sj
+			AND NOT EXISTS (SELECT DISTINCT nsrmc FROM t_db_swj_ybnsrdjxx c WHERE g.nsrmc = c.nsrmc)
+			UNION ALL
+			SELECT g.qymc,g.sj,IFNULL(z.rzrc,0) rzrc,IFNULL(z.dj,100) dj,IFNULL(z.je,0) yye,IFNULL(z.je * 0.06,0) yjje,IFNULL(g.sjje,0) sjje,IFNULL(IFNULL(g.sjje,0) - IFNULL(z.je * 0.06,0),0) ce,'一般纳税人' nsrlx
+			FROM sr g LEFT JOIN zs z
+			ON g.qymc = z.qymc
+			AND g.sj = z.sj
+			AND EXISTS (SELECT DISTINCT nsrmc FROM t_db_swj_ybnsrdjxx c WHERE g.nsrmc = c.nsrmc)
+		),
+		hjs as(
+			select * from(
+				select qymc,nsrlx,#{skssqq} skssqq,#{skssqz} skssqz,sum(rzrc) rzrc,max(dj) dj,
+				sum(yye) yye,sum(yjje) yjje,sum(sjje) sjje,sum(ce) ce
+				from hj group by qymc,nsrlx
+			)t
+			<where>
+				<if test="type !=null and type != ''">
+					<if test="type == 1">
+					AND CE &lt; 0
+						<if test="cedy != null and cedy != ''">
+							AND CE*-1 &gt;= #{cedy}	
+						</if>
+						<if test="cexy != null and cexy != ''">
+							AND CE*-1 &lt;= #{cexy}
+						</if>
+					</if>
+					
+					<if test="type == 2">
+					AND CE &gt;= 0
+						<if test="cedy != null and cedy != ''">
+							AND CE &gt;= #{cedy}	
+						</if>
+						<if test="cexy != null and cexy != ''">
+							AND CE &lt;= #{cexy}
+						</if>
+					</if>
+				</if> 
+				<if test="yye != null and yye != ''">
+					AND YYE &gt;= #{yye}
+				</if>
+			</where>
+			order by cast(ce as decimal(10,2))
+		)
+		select '合计' qymc, ''nsrlx, #{skssqq} skssqq,#{skssqz} skssqz, sum(rzrc) rzrc,max(dj) dj,
+				sum(yye) yye,sum(yjje) yjje,sum(sjje) sjje,sum(ce) ce from hjs
+		union all
+		select * from hjs
+	</select>
+	
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" databaseId="oracle">
+		WITH A AS(
+			SELECT DISTINCT LGMC QYMC 
+			FROM MD_GAJ_BGRZXX 
+			WHERE SUBSTR(SJ,0,7) &gt;= #{skssqq}
+		    AND SUBSTR(SJ,0,7) &lt;= #{skssqz}
+		),
+		T AS(
+			SELECT BB.MONTHSTR SJ,AA.NSRMC,AA.QYMC FROM (SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(#{skssqq},'YYYY-MM'),LEVEL-1),'YYYY-MM') MONTHSTR 
+		    FROM DUAL 
+		    CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{skssqz},'YYYY-MM'),TO_DATE(#{skssqq},'YYYY-MM')),0)+2 ORDER BY MONTHSTR ) BB
+		    LEFT JOIN (
+			SELECT DISTINCT QYMC,NSRMC FROM T_TMP_LGSW D
+				WHERE 1=1
+				<!-- NOT EXISTS(SELECT 0 FROM TMP_DB_SWLDJDSYBD B WHERE D.QYMC=B.QYMC AND BZ='1') -->
+		    	<if test="qymc != null and qymc != ''">
+			    	AND QYMC LIKE '%'||#{qymc}||'%'
+		    	</if>
+		    ) AA ON 1=1
+		),
+		G AS(
+			SELECT NSRMC,NVL(SUM(SJJE),0) SJJE,SUBSTR(SKSSQQ,0,7) SKSSQQ 
+			FROM T_DB_SWJ_JRKXX
+			WHERE
+			SUBSTR(SKSSQQ,0,7) &gt;= #{skssqq}
+			AND SUBSTR(SKSSQQ,0,7) &lt;= #{skssqz}
+			AND ZSXM='增值税'
+			AND NSRMC IN (SELECT NSRMC FROM T)
+			GROUP BY NSRMC,SUBSTR(SKSSQQ,0,7)
+		),
+		GS AS(
+		   SELECT T.NSRMC,T.SJ,T.QYMC,G.SJJE 
+		   FROM T,G 
+		   WHERE T.NSRMC = G.NSRMC(+)
+		   AND T.SJ = G.SKSSQQ(+)
+		),
+		ZS AS (
+			SELECT QYMC,NVL(SUM(RZRC * PRICE),0) JE,NVL(SUM(RZRC),0) RZRC,MAX(PRICE) DJ,SUBSTR(SJYF,0,7) SJ
+			FROM (
+				 SELECT CASE WHEN SUBSTR(L.SJYF,0,7) >= J.KSSJ AND SUBSTR(L.SJYF,0,7) &lt;= J.JSSJ THEN J.JG ELSE '100' END AS PRICE,L.*
+			     FROM T_DB_GAJ_LGRZXX L
+			     LEFT JOIN T_TMP_LGYJGWH J ON (L.QYMC = J.QYMC AND SUBSTR(L.SJYF,0,7) >= J.KSSJ AND SUBSTR(L.SJYF,0,7) &lt;= J.JSSJ)
+			)
+		    WHERE
+		    SUBSTR(SJYF,0,7) &gt;= #{skssqq}
+		    AND SUBSTR(SJYF,0,7) &lt;= #{skssqz}
+		    GROUP BY QYMC, SUBSTR(SJYF,0,7)
+		),
+		HJ AS(
+		  SELECT G.QYMC,G.SJ,NVL(Z.RZRC,0) RZRC,NVL(Z.DJ,100) DJ,NVL(Z.JE,0) YYE,NVL(Z.JE * 0.03,0) YJJE,NVL(G.SJJE,0) SJJE,
+		     NVL(NVL(G.SJJE,0) - NVL(Z.JE * 0.03,0),0) CE,'小规模纳税人' NSRLX
+		  FROM GS G,ZS Z
+		  WHERE Z.QYMC(+) = G.QYMC
+		  AND Z.SJ(+) = G.SJ
+		  AND NOT EXISTS (SELECT DISTINCT NSRMC FROM T_DB_SWJ_YBNSRDJXX C WHERE G.NSRMC = C.NSRMC)
+		  UNION ALL
+		  SELECT G.QYMC,G.SJ,NVL(Z.RZRC,0) RZRC,NVL(Z.DJ,100) DJ,NVL(Z.JE,0) YYE,NVL(Z.JE * 0.06,0) YJJE,NVL(G.SJJE,0) SJJE,
+		     NVL(NVL(G.SJJE,0) - NVL(Z.JE * 0.06,0),0) CE,'一般纳税人' NSRLX
+		  FROM GS G,ZS Z
+		  WHERE Z.QYMC(+) = G.QYMC
+		  AND Z.SJ(+) = G.SJ
+		  and EXISTS (SELECT DISTINCT NSRMC FROM T_DB_SWJ_YBNSRDJXX C WHERE G.NSRMC = C.NSRMC)
+		),
+		HJS AS(
+			SELECT * FROM(
+				SELECT QYMC,NSRLX,#{skssqq} SKSSQQ,#{skssqz} SKSSQZ,SUM(RZRC) RZRC,MAX(DJ) DJ,
+				SUM(YYE) YYE,SUM(YJJE) YJJE,SUM(SJJE) SJJE,SUM(CE) CE
+				FROM HJ GROUP BY QYMC,NSRLX
+			)
+			<where>
+				<if test="type !=null and type != ''">
+					<if test="type == 1">
+					AND CE &lt; 0
+						<if test="cedy != null and cedy != ''">
+							AND CE*-1 &gt;= #{cedy}	
+						</if>
+						<if test="cexy != null and cexy != ''">
+							AND CE*-1 &lt;= #{cexy}
+						</if>
+					</if>
+					
+					<if test="type == 2">
+					AND CE &gt;= 0
+						<if test="cedy != null and cedy != ''">
+							AND CE &gt;= #{cedy}	
+						</if>
+						<if test="cexy != null and cexy != ''">
+							AND CE &lt;= #{cexy}
+						</if>
+					</if>
+				</if> 
+				<if test="yye != null and yye != ''">
+					AND YYE &gt;= #{yye}
+				</if>
+			</where>
+			ORDER BY TO_NUMBER(CE)
+		)
+		SELECT '合计' QYMC, ''NSRLX, #{skssqq} SKSSQQ,#{skssqz} SKSSQZ, SUM(RZRC) RZRC,MAX(DJ) DJ,
+				SUM(YYE) YYE,SUM(YJJE) YJJE,SUM(SJJE) SJJE,SUM(CE) CE FROM HJS
+		UNION ALL
+		SELECT * FROM HJS
+	</select>
+	
+	<!-- 二级页面查询 -->
+	<select id="getTowList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" databaseId="mysql">
+		WITH RECURSIVE sj(dt, num) AS (
+			SELECT DATE_FORMAT(CONCAT(#{skssqz},'-01'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(CONCAT(#{skssqz},'-01'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sj WHERE num &lt;
+				TIMESTAMPDIFF(MONTH,CONCAT(#{skssqq},'-01'),CONCAT(#{skssqz},'-01'))+1
+		),
+		bt AS(
+			SELECT dt sj,aa.nsrmc,aa.qymc FROM sj
+			LEFT JOIN (
+			SELECT DISTINCT qymc,nsrmc FROM t_tmp_lgsw f
+			WHERE 1=1
+			<if test="qymc != null and qymc != ''">
+				and qymc like concat('%',#{qymc},'%')
+			</if>
+		)aa ON 1=1
+		),
+		ss AS(
+			SELECT nsrmc,SUM(REPLACE(sjje,',','')) sjje,SUBSTR(skssqq,1,7) skssqq
+			FROM t_db_swj_jrkxx
+			WHERE zsxm='增值税'
+			AND SUBSTR(skssqq,1,7) >= #{skssqq}
+			AND SUBSTR(skssqq,1,7) &lt;= #{skssqz}
+			AND nsrmc IN (SELECT nsrmc FROM bt)
+			GROUP BY nsrmc,SUBSTR(skssqq,0,7)
+		),
+		sr AS(
+			SELECT bt.sj,bt.qymc,bt.nsrmc,IFNULL(ss.sjje,0) sjje
+			FROM bt LEFT JOIN ss
+			ON bt.nsrmc = ss.nsrmc
+			AND bt.sj = ss.skssqq
+		),
+		zs AS(
+			SELECT lgmc qymc, IFNULL(SUM(rzlk * price),0) je,IFNULL(SUM(rzlk),0) rzrc,MAX(price) dj,SUBSTR(sj,1,7) sj FROM (
+			SELECT CASE WHEN SUBSTR(l.sj,1,7) >= j.kssj AND SUBSTR(l.sj,1,7) &lt;= j.jssj THEN j.jg ELSE '100' END AS price,l.*
+			FROM t_db_gaj_jdrzxx l
+			LEFT JOIN t_tmp_lgyjgwh j ON (l.lgmc = j.qymc AND SUBSTR(l.sj,1,7) >= j.kssj AND SUBSTR(l.sj,0,7) &lt;= j.jssj)
+			)t WHERE
+			SUBSTR(sj,1,7) >= #{skssqq}
+			AND SUBSTR(sj,1,7) &lt;= #{skssqz}
+			GROUP BY lgmc,SUBSTR(sj,1,7)
+		),
+		hj AS(
+			SELECT g.qymc,g.sj,IFNULL(z.rzrc,0) rzrc,IFNULL(z.dj,100) dj,IFNULL(z.je,0) yye,IFNULL(z.je * 0.03,0) yjje,IFNULL(g.sjje,0) sjje,IFNULL(IFNULL(g.sjje,0) - IFNULL(z.je * 0.03,0),0) ce,'小规模纳税人' nsrlx
+			FROM sr g LEFT JOIN zs z
+			ON g.qymc = z.qymc
+			AND g.sj = z.sj
+			AND NOT EXISTS (SELECT DISTINCT nsrmc FROM t_db_swj_ybnsrdjxx c WHERE g.nsrmc = c.nsrmc)
+			UNION ALL
+			SELECT g.qymc,g.sj,IFNULL(z.rzrc,0) rzrc,IFNULL(z.dj,100) dj,IFNULL(z.je,0) yye,IFNULL(z.je * 0.06,0) yjje,IFNULL(g.sjje,0) sjje,IFNULL(IFNULL(g.sjje,0) - IFNULL(z.je * 0.06,0),0) ce,'一般纳税人' nsrlx
+			FROM sr g LEFT JOIN zs z
+			ON g.qymc = z.qymc
+			AND g.sj = z.sj
+			AND EXISTS (SELECT DISTINCT nsrmc FROM t_db_swj_ybnsrdjxx c WHERE g.nsrmc = c.nsrmc)
+		)
+		SELECT '合计' qymc,'' sj,SUM(rzrc) rzrc,'' dj,SUM(yye) yye,SUM(yjje) yjje,SUM(sjje) sjje,SUM(ce) ce,'' nsrlx
+		FROM hj
+		UNION ALL
+		SELECT * FROM (SELECT * FROM hj ORDER BY sj)t
+	</select>
+	
+	<select id="getTowList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" databaseId="oracle">
+		WITH A AS(
+			SELECT DISTINCT LGMC QYMC 
+			FROM MD_GAJ_BGRZXX 
+			WHERE SUBSTR(SJ,0,7) &gt;= #{skssqq}
+		    AND SUBSTR(SJ,0,7) &lt;= #{skssqz}
+		),
+		T AS(
+			SELECT BB.MONTHSTR SJ,AA.NSRMC,AA.QYMC FROM (SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(#{skssqq},'YYYY-MM'),LEVEL-1),'YYYY-MM') MONTHSTR 
+		    FROM DUAL 
+		    CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{skssqz},'YYYY-MM'),TO_DATE(#{skssqq},'YYYY-MM')),0)+2 ORDER BY MONTHSTR ) BB
+		    LEFT JOIN (
+			SELECT DISTINCT QYMC,NSRMC FROM T_TMP_LGSW D
+				WHERE 1=1
+				<!-- NOT EXISTS(SELECT 0 FROM TMP_DB_SWLDJDSYBD B WHERE D.QYMC=B.QYMC AND BZ='1') -->
+		    	<if test="qymc != null and qymc != ''">
+			    	AND QYMC LIKE '%'||#{qymc}||'%'
+		    	</if>
+		    ) AA ON 1=1
+		),
+		G AS(
+			SELECT NSRMC,NVL(SUM(SJJE),0) SJJE,SUBSTR(SKSSQQ,0,7) SKSSQQ 
+			FROM T_DB_SWJ_JRKXX
+			WHERE
+			SUBSTR(SKSSQQ,0,7) &gt;= #{skssqq}
+			AND SUBSTR(SKSSQQ,0,7) &lt;= #{skssqz}
+			AND ZSXM='增值税'
+			AND NSRMC IN (SELECT NSRMC FROM T)
+			GROUP BY NSRMC,SUBSTR(SKSSQQ,0,7)
+		),
+		GS AS(
+		   SELECT T.NSRMC,T.SJ,T.QYMC,G.SJJE 
+		   FROM T,G 
+		   WHERE T.NSRMC = G.NSRMC(+)
+		   AND T.SJ = G.SKSSQQ(+)
+		),
+		ZS AS (
+			SELECT QYMC,NVL(SUM(RZRC * PRICE),0) JE,NVL(SUM(RZRC),0) RZRC,MAX(PRICE) DJ,SUBSTR(SJYF,0,7) SJ
+			FROM (
+				 SELECT CASE WHEN SUBSTR(L.SJYF,0,7) >= J.KSSJ AND SUBSTR(L.SJYF,0,7) &lt;= J.JSSJ THEN J.JG ELSE '100' END AS PRICE,L.*
+			     FROM T_DB_GAJ_LGRZXX L
+			     LEFT JOIN T_TMP_LGYJGWH J ON (L.QYMC = J.QYMC AND SUBSTR(L.SJYF,0,7) >= J.KSSJ AND SUBSTR(L.SJYF,0,7) &lt;= J.JSSJ)
+			)
+		    WHERE
+		    SUBSTR(SJYF,0,7) &gt;= #{skssqq}
+		    AND SUBSTR(SJYF,0,7) &lt;= #{skssqz}
+		    GROUP BY QYMC, SUBSTR(SJYF,0,7)
+		),
+		HJ AS(
+		  SELECT G.QYMC,G.SJ,NVL(Z.RZRC,0) RZRC,NVL(Z.DJ,100) DJ,NVL(Z.JE,0) YYE,NVL(Z.JE * 0.03,0) YJJE,NVL(G.SJJE,0) SJJE,
+		     NVL(NVL(G.SJJE,0) - NVL(Z.JE * 0.03,0),0) CE,'小规模纳税人' NSRLX
+		  FROM GS G,ZS Z
+		  WHERE Z.QYMC(+) = G.QYMC
+		  AND Z.SJ(+) = G.SJ
+		  AND NOT EXISTS (SELECT DISTINCT NSRMC FROM T_DB_SWJ_YBNSRDJXX C WHERE G.NSRMC = C.NSRMC)
+		  UNION ALL
+		  SELECT G.QYMC,G.SJ,NVL(Z.RZRC,0) RZRC,NVL(Z.DJ,100) DJ,NVL(Z.JE,0) YYE,NVL(Z.JE * 0.06,0) YJJE,NVL(G.SJJE,0) SJJE,
+		     NVL(NVL(G.SJJE,0) - NVL(Z.JE * 0.06,0),0) CE,'一般纳税人' NSRLX
+		  FROM GS G,ZS Z
+		  WHERE Z.QYMC(+) = G.QYMC
+		  AND Z.SJ(+) = G.SJ
+		  and EXISTS (SELECT DISTINCT NSRMC FROM T_DB_SWJ_YBNSRDJXX C WHERE G.NSRMC = C.NSRMC)
+		)
+		SELECT '合计' QYMC,'' SJ,SUM(RZRC) RZRC,'' DJ,SUM(YYE) YYE,SUM(YJJE) YJJE,SUM(SJJE) SJJE,SUM(CE) CE,'' NSRLX
+		FROM HJ
+		UNION ALL
+		SELECT * FROM (SELECT * FROM HJ ORDER BY SJ)
+	</select>
+	
+	<!-- 三级页面查询 -->
+	<select id="getThreeList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Ldjdhy">
+		SELECT CASE WHEN SUBSTR(L.SJ,1,7) >= J.KSSJ AND SUBSTR(L.SJ,1,7) &lt;= J.JSSJ THEN J.JG ELSE '100' END AS DJ,L.LGMC,'' LGDZ,L.RZLK ,L.SJ BSZQ
+		FROM t_db_gaj_jdrzxx L
+		LEFT JOIN T_TMP_LGYJGWH J ON (L.LGMC = J.QYMC AND SUBSTR(L.SJ,1,7) >= J.KSSJ AND SUBSTR(L.SJ,1,7) &lt;= J.JSSJ)
+		WHERE L.LGMC = #{qymc}
+		AND SUBSTR(L.SJ,1,7) = #{sj}
+	</select>
+</mapper>

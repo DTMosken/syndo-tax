@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('推送运行')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:90px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 96px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-inline layui-col-sm6 layui-col-md6">
+						<label class="layui-form-label">所属期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="ssq" name="ssq"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm6 layui-col-md6">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search('query-form')">
+								<i class="layui-icon">&#xe615;</i> 日志查询
+							</a>
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="sjbd()">
+								<i class="layui-icon">&#xe653;</i> 数据比对
+							</a>
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="fxts()">
+								<i class="layui-icon">&#xe630;</i> 风险推送
+							</a>
+						</div>
+					</div>
+				</div>
+				<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-col-md10" style="padding-left: 50px">
+						<p>
+							数据比对：<br>
+							执行各指标算数过程，统计未推送风险点数量，若新结果中没有已推送的风险且未反馈，将其置为自动消除<br>
+							执行方式：系统每日自动执行或者点击“数据比对”按钮立即开始比对<br><br>
+
+							风险推送：<br>
+							执行各指标算数过程，统计并推送新风险点<br>
+							执行方式：在风险推送设置的日期自动调度或者点击“风险推送”按钮立即推送<br>
+						</p>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/tsyx";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				title: "推送运行",
+				limit: 200,
+				limits: [200],
+				ataType: "json",
+				height: 'full-210',
+				even: true,
+				where: $.table.where('query-form'),
+				bottomToolbar:[],
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+						{
+                        	field : 'ssq',
+                            title : '所属期',
+                            align: 'left', 
+							width: '100'
+                        },
+                        {
+                        	field : 'lxmc',
+                            title : '类型',
+                            align: 'center',
+							width: '100'
+                        },
+						{
+							field : 'wtsSl',
+							title : '待推送',
+							align: 'center',
+							style: 'text-align:right',
+							width: '100'
+						},
+						{
+							field : 'tsSl',
+							title : '推送',
+							align: 'center',
+							style: 'text-align:right',
+							width: '100'
+						},
+						{
+							field : 'zdxcSl',
+							title : '自动消除',
+							align: 'center',
+							style: 'text-align:right',
+							width: '120'
+						},
+						{
+							field : 'msg',
+							title : '消息',
+							align: 'center',
+							style: 'text-align:left',
+							width: '200'
+						},
+						{
+							field : 'logTime',
+							title : '比对/推送时间',
+							align: 'center',
+							width: '150'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#ssq',type:'month',format:'yyyy-MM'});
+        });
+
+		function sjbd() {
+			$.modal.confirm("确定要数据比对吗？", function() {
+				var url = prefix + "/sjbd";
+				$.operate.post(url);
+			});
+		}
+
+		function fxts() {
+			$.modal.confirm("确定要手动推送吗？", function() {
+				var url = prefix + "/fxts";
+				$.operate.post(url);
+			});
+		}
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,792 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- leaflet -->
+<div th:fragment="leaflet">
+    <style>
+        /* 地图样式 */
+        .map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .leaflet-container {
+            background: white;
+            outline: 0;
+        }
+
+        .leaflet-default-marker-icon {
+            background-image: url(/ajax/libs/leaflet/images/marker-icon.png);
+        }
+
+        .leaflet-default-marker-icon-2x {
+            background-image: url(/ajax/libs/leaflet/images/marker-icon-2x.png);
+        }
+
+        .leaflet-default-marker-shadow {
+            background-image: url(/ajax/libs/leaflet/images/marker-shadow.png);
+        }
+    </style>
+    <template id="leafletTemplate">
+        <div id="map" class="map">
+            <el-button
+                title="清除标注"
+                icon="el-icon-brush"
+                @click="cleanDraw"
+                style="
+                    position: absolute;
+                    right: 90px;
+                    top: 10px;
+                    font-size: 30px;
+                    color: #b5b5b5;
+                    padding: 6px 8px 7px 6px;
+                    border: 2px solid rgba(0, 0, 0, 0.2);
+                    z-index: 1000;
+                "
+            ></el-button>
+            <!-- <i class="el-icon-brush" style="position: absolute; right: 90px; top: 10px; border: 2px solid rgba(0, 0, 0, 0.2); z-index: 9999"></i> -->
+        </div>
+    </template>
+    <script type="module">
+        // import * as MapConfig from "/js/map_ytkfq.js";
+        import * as MapConfig from "/js/map_lingcheng.js?2021091702";
+        import "/ajax/libs/leaflet/leaflet_patch.js";
+
+        Vue.component("leafletMap", {
+            template: "#leafletTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+                // 使用在线天地图
+                useOnlineTdt: {
+                    type: Boolean,
+                    default: true,
+                },
+                // 限制地图范围
+                limitBound: {
+                    type: Boolean,
+                    default: false,
+                },
+            },
+            data() {
+                return {
+                    markerData: {},
+                    markerComponent: {},
+                    layerType: "",
+                    // 编辑中的Marker，用于保留编辑中状态，防止选中影响图标样式
+                    editingMarker: [],
+                    // 从表格选中的Marker
+                    selectedMarker: {},
+                    pmPolygon: {
+                        data: {},
+                        layerType: "",
+                        markerComponent: {},
+                        editing: [],
+                        selected: {},
+                    },
+                };
+            },
+            mounted() {
+                this.initMap();
+                this.initPm();
+                this.initMarkers();
+                // this.test();
+            },
+            watch: {
+                selectedMarker: function (val, oldVal) {
+                    if (val instanceof L.Marker && this.editingMarker.indexOf(val.id) === -1) {
+                        val.setIcon(this.IconBlue);
+                    }
+                    if (oldVal.id && oldVal instanceof L.Marker && this.editingMarker.indexOf(oldVal.id) === -1) {
+                        oldVal.setIcon(this.IconDefault);
+                    }
+                },
+                "pmPolygon.selected": function (val, oldVal) {
+                    if (val instanceof L.Polygon && this.pmPolygon.editing.indexOf(val.id) === -1) {
+                        val.setStyle({ color: this.PolygonBlueColor });
+                    }
+                    if (oldVal.id && oldVal instanceof L.Polygon && this.pmPolygon.editing.indexOf(oldVal.id) === -1) {
+                        oldVal.setStyle({ color: this.PolygonDefaultColor });
+                    }
+                },
+            },
+            created() {
+                // esc键退出绘制
+                document.addEventListener("keydown", (e) => {
+                    if (e.which == 27 && this.map.pm) {
+                        this.map.pm.disableDraw();
+                    }
+                });
+            },
+            methods: {
+                cleanDraw() {
+                    this.selectedMarker = {};
+                    this.editingMarker = [];
+                    this.pmPolygon.selected = {};
+                    this.pmPolygon.editing = [];
+                    this.map.pm.disableDraw();
+                    this.map.closePopup();
+                    this.drawGroup.clearLayers();
+                },
+                initPm() {
+                    // 设置lang=中文
+                    this.map.pm.setLang("zh");
+                    this.map.pm.setGlobalOptions({ layerGroup: this.drawGroup });
+                    // this.map.pm.getGeomanLayers(true)
+                    //     .bindPopup('Hello world!')
+                    //     .on('click', function () {
+                    //         alert('Clicked on a member of the group!');
+                    //     })
+                    this.pubVue.$on("deleteLayer", (data) => {
+                        this.delFromDrawGroupByIdAndLayertype(data.id, data.layerType);
+                    });
+                    this.pubVue.$on("removeMarkers", (data) => {
+                        let layerType = data.layerType;
+                        this.map.pm.disableDraw();
+                        for (let i in this.drawGroup._layers) {
+                            if (this.drawGroup._layers[i].id.slice(0, layerType.length + 1) === layerType + "_") {
+                                this.delFromDrawGroup(this.drawGroup._layers[i].id);
+                            }
+                        }
+                    });
+                    this.pubVue.$on("importGeoJSON", (data) => {
+                        // let wkt = new Wkt.Wkt();
+                        // wkt.read(data.geoJSON);
+                        this.map.pm.disableDraw();
+                        this.map.closePopup();
+                        this.drawGroup.clearLayers();
+                        let json = JSON.parse(data.data.geoJSON.replace(/\\n/g, ""));
+                        L.geoJSON(json, {
+                            onEachFeature: (feature, layer) => {
+                                let id = "tmp_" + new Date().getTime();
+                                let pid = data.data.pid;
+                                let lx = data.data.lx;
+                                let wkt = new Wkt.Wkt();
+                                let geo = wkt.read(JSON.stringify(layer.toGeoJSON(15))).write();
+                                layer.id = this.genLayerId(id, data.layerType);
+                                if (layer instanceof L.Polygon) {
+                                    let content = this.getMarkerContent(
+                                        {
+                                            markerData: { id: id, pid: pid, lx: lx, geo: geo, newGeo: geo, label: feature.properties.NAME },
+                                            btnStatus: 1,
+                                            delable: false,
+                                        },
+                                        data.marker
+                                    );
+                                    layer.setStyle({ color: this.PolygonOrangeColor });
+                                    layer.bindPopup(content);
+                                    this.drawGroup.addLayer(layer);
+                                }
+                            },
+                        });
+                    });
+                    this.pubVue.$on("showMarker", (data) => {
+                        this.map.pm.disableDraw();
+                        let rows = data.rows;
+                        let marker = data.marker;
+                        let markerArr = [];
+                        rows.forEach((row) => {
+                            if(row.wbz === 0) {
+                                row.layerType = data.layerType;
+                                let layerId = this.genLayerId(row.id, data.layerType);
+                                this.deleteEditingMarker(layerId);
+                                // 删除已有相同标记
+                                this.delFromDrawGroup(layerId);
+                                markerArr.push(this.addMarker2DrawGroup(layerId, row, marker, true));
+                            }
+                        });
+                        if(markerArr.length>0) {
+                            let group = L.featureGroup(markerArr);
+                            this.map.fitBounds(group.getBounds(), {paddingTopLeft:[340, 0]});
+                        }
+                    });
+                    this.pubVue.$on("afterSaveMarker", (data) => {
+                        let layerId = this.genLayerId(data.id, data.layerType);
+                        this.deleteEditingMarker(layerId);
+                        let layer = this.drawGroup.getLayerById(layerId);
+                        if (layer) {
+                            layer.setIcon(this.IconDefault);
+                        }
+                    });
+                    this.pubVue.$on("afterSavePolygon", (data) => {
+                        let layerId = this.genLayerId(data.id, data.layerType);
+                        this.deleteEditingPolygon(layerId);
+                        let layer = this.drawGroup.getLayerById(layerId);
+                        if (layer) {
+                            layer.pm.disable();
+                            if (data.data) {
+                                if (data.data.newGeo) data.data.geo = data.data.newGeo;
+                                data.data.wbz = 0;
+                            }
+
+                            if (data.flag === "1") {
+                                // 若id是临时的，替换为新生成的
+                                // layer.id = this.genLayerId(data.newId, data.layerType);
+                                // layer.unbindPopup();
+                                // data.data.id = data.newId;
+                                // this.polygonEditCallback(layer, data.data, data.marker);
+                                this.delFromDrawGroupByIdAndLayertype(data.id, data.layerType);
+                                data.data.id = data.newId;
+                                let newLayerId = this.genLayerId(data.newId, data.layerType);
+                                this.addPolygon2DrawGroup(newLayerId, data.data, data.marker, true);
+                            } else if (data.flag === "2") {
+                                // 属性发生变化，重新设置popup
+                                this.delFromDrawGroup(layerId);
+                                this.addPolygon2DrawGroup(layerId, data.data, data.marker, true);
+                            }
+                            layer = this.drawGroup.getLayerById(layerId);
+                            if (layer) {
+                                if (this.pmPolygon.selected.id === layer.id) {
+                                    layer.setStyle({ color: this.PolygonBlueColor });
+                                } else {
+                                    layer.setStyle({ color: this.PolygonDefaultColor });
+                                }
+                            }
+                        }
+                    });
+                    this.pubVue.$on("showPoint", (data) => {
+                        this.markerData = data.row;
+                        this.markerComponent = data.marker;
+                        this.layerType = this.markerData.layerType;
+
+                        let layerId = this.genLayerId(this.markerData.id);
+                        // console.log(data)
+                        // 清除之前正在编辑的相同Marker
+                        this.deleteEditingMarker(layerId);
+                        // 删除已有相同标记
+                        this.delFromDrawGroup(layerId);
+
+                        // 已标注的，直接显示
+                        if (this.markerData.wbz === 0) {
+                            this.map.pm.disableDraw();
+                            this.addMarker2DrawGroup();
+                            // 往右偏移1/10屏以避开列表
+                            this.map.panTo([
+                                this.markerData.lat,
+                                this.markerData.lon - (this.map.getBounds().getEast() - this.map.getBounds().getWest()) / 10,
+                            ]);
+                        } 
+                    });
+                    this.pubVue.$on("drawPoint", (data) => {
+                        this.markerData = data.row;
+                        this.markerComponent = data.marker;
+                        this.layerType = this.markerData.layerType;
+
+                        let layerId = this.genLayerId(this.markerData.id);
+                        // console.log(data)
+                        // 清除之前正在编辑的相同Marker
+                        this.deleteEditingMarker(layerId);
+                        // 删除已有相同标记
+                        this.delFromDrawGroup(layerId);
+
+                        // 已标注的，直接显示
+                        if (this.markerData.wbz === 0) {
+                            this.map.pm.disableDraw();
+                            this.addMarker2DrawGroup();
+                            // 往右偏移1/10屏以避开列表
+                            this.map.panTo([
+                                this.markerData.lat,
+                                this.markerData.lon - (this.map.getBounds().getEast() - this.map.getBounds().getWest()) / 10,
+                            ]);
+                        } else {
+                            this.addEditingMarker(layerId);
+                            // console.log("drawPoint", data);
+                            this.map.pm.enableDraw("Marker", {
+                                snappable: false,
+                                continueDrawing: false,
+                                markerStyle: { icon: this.IconOrange },
+                            });
+                        }
+                    });
+                    this.pubVue.$on("drawPolygon", (data) => {
+                        $.extend(this.pmPolygon, {
+                            markerData: data.data,
+                            layerType: data.layerType,
+                            markerComponent: data.marker,
+                        });
+                        let layerId = this.genLayerId(data.data.id, data.layerType);
+                        // 清除之前正在编辑的相同Polygon
+                        this.deleteEditingPolygon(layerId);
+                        // 删除已有相同标记
+                        this.delFromDrawGroup(layerId);
+
+                        // 已标注的，直接显示
+                        if (this.pmPolygon.markerData.wbz === 0 && this.pmPolygon.markerData.geo) {
+                            this.map.pm.disableDraw();
+                            let center = this.addPolygon2DrawGroup(layerId, this.pmPolygon.markerData, this.pmPolygon.markerComponent, false);
+                            // 往右偏移1/10屏以避开列表
+                            this.map.panTo([center.lat, center.lng - (this.map.getBounds().getEast() - this.map.getBounds().getWest()) / 10]);
+                        } else {
+                            this.addEditingPolygon(layerId);
+                            this.map.pm.enableDraw("Polygon", {
+                                snappable: true,
+                                sanpDistance: 20,
+                                hintlineStyle: {
+                                    color: this.PolygonOrangeColor,
+                                    dashArray: [5, 5],
+                                },
+                                templineStyle: { color: this.PolygonOrangeColor },
+                                pathOptions: { color: this.PolygonOrangeColor, fillOpacity: 0.1 },
+                            });
+                        }
+                    });
+                    this.pubVue.$on("editGeo", (data) => {
+                        // this.map.pm.enableGlobalDragMode();
+                        // this.map.pm.toggleGlobalEditMode({allowSelfIntersection: true});
+
+                        let layerType = data.layerType;
+                        let layerId = this.genLayerId(data.data.id, layerType);
+
+                        let layer = this.drawGroup.getLayerById(layerId);
+                        if (layer && layer instanceof L.Marker) {
+                            // this.markerData = data;
+                            this.addEditingMarker(layer.id);
+                            // layer.pm.toggleEdit({
+                            layer.pm.enable({
+                                allowSelfIntersection: true,
+                            });
+                            layer.setIcon(this.IconOrange);
+                            // layer.openPopup();
+                            layer.on("pm:edit", (e) => {
+                                if (e.shape === "Marker") {
+                                    this.markerEditCallback(e.layer, data.data, data.marker);
+                                }
+                            });
+                        } else if (layer && layer instanceof L.Polygon) {
+                            this.addEditingPolygon(layer.id);
+                            layer.pm.enable({
+                                allowSelfIntersection: true,
+                            });
+                            layer.setStyle({ color: this.PolygonOrangeColor });
+                            // layer.openPopup();
+                            layer.on("pm:edit", (e) => {
+                                if (e.shape === "Polygon") {
+                                    this.polygonEditCallback(e.layer, data.data, data.marker);
+                                }
+                            });
+                        } else {
+                            console.warn("未找到待编辑", data);
+                        }
+                    });
+                    this.pubVue.$on("cancelGeo", (data) => {
+                        let layerId = this.genLayerId(data.data.id, data.layerType);
+                        if (data.data.wbz === 0) {
+                            let layer = this.drawGroup.getLayerById(layerId);
+                            if (layer && layer instanceof L.Marker) {
+                                this.deleteEditingMarker(layerId);
+                                layer.setLatLng([data.data.lat, data.data.lon]);
+                                if (this.selectedMarker && this.selectedMarker.id === layer.id) {
+                                    layer.setIcon(this.IconBlue);
+                                } else {
+                                    layer.setIcon(this.IconDefault);
+                                }
+                            } else if (layer && layer instanceof L.Polygon) {
+                                this.deleteEditingPolygon(layerId);
+                                layer.pm.disable();
+                                let wkt = new Wkt.Wkt();
+                                wkt.read(data.data.geo);
+                                layer.setLatLngs(L.GeoJSON.geometryToLayer(L.GeoJSON.asFeature(wkt.toJson())).getLatLngs());
+                                if (this.pmPolygon.selected && this.pmPolygon.selected.id === layer.id) {
+                                    layer.setStyle({ color: this.PolygonBlueColor });
+                                } else {
+                                    layer.setStyle({ color: this.PolygonDefaultColor });
+                                }
+                            }
+                        } else {
+                            // 取消时，清除未保存
+                            this.delFromDrawGroupByIdAndLayertype(data.data.id, data.layerType);
+                        }
+                    });
+                    // this.pubVue.$on("editGeoEnd", data => {
+                    //     this.nsrmc = data.nsrmc;
+                    //     // console.log("editGeo", data);
+                    //     // this.map.pm.enableGlobalDragMode();
+                    //     // this.map.pm.toggleGlobalEditMode({allowSelfIntersection: true});
+                    //     let layer = this.drawGroup.getLayerById(this.nsrmc);
+                    //     layer.pm.disable();
+                    //     layer.openPopup();
+                    // });
+                    this.map.on("pm:create", ({ shape, layer }) => {
+                        // console.log(shape, layer);
+                        // console.log(layer.getLatLng())
+                        //
+                        if (shape === "Marker") {
+                            layer.id = this.genLayerId(this.markerData.id);
+                            this.markerEditCallback(layer, this.markerData, this.markerComponent);
+                            // this.map.pm.disableDraw();
+                            // layer.on("pm:edit", (e) => {
+                            //     if (e.shape === "Marker") {
+                            //         this.markerEditCallback(e.layer, this.markerData, this.markerComponent);
+                            //     }
+                            // });
+                        } else if (shape === "Polygon") {
+                            layer.id = this.genLayerId(this.pmPolygon.markerData.id, this.pmPolygon.layerType);
+                            this.polygonEditCallback(layer, this.pmPolygon.markerData, this.pmPolygon.markerComponent);
+                            // layer.on("pm:edit", (e) => {
+                            //     if (e.shape === "Polygon") {
+                            //         this.polygonEditCallback(e.layer, this.pmPolygon.markerData, this.pmPolygon.markerComponent);
+                            //     }
+                            // });
+                        }
+                    });
+                },
+                addEditingPolygon(layerId) {
+                    if (this.pmPolygon.editing.indexOf(layerId) === -1) this.pmPolygon.editing.push(layerId);
+                },
+                addEditingMarker(layerId) {
+                    if (this.editingMarker.indexOf(layerId) === -1) this.editingMarker.push(layerId);
+                },
+                deleteEditingPolygon(layerId) {
+                    let index = this.pmPolygon.editing.indexOf(layerId);
+                    if (index > -1) this.pmPolygon.editing.splice(index, 1);
+                },
+                deleteEditingMarker(layerId) {
+                    let index = this.editingMarker.indexOf(layerId);
+                    if (index > -1) this.editingMarker.splice(index, 1);
+                },
+                polygonEditCallback(layer, markerData, markerComponent) {
+                    let wkt = new Wkt.Wkt();
+                    let geoString = wkt.read(JSON.stringify(layer.toGeoJSON(15))).write();
+
+                    layer.bindPopup(
+                        this.getMarkerContent(
+                            {
+                                markerData: $.extend(markerData, { newGeo: geoString }),
+                                btnStatus: 1,
+                            },
+                            markerComponent
+                        )
+                    );
+                    // layer.openPopup();
+                },
+                markerEditCallback(layer, markerData, markerComponent) {
+                    let latlng = layer.getLatLng();
+                    layer.bindPopup(
+                        this.getMarkerContent(
+                            {
+                                markerData: $.extend(markerData, {
+                                    newlat: latlng.lat,
+                                    newlon: latlng.lng,
+                                }),
+                                btnStatus: 1,
+                            },
+                            markerComponent
+                        )
+                    );
+                    layer.openPopup();
+                },
+                genLayerId(id, layerType) {
+                    if (layerType) {
+                        return layerType + "_" + id;
+                    } else {
+                        return this.layerType + "_" + id;
+                    }
+                },
+                getMarkerContent(obj, markerComponent) {
+                    $.extend(obj, {
+                        editable: true,
+                        leafletMap: this,
+                        pubVue: this.pubVue,
+                    });
+                    if (markerComponent) {
+                        return new markerComponent({ propsData: obj }).$mount().$el;
+                    } else {
+                        return new this.markerComponent({ propsData: obj }).$mount().$el;
+                    }
+                },
+                // getQybzPopupMarkerContent(obj) {
+                //     $.extend(obj, {
+                //         editable: true,
+                //         leafletMap: this,
+                //         pubVue: this.pubVue,
+                //     });
+                //     return new qybzMarkerContentCmp({ propsData: obj }).$mount().$el;
+                // },
+                delFromDrawGroup(layerId) {
+                    let layer = this.drawGroup.getLayerById(layerId);
+                    if (layer) {
+                        layer.closePopup();
+                        this.map.closePopup();
+                        this.drawGroup.removeLayer(layer);
+                        layer.remove();
+                    } else {
+                        console.warn("未找到待删除", layerId);
+                    }
+                },
+                delFromDrawGroupByIdAndLayertype(id, layerType) {
+                    this.delFromDrawGroup(this.genLayerId(id, layerType));
+                },
+                /*test() {
+                    let wkt = new Wkt.Wkt();
+                    wkt.read("MULTILINESTRING ((116.596056399983 37.3330388996256,116.591807699566 37.3253266995676,116.584726700377 37.3262140003758,116.577388200105 37.323772299652,116.574040800243 37.3229720001577,116.571465900031 37.3235520997496,116.562189099947 37.329361800207,116.559750000063 37.3308891997768,116.555929699796 37.3335850003476,116.55246370004 37.3355402002201))");
+                    let geometry = L.GeoJSON.geometryToLayer(L.GeoJSON.asFeature(wkt.toJson()));
+                    this.drawGroup.addLayer(geometry);
+                },*/
+                addPolygon2DrawGroup(layerId, markerData, markerComponent, notShowPopup) {
+                    let wkt = new Wkt.Wkt();
+                    wkt.read(markerData.geo);
+                    // let geometry = wkt.toObject();
+                    let geometry = L.GeoJSON.geometryToLayer(L.GeoJSON.asFeature(wkt.toJson()));
+                    geometry.id = layerId;
+                    let content = this.getMarkerContent(
+                        {
+                            markerData: markerData,
+                            btnStatus: 0,
+                            delable: true,
+                        },
+                        markerComponent
+                    );
+                    geometry.bindPopup(content);
+                    this.drawGroup.addLayer(geometry);
+                    let center = geometry.getBounds().getCenter();
+                    if (!notShowPopup) {
+                        this.pmPolygon.selected = geometry;
+                        // setTimeout(() => {
+                        // geometry.openPopup();
+                        // }, 1000);
+                        L.popup().setLatLng(center).setContent(content).openOn(this.map);
+                    }
+                    return center;
+                },
+                addMarker2DrawGroup(layerId, data, markerComponent, notShowPopup) {
+                    let markerData = this.markerData;
+                    if (data) {
+                        markerData = data;
+                    }
+                    let lat = markerData.lat;
+                    let lon = markerData.lon;
+                    let marker = L.marker([lat, lon]).bindPopup(
+                        this.getMarkerContent(
+                            {
+                                markerData: $.extend(markerData, { lat: lat, lon: lon }),
+                                btnStatus: 0,
+                                delable: true,
+                            },
+                            markerComponent
+                        )
+                    );
+                    if (layerId) {
+                        marker.id = layerId;
+                    } else {
+                        marker.id = this.genLayerId(this.markerData.id);
+                    }
+                    this.drawGroup.addLayer(marker);
+                    /*this.popupListLayer.addMarker(marker, this.getMarkerContent(
+                            {
+                                markerData: $.extend(markerData, { lat: lat, lon: lon }),
+                                btnStatus: 0,
+                                delable: true,
+                            },
+                            markerComponent
+                        )
+                    );*/
+                    if (!notShowPopup) {
+                        this.selectedMarker = marker;
+                        marker.openPopup();
+                    }
+                    return marker;
+                },
+
+                initMarkers() {
+                    this.IconDefault = L.icon({
+                        iconUrl: "/ajax/libs/leaflet/images/marker-icon.png",
+                        iconRetinaUrl: "/ajax/libs/leaflet/images/marker-icon-2x.png",
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41],
+                    });
+                    this.IconOrange = L.icon({
+                        iconUrl: "/ajax/libs/leaflet/images/marker-icon-orange.png",
+                        iconRetinaUrl: "/ajax/libs/leaflet/images/marker-icon-orange-2x.png",
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41],
+                    });
+                    this.IconRed = L.icon({
+                        iconUrl: "/ajax/libs/leaflet/images/marker-icon-red.png",
+                        iconRetinaUrl: "/ajax/libs/leaflet/images/marker-icon-red-2x.png",
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41],
+                    });
+                    this.IconBlue = L.icon({
+                        iconUrl: "/ajax/libs/leaflet/images/marker-icon-blue.png",
+                        iconRetinaUrl: "/ajax/libs/leaflet/images/marker-icon-blue-2x.png",
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41],
+                    });
+                    this.PolygonDefaultColor = "#3388ff";
+                    this.PolygonOrangeColor = "#F57000";
+                    this.PolygonBlueColor = "#0D00F3";
+                },
+                initMap() {
+                    let baseLayerGroup, yxLayerGroup;
+                    let bjLayer = L.geoJSON(MapConfig.boundPolygon, {
+                        style: function (feature) {
+                            return { color: "blue", stroke: true, fill: false };
+                        },
+                    });
+                    if (this.useOnlineTdt === true) {
+                        let baseleLayer = L.tileLayer.chinaProvider("TianDiTu.Normal.Map", { maxZoom: 18, minZoom: 11 });
+                        let baselwLayer = L.tileLayer.chinaProvider("TianDiTu.Normal.Annotion", { maxZoom: 18, minZoom: 11 });
+                        let yxLayer = L.tileLayer.chinaProvider("TianDiTu.Satellite.Map", { maxZoom: 18, minZoom: 11 });
+                        let yxlwLayer = L.tileLayer.chinaProvider("TianDiTu.Satellite.Annotion", { maxZoom: 18, minZoom: 11 });
+
+                        baseLayerGroup = new L.layerGroup([baseleLayer, baselwLayer, bjLayer]);
+                        yxLayerGroup = new L.layerGroup([yxLayer, yxlwLayer, bjLayer]);
+                    } else if(MapConfig.mapCacheCustom && MapConfig.mapCacheCustom.enable === true){
+                        let origin = [-20037508.342787001, 20037508.342787001]; //图层起点坐标
+                        let resolutions = [
+                            156543.03392800014, // Level 0
+                            78271.516963999937, // Level 1
+                            39135.758482000092, // Level 2
+                            19567.879240999919, // Level 3
+                            9783.9396204999593, // Level 4
+                            4891.9698102499797,
+                            2445.984905124989,
+                            1222.9924525624949,
+                            611.49622628137968,
+                            305.74811314055756,
+                            152.87405657041106,
+                            76.437028285073239,
+                            38.21851414253662,
+                            19.10925707126831,
+                            9.5546285356341549,
+                            4.7773142679493699,
+                            2.3886571339746849,
+                            1.1943285668550503,
+                            0.59716428355981721
+                        ];
+                        this.crs = new L.Proj.CRS("", "+title=WGS 84 / Pseudo-Mercator +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs", {
+                            origin: origin,
+                            resolutions: resolutions
+                        });
+
+                        L.TileLayer.prototype.getTileUrl = function(tilePoint) {
+                            return L.Util.template(
+                                this._url,
+                                L.extend({
+                                    s: this._getSubdomain(tilePoint),
+                                    z: function() {
+                                        var value = tilePoint.z.toString(10);
+                                        return "L" + pad(value, 2).toUpperCase();
+                                    },
+                                    x: function() {
+                                        var value = tilePoint.y.toString(16);
+                                        return "R" + pad(value, 8).toUpperCase();
+                                    },
+                                    y: function() {
+                                        var value = tilePoint.x.toString(16);
+                                        return "C" + pad(value, 8).toUpperCase();
+                                    }
+                                })
+                            );
+                        };
+                        var pad = function(numStr, n) {
+                            var len = numStr.length;
+                            while (len < n) {
+                                numStr = "0" + numStr;
+                                len++;
+                            }
+                            return numStr;
+                        };
+
+                        let baseleLayer = new L.tileLayer(MapConfig.mapCacheCustom.baseLayer.url, 
+                            MapConfig.mapCacheCustom.baseLayer.options
+                        );
+                        let yxLayer = new L.tileLayer(MapConfig.mapCacheCustom.yxLayer.url, 
+                            MapConfig.mapCacheCustom.yxLayer.options
+                        );
+                        let yxlwLayer = new L.tileLayer(MapConfig.mapCacheCustom.yxlwLayer.url, 
+                            MapConfig.mapCacheCustom.yxlwLayer.options
+                        );
+
+                        baseLayerGroup = new L.layerGroup([baseleLayer, bjLayer]);
+                        yxLayerGroup = new L.layerGroup([yxLayer, yxlwLayer]);
+                    } else {                        
+                        let baseleLayer = new L.tileLayer.wms(MapConfig.geowebcachewms, MapConfig.baseLayer);
+                        let yxLayer = new L.tileLayer.wms(MapConfig.geowebcachewms, MapConfig.yxLayer);
+                        let yxlwLayer = new L.tileLayer.wms(MapConfig.geowebcachewms, MapConfig.yxlwLayer);
+
+                        baseLayerGroup = new L.layerGroup([baseleLayer, bjLayer]);
+                        yxLayerGroup = new L.layerGroup([yxLayer, yxlwLayer]);
+                    }
+
+                    // 基础地图
+                    let baseLayers = {
+                        地图: baseLayerGroup,
+                        // 影像: [yxLayer, yxlwLayer]
+                        影像: yxLayerGroup,
+                        // 影像: yxlwLayer
+                    };
+                    this.drawGroup = new L.layerGroup();
+                    // this.popupListLayer = new L.popupListLayer();
+                    let overLayers = {
+                        标注: this.drawGroup,
+                    };
+                    if (this.limitBound) {
+                        this.map = L.map("map", {
+                            crs: this.this.crs || L.CRS.EPSG3857,
+                            zoomControl: true, //放大缩小
+                            center: MapConfig.center,
+                            layers: [yxLayerGroup, this.drawGroup],
+                            attributionControl: false, //右下角属性控件
+                            zoom: MapConfig.initZoom,
+                            maxBounds: L.latLngBounds(L.latLng(MapConfig.maxBounds[0]), L.latLng(MapConfig.maxBounds[1])),
+                        });
+                    } else {
+                        this.map = L.map("map", {
+                            crs: L.CRS.EPSG3857,
+                            zoomControl: true, //放大缩小
+                            center: MapConfig.center,
+                            layers: [yxLayerGroup, this.drawGroup],
+                            attributionControl: false, //右下角属性控件
+                            zoom: MapConfig.initZoom,
+                        });
+                    }
+
+                    // this.popupListLayer.addTo(this.map)
+
+                    // 图层控制
+                    let layerControl = L.control.layers(baseLayers, overLayers);
+                    this.map.addControl(layerControl);
+                    // 鹰眼图
+                    this.addMiniMap();
+                    // 比例尺
+                    L.control.scale({ imperial: false }).addTo(this.map);
+
+                    // this.map.on("viewreset", (e) => {
+                    //     console.log("viewreset", e);
+                    // });
+                    // this.map.on("click", (e) => {
+                    //     console.log(this.map.getBounds().getCenter());
+                    // });
+                },
+                addMiniMap() {
+                    let baseLayerGroup;
+                    if (this.useOnlineTdt === true) {
+                        let baseleLayer = L.tileLayer.chinaProvider("TianDiTu.Normal.Map", { maxZoom: 17, minZoom: 7 });
+                        let baselwLayer = L.tileLayer.chinaProvider("TianDiTu.Normal.Annotion", { maxZoom: 17, minZoom: 7 });
+
+                        baseLayerGroup = new L.layerGroup([baseleLayer, baselwLayer]);
+                    } else if(MapConfig.mapCacheCustom && MapConfig.mapCacheCustom.enable === true){
+                        baseLayerGroup = new L.tileLayer(MapConfig.mapCacheCustom.baseLayer.url, 
+                            $.extend(MapConfig.mapCacheCustom.baseLayer.options, { minZoom: 7 })
+                        );
+                    } else {
+                        baseLayerGroup = new L.tileLayer.wms(MapConfig.geowebcachewms, $.extend(MapConfig.baseLayer, { minZoom: 7 }));
+                    }
+                    let overViewLayer = new L.Control.MiniMap(baseLayerGroup, { toggleDisplay: true, minimized: true });
+                    overViewLayer.addTo(this.map);
+                },
+            },
+        });
+    </script>
+</div>

@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('任务调整')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:90px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 96px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-inline layui-col-sm4 layui-col-md4">
+						<label class="layui-form-label">推送日期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="tsrq" name="tsrq"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md4">
+						<label class="layui-form-label">指标：</label>
+						<div class="layui-input-block">
+							<select id="zbdm" name="zbdm" class="form-control input-sm" th:with="type=${@zbxx.getALlZbxx()}" lay-verify="" lay-search>
+								<option value="">全部指标</option>
+								<option th:each="dict : ${type}" th:text="${dict.zbmc}" th:value="${dict.zbdm}"></option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md4">
+						<label class="layui-form-label">剩余天数大于：</label>
+						<div class="layui-input-block">
+							<input type="number" id="syts" name="syts" value="" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md4">
+						<label class="layui-form-label">反馈人：</label>
+						<div class="layui-input-block">
+							<input type="text" id="fkr" name="fkr" value="" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md4">
+						<div class="layui-form-btn" style="text-align: center" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search('query-form')">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+	 <script type="text/html" id="tmpToolbar">
+		 <div class="layui-btn-container" id="toolbtn">
+			 <button class="layui-btn layui-bg-blue layui-btn-sm" onclick="tzfkr()">
+				 调整反馈人
+			 </button>
+			 <button class="layui-btn layui-bg-green layui-btn-sm" onclick="tzfksx()">
+				 调整反馈时限
+			 </button>
+			 <button class="layui-btn layui-bg-red layui-btn-sm" onclick="qxts()">
+				 取消推送
+			 </button>
+			 <div style="position: absolute; background-color: white;top:-1px; left:-1px; width: calc(100% + 2px); height: 100%; z-index: -1;"></div>
+		 </div>
+	 </script>
+
+	 <script type="text/html" id="zbTpl">
+		 <a href="javascript:;" onclick="zbinfo('{{d.zbdm}}','{{d.zbmc}}')" class="layui-table-link">{{ d.zbmc }}</a>
+	 </script>
+	 <script type="text/html" id="nsrTpl">
+		 <a href="javascript:;" onclick="ckmx('{{d.id}}', '{{d.zbmc}}')" class="layui-table-link">{{ d.nsrmc }}</a>
+	 </script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/rwtz";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				title: "任务调整",
+				toolbar: '#tmpToolbar',
+				limit: 200,
+				limits: [200],
+				ataType: "json",
+				height: 'full-140',
+				even: true,
+				where: $.table.where('query-form'),
+				defaultToolbar:['filter', 'print'],
+				bottomToolbar:[],
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+                        {
+                        	field : 'zbmc',
+                            title : '指标',
+                            align: 'center',
+							width: '250',
+							templet: '#zbTpl'
+                        },
+						{
+							field : 'nsrmc',
+							title : '纳税人名称',
+							align: 'center',
+							width: '250',
+							templet: '#nsrTpl'
+						},
+						{
+							field : 'tsrmc',
+							title : '推送人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'tssj',
+							title : '推送时间',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'fkrmc',
+							title : '反馈人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'fksx',
+							title : '反馈时限',
+							align: 'center',
+							width: '100'
+						},
+						// {
+						// 	field : 'fksj',
+						// 	title : '反馈时间',
+						// 	align: 'center',
+						// 	width: '150'
+						// }
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+			laydate.render({elem: '#tsrq',type:'month',format:'yyyy-MM'});
+        });
+		layui.use(['form'], function(){
+			var form = layui.form;
+		});
+
+		// function doSave() {
+		// 	var url = prefix + "/save";
+		// 	var data = $("#config-form").serializeArray();
+		// 	$.operate.submit(url, "post", "json", data);
+		// }
+		// 调整反馈人
+		function tzfkr(){
+			var ids = $.table.selectColumns("id".toString());
+			if (ids.length === 0) {
+				$.modal.alertWarning("请至少选择一条任务");
+				return false;
+			}
+			var rows = $.table.getSelections();
+			var fkr, flag = true;
+			for(var i=0, len=rows.length; i<len; i++){
+				if(i==0) {
+					fkr = rows[i]['fkr'];
+				} else {
+					if(rows[i].fkr !== fkr) {
+						flag = false;
+						break;
+					}
+				}
+			}
+			if(!flag) {
+				$.modal.alertWarning("请选择相同反馈人的任务");
+				return false;
+			}
+			$.modal.open("调整反馈人", prefix + '/tzfkr/'+ids.join('a')+'/'+fkr, null, 500);
+		}
+		function tzfksx(){
+			var ids = $.table.selectColumns("id".toString());
+			if (ids.length === 0) {
+				$.modal.alertWarning("请至少选择一条任务");
+				return false;
+			}
+			$.modal.open("调整反馈时限", prefix + '/tzfksx/'+ids.join('a'), null, 500);
+		}
+		function qxts(){
+			var ids = $.table.selectColumns("id".toString());
+			if (ids.length === 0) {
+				$.modal.alertWarning("请至少选择一条任务");
+				return false;
+			}
+			$.modal.confirm("您确定要取消选中反馈任务吗？", function() {
+				$.modal.loading("正在处理中，请稍后...");
+				let url = prefix + '/qxts/'+ids.join('a');
+				$.post(url, {}, function(res){
+					$.modal.closeLoading();
+					if(res.code=='0') {
+						$.modal.msgSuccess(res.msg, $.table.refresh());
+					}else{
+						$.modal.alertError(res.msg);
+					}
+				});
+			});
+		}
+
+		function zbinfo(zbdm, zbmc) {
+			var prefix1 = ctx + "zhzs/dbfxxt/ts/zbxx/info/";
+			var width = 500;
+			var height = 400;
+			if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+				width = 'auto';
+			}
+			parent.layer.open({
+				area: [width + 'px', height + 'px'],
+				type: 2,
+				title: zbmc,
+				btn: ['关闭'],
+				shadeClose: true,
+				content: prefix1 + zbdm
+			});
+		}
+		function ckmx(id, zbmc){
+			var prefix1 = ctx + "zhzs/dbfxxt/ts/dbrw";
+			$.modal.openTab(zbmc, prefix1+"/ckmx/"+id);
+		}
+
+
+    </script>
+</body>
+</html>

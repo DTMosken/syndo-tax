@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.KpsjahcxMapper">
+	
+	<!-- 开票数据按户查询 -->
+	<sql id="whereClause">
+		<if test="pjbh != null and pjbh != ''"> and t1.pjbh = #{pjbh}</if>
+		<if test="dz != null and dz != ''"> and t1.dz like '%'||#{dz}||'%'</if>
+		<if test="nsrsbh != null and nsrsbh != ''"> and t1.nsrsbh = #{nsrsbh}</if>
+		<if test="nsrmc != null and nsrmc != ''"> and t1.nsrmc like '%'||#{nsrmc}||'%'</if>
+
+		<if test="tpr != null and tpr != ''"> and t1.tpr like '%'||#{tpr}||'%'</if>
+		<if test="dzdw != null and dzdw != ''"> and t1.dzdw like '%'||#{dzdw}||'%'</if>
+
+		<if test="bszqq != null and bszqq != ''"> and t1.bszq &gt;=#{bszqq}</if>
+		<if test="bszqz != null and bszqz != ''"> and t1.bszq &lt;= #{bszqz}</if>
+	</sql>
+
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjahcx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjahcx">
+		select t1.pjbh,t1.djzclx,t1.tfrq,t1.swjg,t1.nsrsbh,t1.nsrmc,t1.dz,t1.jehjdx,t1.tpr,
+			   t1.bz,t1.zt,t1.sfyjdy,t1.bszq,t1.bcsj,t1.jehj,t1.dzdw,t1.wsid
+        from cs_ftlszsgltax t1 
+        where 1=1
+        <include refid="whereClause" />
+        group by t1.pjbh,t1.djzclx,t1.tfrq,t1.swjg,t1.nsrsbh,t1.nsrmc,t1.dz,t1.jehjdx,t1.tpr,
+              t1.bz,t1.zt,t1.sfyjdy,t1.bszq,t1.bcsj,t1.jehj,t1.dzdw,t1.wsid
+	</select>
+
+    <!-- 查询统计 -->
+	<select id="getTotal" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Kpsjahcx">
+		select count(pjbh) as pjbh,sum(jehj) as jehj from (
+        select t.pjbh,t.jehj from cs_ftlszsgltax t group by t.pjbh,t.jehj)
+	</select>
+</mapper>

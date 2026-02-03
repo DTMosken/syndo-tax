@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: layui-header('行政审批办理登记未在税务注册')" />
+		<style type="text/css">
+			.layui-card-header{
+				height: auto;
+			}
+		</style>
+	</head>
+	<body class="layui-body-table">
+	<div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row">
+					<div class="layui-inline layui-col-sm6 layui-col-md3">
+						<label class="layui-form-label">企业名称：</label>
+						<div class="layui-input-block">
+							<input type="text" id="qyzwm" name="qyzwm" th:value="${param.nsrmc}" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm6 layui-col-md3">
+						<label class="layui-form-label" style="width: 110px;">统一社会信用代码：</label>
+						<div class="layui-input-block" style="margin-left: 120px;">
+							<input type="text" id="shxydm" name="shxydm" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm6 layui-col-md3">
+						<div class="layui-form-btn">
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.reset()"><i class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="layui-card-body">
+			<table id="layui-table" lay-filter="layui-table"></table>
+		</div>
+	</div>
+		<th:block th:include="include :: layui-footer" />
+		<script type="text/javascript">
+			var prefix = ctx + "zhzs/dbfxxt/lzlgfx/xzspbldj";
+
+			$(function() {
+				var options = {
+					id: 'layui-table',
+					url : prefix + "/list",
+					exportUrl: prefix + "/expExcel",
+					title : "办理营业执照未进行税务登记",
+		        	showExport: true,							// 是否显示导出按钮
+					height: 'full-65',
+					ataType: "json",
+					limit: 50,
+					cols:[
+						[
+							{checkbox: true},
+							{field: 'id', title: '', hide: true},
+							{field: 'shxydm', title: '社会信用代码', width:120, align:'center'},
+							{field: 'qyzwm', title: '企业名称', width:200, align:'center'},
+							{field: 'hyml', title: '行业门类', sortable: true, align:'center'},
+							{field: 'jyfw', title: '经营范围', align:'center'},
+							{field: 'zs', title: '住所', align:'center'},
+							{field: 'fzr', title: '负责人', width:80, align:'center'},
+							{field: 'info', title: '对比类型', width:180, align:'center'},
+							{field: 'cldw', title: '处理单位', width:80, align:'center'},
+						]
+					]
+				};
+				$.table.init(options);
+			});
+		</script>
+	</body>
+</html>

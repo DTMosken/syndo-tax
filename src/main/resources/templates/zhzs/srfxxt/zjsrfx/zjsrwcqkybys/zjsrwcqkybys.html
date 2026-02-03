@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('镇街收入完成情况（一般预算）')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline">
+					<label class="layui-form-label">日期:</label>
+					<div class="layui-input-inline">
+						<input class="layui-input" type="text" th:value="${rkrq}" readonly="readonly" id="rkrq" name="rkrq"/>
+					</div>
+				</div>
+				<div class="layui-inline">
+					<label class="layui-form-label">征收项目：</label>
+					<div class="layui-input-inline">
+						<div id="zsxm"></div>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="10000">万元</option>
+							<option value="1">元</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline">
+					<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+					<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.form.reset()"><i class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+
+<th:block th:include="include :: layui-footer" />
+<script th:inline="javascript">
+	var zsxmData = /*[[${zsxm}]]*/[];
+</script>
+<script type="text/javascript">
+	var prefix = ctx + "zhzs/srfxxt/zjsrfx/zjsrwcqkybys";
+
+	layui.use('laydate', function(){
+		var laydate = layui.laydate;
+		laydate.render({elem: '#rkrq', type:'month', format:'yyyy-MM'});
+	});
+	layui.use('xmSelect',function(){
+		var xmSelect = layui.xmSelect;
+		var zsxm = xmSelect.render({
+			name: 'zsxm',
+			el: '#zsxm', 
+			theme: {
+				color: '#1E9FFF'
+			},
+			toolbar: {
+				show: true,
+			},
+			model: {
+				label: {
+					type: 'block',
+					block: {
+						showCount: 3,
+						showIcon: false
+					}
+				}
+			},
+			data: zsxmData
+		})
+	});
+
+	$(function(){
+		var options = {
+			id: 'layui-table',
+			url: prefix + "/list",
+			exportUrl: prefix + "/expExcel",
+			title: '镇街收入完成情况（一般预算）',
+			showExport: true,
+			height: 'full-65',
+			ataType: "json",
+			limit: 50,
+			cols: [
+				[
+					{type:'checkbox'},
+					{title: '街道乡镇', width: '200', field: 'jdxz', align: 'center'},
+					{title: '指导数', width: '100', field: 'ncjh', align: 'right'},
+					// {title: '本月完成', width: '100', field: 'bqs', align: 'right'},
+					{title: '累计完成', width: '100', field: 'bnlj', align: 'right'},
+					{title: '完成率%', width: '100', field: 'wcjh', align: 'right'},
+					{title: '去年同期', width: '100', field: 'sntq', align: 'right'},
+					{title: '增长率%', width: '100', field: 'bsn', align: 'right'},
+				]
+			]
+		};
+		$.table.init(options);
+	});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('新增收入预算年初计划')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">
+					<label class="col-sm-2 control-label">所属年度：</label>
+					<div class="col-sm-4">
+						<input id="ssnd" name="ssnd" class="form-control" type="text" readonly="readonly" />
+					</div>
+					<label class="col-sm-2 control-label">街道乡镇：</label>
+					<div class="col-sm-4">
+						<select id="jdxz" name="jdxz" th:with="type=${@dict.getType('dm_jdxz')}" class="form-control">
+							<option value=""></option>
+							<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">全口径计划（万元）：</label>
+					<div class="col-sm-4">
+						<input id="qkj" name="qkj" class="form-control" type="number">
+					</div>
+					<label class="col-sm-2 control-label">一般预算计划（万元）：</label>
+					<div class="col-sm-4">
+						<input id="ybys" name="ybys" class="form-control" type="number">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">简称：</label>
+					<div class="col-sm-4">
+						<input id="jc" name="jc" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">排序：</label>
+					<div class="col-sm-4">
+						<input id="px" name="px" class="form-control" type="text">
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/zjsrncjhwh";
+			$("#form-add").validate({
+				rules:{
+					jdxz: {required: true},
+					qkjnjh: {required: true, number: true},
+					ybysnjh: {required: true, number: true},
+					ssnd:{required: true}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#ssnd',type:'year',format: 'yyyy',trigger: 'click'});
+	        });
+		</script>
+	</body>
+</html>

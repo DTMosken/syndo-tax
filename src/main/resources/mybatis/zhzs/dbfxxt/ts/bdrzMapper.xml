@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 比对日志 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.BdrzMapper">
+
+    <select id="selectList" parameterType="Bdrz" resultType="Bdrz">
+        SELECT bdid, MIN(lx) lx, MIN(ssq) ssq, MIN(date_format(log_time,'%Y-%m-%d %T')) log_time, SUM(zdxc_sl) zdxc_sl, SUM(ts_sl) ts_sl, SUM(wts_sl) wts_sl, group_concat(msg) msg
+        FROM t_dbfxxt_bdrz
+        <where>
+            <if test='lx!=null and lx!=""'>
+                lx = #{lx}
+            </if>
+            <if test="ssq!=null and ssq!=''">
+                and ssq = #{ssq}
+            </if>
+        </where>
+        GROUP BY bdid
+        order by bdid desc
+    </select>
+
+</mapper>

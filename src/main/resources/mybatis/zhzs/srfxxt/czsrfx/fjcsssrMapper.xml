@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.czsrfx.FjcsssrMapper">
+	
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.czsrfx.Fjcsssr" 
+           parameterType="com.syndo.project.zhzs.srfxxt.domain.czsrfx.Fjcsssr">
+		select IFNULL(t.zsxm, '其他')ZSXM,
+		       ROUND(sum(t.SJJE/#{dw}),2) hj,
+			   ROUND(sum(ZYJ/#{dw}),2) zyj,
+			   ROUND(sum(SSJ/#{dw}),2) shenj,
+			   ROUND(sum(DSJ/#{dw}),2) shij,
+			   ROUND(sum(QXJ/#{dw}),2) qxj
+			   <!-- ROUND(sum(ZYDFP/#{dw}),2) zydfp -->
+		  from t_srfxrkxx t LEFT JOIN sys_dict_data  d ON t.ZSXM=d.dict_label
+		 where 1 = 1
+		 <if test="rkrq != null and rkrq != ''"> and t.RKRQ = SUBSTRING(#{rkrq}, 1, 7) </if>
+		 <if test="zsxm != null and zsxm != ''"> and t.zsxm = #{zsxm} </if>
+		 group by t.ZSXM
+		 ORDER BY d.dict_sort
+	</select>
+	
+</mapper>

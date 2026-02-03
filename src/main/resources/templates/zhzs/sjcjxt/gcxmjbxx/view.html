@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<head>
+		<th:block th:include="include :: header('工程项目基本信息列表')" />
+		<style type="text/css">
+			.form-horizontal {margin: 15px 15px 0 15px}
+			.container-div {overflow-y: hidden;}
+		</style>
+	</head>
+	<body class="gray-white">
+		<div class="container-div">
+			<div class="row">
+				<!-- 查询条件 -->
+				<div class="panel panel-default" id="query-panel">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+								<span class="fa fa-chevron-down"></span>
+							</a>
+						</h4>
+					</div>
+					<div id="collapseExample" class="panel-collapse collapse">
+						<form id="query-form" class="form-horizontal m">
+							<input id="gucode" name="gucode" value="gcxmjbxx" type="hidden" />
+							<div class="row">
+								<div class="col-sm-3">
+									<div class="form-group">
+										<label title="工程项目名称" class="col-sm-4 control-label input-sm">工程项目名称：</label>
+										<div class="col-sm-8">
+											<input id="gcxmmc" name="gcxmmc" class="form-control input-sm" type="text" />
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-3">
+									<div class="form-group">
+										<label title="建设单位" class="col-sm-4 control-label input-sm">建设单位：</label>
+										<div class="col-sm-8">
+											<input id="jsdw" name="jsdw" class="form-control input-sm" type="text" />
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-3 text-right">
+									<div class="form-group">
+										<div class="col-sm-12">
+											<a class="btn btn-success btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+											<a class="btn btn-default btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+					<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="zhzs:sjcjxt:gcxmjbxx:add">
+						<i class="fa fa-plus"></i> 新增
+					</a>
+					<a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="zhzs:sjcjxt:gcxmjbxx:edit">
+						<i class="fa fa-edit"></i> 修改
+					</a>
+					<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="zhzs:sjcjxt:gcxmjbxx:remove">
+						<i class="fa fa-remove"></i> 删除
+					</a>
+					<a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="zhzs:sjcjxt:gcxmjbxx:export">
+						<i class="fa fa-download"></i> 导出
+					</a>
+				</div>
+				<div class="col-sm-12 full-table table-bordered">
+					<table id="bootstrap-table"></table>
+				</div>
+			</div>
+		</div>
+		<th:block th:include="include :: footer" />
+		<script th:inline="javascript">
+			var editFlag = [[${@permission.hasPermi('zhzs:sjcjxt:gcxmjbxx:edit')}]];
+			var removeFlag = [[${@permission.hasPermi('zhzs:sjcjxt:gcxmjbxx:remove')}]];
+			var prefix = ctx + "zhzs/sjcjxt/gcxmjbxx";
+
+			$(function() {
+				var options = {
+					url: prefix + "/list",
+					createUrl: prefix + "/add",
+					updateUrl: prefix + "/edit/{id}",
+					removeUrl: prefix + "/remove",
+					exportUrl: prefix + "/export",
+					modalName: "工程项目基本信息",
+					uniqueId: 'id',
+					height: calcHeight(),
+					showSearch: false,
+					showToggle: false,
+					showColumns: false,
+					columns: [{
+							checkbox: true
+						},
+						{
+							title: '操作',
+							align: 'center',
+							width: 150,
+							formatter: function(value, row, index) {
+								var actions = [];
+								actions.push('<a class="btn btn-warning btn-xs" href="javascript:void(0)" onclick="subdata(\'' + row.id + '\')"><i class="fa fa-edit"></i> 承建单位维护</a>');
+								return actions.join('');
+							}
+						},
+						{
+							field: 'id',
+							title: 'ID',
+							align: 'left',
+				        	halign: 'center',
+							visible: false
+						},
+						{
+							field: 'gcxmmc',
+							title: '工程项目名称',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'xmdz',
+							title: '项目地址',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'jsnr',
+							title: '建设内容',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'kgsj',
+							title: '开工时间',
+							align: 'center',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'jgsj',
+							title: '竣工时间',
+							align: 'center',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'jsdw',
+							title: '建设单位',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'jsdwlxr',
+							title: '建设单位联系人',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'lxfs',
+							title: '联系方式',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'jsqx',
+							title: '建设期限',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'tze',
+							title: '投资额',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						},
+						{
+							field: 'njhtz',
+							title: '年计划投资',
+							align: 'left',
+				        	halign: 'center',
+							width: 150
+						}
+					]
+				};
+				$.table.init(options);
+				
+			 	<!--/* 窗口改变，调整表格高度 */-->
+	            $(window).resize(function() {
+	            	$("#bootstrap-table").bootstrapTable('resetView', {
+	                    height: calcHeight()
+	                });
+	            });
+	            <!--/* 监听条件元素，调整表格高度 */-->
+	            var oP = document.getElementById('collapseExample');
+	    		var observer = new MutationObserver(mutations => {
+    				$("#bootstrap-table").bootstrapTable('resetView', {
+	                    height: calcHeight()
+	                });
+	    		});
+	    		observer.observe(oP, { attributes: true,  attributeFilter: ['class'] });
+			});
+
+			<!--/* 计算表格高度 */-->
+			function calcHeight() {
+	        	var winHeight = $(window).height();
+            	var queryHeight = $("#query-panel").height();
+            	var height = parseInt(winHeight - queryHeight - 12);
+            	return height;
+	        }
+			
+			function subdata(id) {
+				const prefix = ctx + "zhzs/sjcjxt/cjdwxx";
+				var url = prefix + '/subdata/' + id;
+				$.modal.openTab("承建单位信息", url);
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<head>
+		<th:block th:include="include :: header('承建单位信息列表')" />
+		<style type="text/css">
+			.main-content .form-header.h4 {margin-bottom: 10px}
+			.container-div {height: auto}
+			.container-div .form-header.h4 {margin-top: 0; margin-bottom: 0}
+		</style>
+	</head>
+	<body class="gray-white">
+		<div class="main-content">
+			<form id="form-add" class="form-horizontal" th:object="${gcxmjbxx}">
+				<input name="deptId" type="hidden" id="treeId" />
+				<h4 class="form-header h4">工程项目基本信息</h4>
+				<div class="row">
+					<div class="col-sm-4">
+						<div class="form-group">
+							<label class="col-sm-4 control-label">工程项目名称：</label>
+							<div class="col-sm-8">
+								<input id="gcxmmc" th:field="*{gcxmmc}" readonly="readonly" class="form-control" type="text">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="form-group">
+							<label class="col-sm-4 control-label">项目地址：</label>
+							<div class="col-sm-8">
+								<input th:field="*{xmdz}" readonly="readonly" class="form-control" type="text">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="form-group">
+							<label class="col-sm-4 control-label">建设内容：</label>
+							<div class="col-sm-8">
+								<input th:field="*{jsnr}" readonly="readonly" class="form-control" type="text">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="form-group">
+							<label class="col-sm-4 control-label">开工时间：</label>
+							<div class="col-sm-8">
+								<input th:field="*{kgsj}" readonly="readonly" class="form-control" type="text">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="form-group">
+							<label class="col-sm-4 control-label">建设单位：</label>
+							<div class="col-sm-8">
+								<input th:field="*{jsdw}" readonly="readonly" class="form-control" type="text">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="form-group">
+							<label class="col-sm-4 control-label">投资额：</label>
+							<div class="col-sm-8">
+								<input th:field="*{tze}" readonly="readonly" class="form-control" type="text">
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="container-div">
+			<div class="row">
+				<h4 class="form-header h4">承建单位信息</h4>
+				<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+					<a class="btn btn-success" onclick="addSubdata()" shiro:hasPermission="zhzs:sjcjxt:cjdwxx:add">
+						<i class="fa fa-plus"></i> 新增
+					</a>
+					<a class="btn btn-primary single disabled" onclick="editSubdata()" shiro:hasPermission="zhzs:sjcjxt:cjdwxx:edit">
+						<i class="fa fa-edit"></i> 修改
+					</a>
+					<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="zhzs:sjcjxt:cjdwxx:remove">
+						<i class="fa fa-remove"></i> 删除
+					</a>
+					<a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="zhzs:sjcjxt:cjdwxx:export">
+						<i class="fa fa-download"></i> 导出
+					</a>
+				</div>
+				<div class="col-sm-12 full-table table-bordered">
+					<table id="bootstrap-table"></table>
+				</div>
+			</div>
+		</div>
+		<th:block th:include="include :: footer" />
+		<script th:inline="javascript">
+		 	var editFlag = [[${@permission.hasPermi('zhzs:sjcjxt:cjdwxx:edit')}]];
+	        var removeFlag = [[${@permission.hasPermi('zhzs:sjcjxt:cjdwxx:remove')}]];
+	        var prefix = ctx + "zhzs/sjcjxt/cjdwxx";
+
+
+			$(function() {
+				var options = {
+					url: prefix + "/list",
+	                updateUrl: prefix + "/edit/{id}",
+	                removeUrl: prefix + "/remove",
+	                exportUrl: prefix + "/export",
+	                modalName: "承建单位信息",
+					showSearch: false,
+					showRefresh: true,
+					showToggle: false,
+					showColumns: false,
+					detailView: true,
+					onExpandRow: function(index, row, $detail) {
+						initChildTable(index, row, $detail);
+					},
+					uniqueId: 'id',
+					columns: [{
+							checkbox: true
+						},
+						{
+		                    field: 'id', 
+		                    title: 'ID',
+		                    width: 100,
+		                    visible: false
+		                },
+		                {
+		                    field: 'cjdwtyshxydm', 
+		                    title: '承建单位统一社会信用代码',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 180
+		                },
+		                {
+		                    field: 'cjdwmc', 
+		                    title: '承建单位名称',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 200
+		                },
+		                {
+		                    field: 'lxr', 
+		                    title: '联系人',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 120
+		                },
+		                {
+		                    field: 'lxfs', 
+		                    title: '联系方式',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 120
+		                },
+		                {
+		                    field: 'htqdsj', 
+		                    title: '合同签订时间',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 100
+		                },
+		                {
+		                    field: 'htqde', 
+		                    title: '合同签订额',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 100
+		                },
+		                {
+		                    field: 'fkfs', 
+		                    title: '付款方式',
+		                    align: 'left',
+				        	halign: 'center',
+		                    width: 120
+		                },
+					]
+				};
+				$.table.init(options);
+				
+			});
+			
+			<!--/* 加载子表数据 */-->
+			initChildTable = function(index, row, $detail) {
+				var childTable = $detail.html('<table style="table-layout:fixed"></table>').find('table');
+				const gcxmmc = row.gcxmmc;
+				const cjdwtyshxydm = row.cjdwtyshxydm;
+				const cjdwmc = row.cjdwmc;
+				
+				const prefix = ctx + "zhzs/sjcjxt/gcfbxx";
+				$(childTable).bootstrapTable({
+					url: prefix + "/list",
+					method: 'post',
+					sidePagination: "server",
+					contentType: "application/x-www-form-urlencoded",
+					queryParams: {
+						gcxmmc: gcxmmc,
+						cjdwtyshxydm: cjdwtyshxydm,
+						cjdwmc: cjdwmc
+					},
+					columns: [
+	                {
+	                    field: 'fbdwtyshxydm', 
+	                    title: '分包单位统一社会信用代码',
+	                    align: 'left',
+			        	halign: 'center',
+			        	 width: 150
+	                },
+	                {
+	                    field: 'fbdwmc', 
+	                    title: '分包单位名称',
+	                    align: 'left',
+			        	halign: 'center',
+	                    width: 240
+	                },
+	                {
+	                    field: 'htqdsj', 
+	                    title: '合同签订时间',
+	                    align: 'left',
+			        	halign: 'center',
+			        	width: 100
+	                },
+	                {
+	                    field: 'htqde', 
+	                    title: '合同签订额',
+	                    align: 'left',
+			        	halign: 'center',
+			        	width: 100
+	                },
+	                {
+	                    field: 'fkfs', 
+	                    title: '付款方式',
+	                    align: 'left',
+			        	halign: 'center',
+			        	width: 150
+	                }
+					]
+				});
+			};
+			
+			<!--/* 新增承建单位信息 */-->
+			function addSubdata() {
+				const gcxmmc = $("#gcxmmc").val();
+				
+				var width = 800;
+				var height = ($(window).height() - 50);
+				<!--/* 如果是移动端，就使用自适应大小弹窗 */-->
+            	if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+            	    width = 'auto';
+            	    height = 'auto';
+            	}
+				const url = prefix + "/addSubdata?gcxmmc=" + gcxmmc;
+                var index = layer.open({
+            		type: 2,
+            		area: [width + 'px', height + 'px'],
+            		fix: false,
+            		maxmin: true,
+            		shade: 0.3,
+            		title: "添加承建单位信息",
+            		content: url,
+            		shadeClose: true,
+            		yes: function(index, layero) {
+            	        var iframeWin = layero.find('iframe')[0];
+            	        iframeWin.contentWindow.submitHandler(index, layero);
+            	    },
+            	    cancel: function(index) {
+            	        return true;
+            	    }
+            	});
+                layer.full(index);
+			}
+			
+			<!--/* 修改承建单位信息 */-->
+			function editSubdata() {
+				var id = $.table.selectColumns('id');
+        		if (id.length == 0) {
+        			$.modal.alertWarning("请至少选择一条记录");
+        			return;
+        		}
+				
+				var width = 800;
+				var height = ($(window).height() - 50);
+				<!--/* 如果是移动端，就使用自适应大小弹窗 */-->
+            	if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+            	    width = 'auto';
+            	    height = 'auto';
+            	}
+            	const url = prefix + "/editSubdata/" + id[0];
+                var index = layer.open({
+            		type: 2,
+            		area: [width + 'px', height + 'px'],
+            		fix: false,
+            		maxmin: true,
+            		shade: 0.3,
+            		title: "修改承建单位信息",
+            		content: url,
+            		shadeClose: true,
+            		yes: function(index, layero) {
+            	        var iframeWin = layero.find('iframe')[0];
+            	        iframeWin.contentWindow.submitHandler(index, layero);
+            	    },
+            	    cancel: function(index) {
+            	        return true;
+            	    }
+            	});
+                layer.full(index);
+			}
+			
+		</script>
+	</body>
+</html>

@@ -1,0 +1,69 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+<!-- 菜单 -->
+<div th:fragment="menu">
+    <style>
+        /* menu组件 */
+        .el-menu.el-menu--horizontal {
+            padding-left: 50px;
+        }
+
+        .el-menu--horizontal > .el-submenu .el-submenu__title,
+        .el-menu--horizontal > .el-menu-item {
+            height: 45px;
+            line-height: 45px;
+        }
+
+        .el-icon-arrow-down:before {
+            color: white;
+        }
+
+        .el-menu--horizontal .el-menu .el-menu-item.is-active,
+        .el-menu--horizontal > .el-submenu.is-active .el-submenu__title,
+        .el-menu--horizontal > .el-menu-item.is-active {
+            border-bottom: 2px solid #409EFF !important;
+            color: white !important;
+            background-color: #1890FF !important;
+        }
+
+    </style>
+    <template id="menuTemplate">
+        <el-menu :default-active="activeIndex" class="el-menu-demo"
+                 mode="horizontal"
+                 background-color="#2F4050"
+                 text-color="#fff"
+                 active-text-color="#ffd04b"
+                 @select="handleSelect">
+            <el-submenu index="bzfw">
+                <template slot="title">标注服务</template>
+                <el-menu-item index="qybz">企业标注</el-menu-item>
+                <el-menu-item index="glqywh">管理区域维护</el-menu-item>
+                <el-menu-item index="xzqhwh">乡镇行政区划维护</el-menu-item>
+            </el-submenu>
+            <el-menu-item index="zhcx">综合查询</el-menu-item>
+            <el-menu-item index="qysyfx">企业税源分析</el-menu-item>
+            <el-menu-item index="syfbrlt">税源分布热力图</el-menu-item>
+        </el-menu>
+    </template>
+    <script type="module">
+        Vue.component('topMenu', {
+            template: '#menuTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                }
+            },
+            data() {
+                return {
+                    activeIndex: '1'
+                };
+            },
+            // mounted() {
+            // },
+            methods: {
+                handleSelect(key, keyPath) {
+                    this.$emit("on-select", key);
+                }
+            }
+        });
+    </script>
+</div>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.QyftxxwhsMapper">
+	<!-- 查询条件 这里是户籍比对分析 使用 -->
+	<sql id="whereClause">
+
+		<if test="bszq != null and bszq != ''"> and bszq = #{bszq}</if>
+		<if test="title != null and title != ''"> and title like '%'||#{title}||'%'</if>
+		<if test="nsrsbh != null and nsrsbh != ''"> and nsrsbh = #{nsrsbh}</if>
+		<if test="nsrmc != null and nsrmc != ''"> and nsrmc like '%'||#{nsrmc}||'%'</if>
+		<if test="staddress != null and staddress != ''"> and staddress like '%'||#{staddress}||'%'</if>
+		<if test="sbyh != null and sbyh != ''"> and sbyh like '%'||#{sbyh}||'%'</if>
+		<if test="ownername != null and ownername != ''"> and ownername like '%'||#{ownername}||'%'</if>
+		<if test="businessstate != null and businessstate != ''"> and businessstate = #{businessstate}</if>
+		<if test="account != null and account != ''"> and y.user_code = #{account}</if>
+		<!-- 乡镇开票需求：乡镇只能查看该乡镇的数据，包括上报和增加的 -->
+		<if test="username != null and username != ''"> and (sbyh like  #{username}||'%' or zjr like #{username}||'%')</if>
+		
+
+	</sql>
+
+	<!-- 查询条件2 这里是数据查看（地税局）使用 -->
+	<sql id="whereClause2">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="bszq != null and bszq != ''"> and bszq = #{bszq}</if>
+				<if test="title != null and title != ''"> and title like '%'||#{title}||'%'</if>
+				<if test="nsrsbh != null and nsrsbh != ''"> and nsrsbh = #{nsrsbh}</if>
+				<if test="nsrmc != null and nsrmc != ''"> and nsrmc like '%'||#{nsrmc}||'%'</if>
+				<if test="frmc != null and frmc != ''"> and frmc like '%'||#{frmc}||'%'</if>
+				<if test="xcqr != null and xcqr != ''"> and xcqr like '%'||#{xcqr}||'%'</if>
+				<if test="ownnumber != null and ownnumber != ''"> and ownnumber = #{ownnumber}</if>
+			</trim>
+		</where>
+	</sql>
+
+
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		select * from(
+		select
+		t.obj_id,t.title,t.staddress,t.address,t.remark,t.userid,t.longitude,t.latitude,t.electricitynumber,t.waternumber,t.taxnumber,t.sbsj,t.imgfilepath,t.
+		imgfilepath2,t.businesstitle,t.businessnumber,t.businessstate,t.businessphone,t.gasnumber,t.ownnumber,t.ownername,t.owneridnumber,t.
+		ownerphnumber,t.industryname,t.policehotel,t.nsrsbh,t.nsrmc,t.scjydz,t.frmc,t.lxdh,t.jyfw,t.cyrs,t.jye,t.fwly,t.xcqr,t.cqrzjh,t.fwjz,t.czfcyz,t.fcmj,t.
+		czfcmj,t.fczlje,t.fcszxbz,t.tddjbz,t.qnynftls,t.jmftse,t.yjnftls,t.sbhm,t.glbm,t.bszq,t.zjr,t.zjsj,t.xgr,t.xgsj,t.taxacreage,t.notaxacreage,t.businesstitle2,t.
+		businessnumber2,t.ownnumber2,'人工核对' as
+		ischecked,t.checkeduserid,t.checktime,t.zl,t.dc,tdlb,t.mj1,t.mj2,t.mj3,
+		y.user_name as sbyh from (select * from cs_ftlsgzgl where ischecked is
+		null) t left join gis_users y on
+		t.userid = y.user_id)sss  where 1=1
+		<include refid="whereClause" />
+		<!-- ) t left join gis_users y on t.userid = y.user_id -->
+		order by staddress,title desc,longitude
+
+	</select>
+
+	<!-- 按照条件查询 -->
+	<select id="queryqydwxxList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		select * from cs_ftlsgzgl
+		<include refid="whereClause2" />
+
+	</select>
+
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs"
+		parameterType="string">
+		<!-- select * from cs_ftlsgzgl where obj_Id = #{objId} -->
+		select obj_id,title,staddress,address,remark,userid,longitude,latitude,electricitynumber,waternumber,
+			taxnumber,sbsj,'http://25.52.132.101/'||substr(imgfilepath,15) as
+			imgfilepath,businesstitle,businessnumber,businessstate,businessphone,
+			gasnumber,ownnumber,ownername,owneridnumber,ownerphnumber,industryname,policehotel,nsrsbh,nsrmc,
+			scjydz,frmc,lxdh,jyfw,cyrs,jye,fwly,xcqr,cqrzjh,fwjz,czfcyz,fcmj,czfcmj,fczlje,fcszxbz,tddjbz,zl,dc,tdlb,
+			qnynftls,jmftse,yjnftls,sbhm,glbm,bszq,zjr,zjsj,xgr,xgsj,taxacreage,notaxacreage,businesstitle2,businessnumber2,ownnumber2
+		from cs_ftlsgzgl 
+		where obj_Id = #{objId}
+	</select>
+
+	<!-- 插入 -->
+	<insert id="insert" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		insert into
+			cs_ftlsgzgl(title,staddress,address,remark,userid,longitude,latitude,
+			electricitynumber,waternumber,taxnumber,sbsj,imgfilepath,imgfilepath2,businesstitle,
+			businessnumber,businessstate,businessphone,gasnumber,ownnumber,ownername,owneridnumber,
+			ownerphnumber,industryname,policehotel,taxAcreage,noTaxAcreage,nsrsbh,nsrmc,scjydz,frmc,lxdh,jyfw,cyrs,jye,fwly,
+			xcqr,cqrzjh,fwjz,czfcyz,fcmj,czfcmj,fczlje,fcszxbz,tddjbz,qnynftls,jmftse,yjnftls,sbhm,
+			glbm,bszq,zjr,zjsj,xgr,xgsj,businesstitle2,businessnumber2,ownnumber2,zl,dc,tdlb)
+		values(#{title},#{staddress},#{address},#{remark},
+		(select p.user_id
+			from gis_users p where 'ds_' || p.user_code =
+			#{account}),#{longitude},#{latitude},
+			#{electricitynumber},#{waternumber},#{taxnumber},#{sbsj},#{imgfilepath},#{imgfilepath2},#{businesstitle},
+			#{businessnumber},#{businessstate},#{businessphone},#{gasnumber},#{ownnumber},#{ownername},#{owneridnumber},
+			#{ownerphnumber},#{industryname},#{policehotel},#{taxAcreage},#{noTaxAcreage},#{nsrsbh},#{nsrmc},#{scjydz},#{frmc},#{lxdh},#{jyfw},
+			#{cyrs},#{jye},#{fwly},#{xcqr},#{cqrzjh},#{fwjz},#{czfcyz},#{fcmj},#{czfcmj},#{fczlje},#{fcszxbz},#{tddjbz},#{qnynftls},#{jmftse},#{yjnftls},#{sbhm},
+			#{glbm},#{bszq},#{zjr},#{zjsj},#{xgr},#{xgsj},#{businesstitle2},#{businessnumber2},#{ownnumber2},#{zl},#{dc},#{tdlb})
+
+
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		update cs_ftlsgzgl
+		<set>
+			title =#{title},staddress =#{staddress},nsrmc =#{nsrmc},nsrsbh =#{nsrsbh},address =#{address},
+			remark =#{remark},longitude =#{longitude}, latitude =#{latitude},electricitynumber=#{electricitynumber},
+			waternumber =#{waternumber},taxnumber=#{taxnumber},businesstitle =#{businesstitle},businessnumber=#{businessnumber},
+			businessstate =#{businessstate},businessphone=#{businessphone},gasnumber =#{gasnumber},taxAcreage=#{taxAcreage},
+			noTaxAcreage=#{noTaxAcreage},ownnumber=#{ownnumber},ownername =#{ownername},owneridnumber=#{owneridnumber},
+			ownerphnumber =#{ownerphnumber},industryname=#{industryname},scjydz =#{scjydz},jyfw =#{jyfw},cyrs =#{cyrs},
+			frmc=#{frmc},lxdh =#{lxdh},jye =#{jye},fwly =#{fwly},xcqr =#{xcqr},cqrzjh=#{cqrzjh},fwjz =#{fwjz},czfcyz =#{czfcyz},fcmj =#{fcmj},
+			czfcmj=#{czfcmj},fczlje =#{fczlje},fcszxbz =#{fcszxbz},tddjbz=#{tddjbz},qnynftls =#{qnynftls},jmftse =#{jmftse},
+			yjnftls=#{yjnftls},sbhm =#{sbhm},glbm=#{glbm},bszq=#{bszq},businesstitle2=#{businesstitle2},businessnumber2=#{businessnumber2},
+			ownnumber2=#{ownnumber2},xgr=#{xgr},xgsj=#{xgsj},zl=#{zl},dc=#{dc},tdlb=#{tdlb}
+		</set>
+		where obj_Id = #{objId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        delete from cs_ftlsgzgl where obj_Id = #{objId}
+    </delete>
+	<!-- 批量删除 -->
+    <delete id="deleteByIds" parameterType="String">
+       delete from cs_ftlsgzgl where obj_Id in
+        <foreach item="objId" collection="array" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+    </delete>
+
+	<!-- 查询工商局数据 -->
+	<select id="getGSJ" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		select case when t.dwmc is null then t.fr else t.dwmc
+		end as businesstitle,
+		jyfw, FR as frmc,JYDZ as scjydz
+		from
+		CS_GONGXBYYZZXX t where t.yyzzhm = #{businessnumber}
+	</select>
+
+	<!-- 查询产权数据 -->
+	<select id="getCQSJ" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		select xcqr ,cqrzjh,fwjz,mj fcmj from cs_cqsj where cqzh=#{ownnumber}
+	</select>
+
+	<!-- 查询纳税入库数据 -->
+	<select id="getNSRK" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyftxxwhs">
+		select nsrsbh,nsrmc,taxnumber,glbm,jyfw,scjydz,frmc,cyrs,lxdh,NVL(jye, '0') jye 
+		from (
+			select rownum as aid,v.* from(
+				select dj.shxydm nsrsbh,dj.nsrmc,dj.shxydm taxnumber,dj.shxydm glbm,dj.jyfw,dj.scjydz,dj.fddbrxm frmc,dj.cyrs,dj.fddbryddh lxdh
+				from md_swj_nsrdjxx dj
+				where dj.shxydm=#{nsrsbh})v
+	    where rownum=1)a 
+	    left join(
+			select rownum as bid,jye from cs_dqdeh m 
+			where m.nsrsbh = #{nsrsbh} and m.zsxm = '营业税')b
+	    on a.aid = b.bid
+	</select>
+
+</mapper>

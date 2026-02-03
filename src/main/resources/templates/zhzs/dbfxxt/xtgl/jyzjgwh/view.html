@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('加油站价格维护')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+			
+	        
+			<!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+	            <a class="btn btn-primary single" onclick="$.operate.edit()">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple" onclick="$.operate.removeAll()">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+	        </div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+	    var editFlag = [[${@permission.hasPermi('module:dbfxxt:xtgl:jyzjgwh:edit')}]];
+	    var removeFlag = [[${@permission.hasPermi('module:dbfxxt:xtgl:jyzjgwh:remove')}]];
+        var prefix = ctx + "zhzs/dbfxxt/xtgl/jyzjgwh";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                modalName: "加油站价格维护",
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false
+				},
+				{
+					field : 'jyzname', 
+					title : '加油站名称',
+					sortable: true
+				},
+				{
+					field : 'qy92', 
+					title : '92#汽油价格',
+					sortable: true
+				},
+				{
+					field : 'qy95', 
+					title : '95#汽油价格',
+					sortable: true
+				},
+				{
+					field : 'qy98', 
+					title : '98#汽油价格',
+					sortable: true
+				},
+				{
+					field : 'cy0', 
+					title : '0#柴油价格',
+					sortable: true
+				},
+				{
+					field : 'cy10', 
+					title : '-10#柴油价格',
+					sortable: true
+				},
+				{
+					field : 'bz', 
+					title : '备 注',
+					sortable: true
+				},
+				{
+					field : 'sjq', 
+					title : '时间起',
+					sortable: true
+				},
+				{
+					field : 'sjz', 
+					title : '时间止',
+					sortable: true
+				},
+				{
+					field : 'xgsj', 
+					title : '修改时间',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+            
+            // 双击修改
+            $("#bootstrap-table").on('dbl-click-row.bs.table', function (e, row, ele,field) {
+            	if(editFlag != 'hidden') {
+            		$.operate.edit(row.id);
+            	}
+            });
+        });
+    </script>
+</body>
+</html>

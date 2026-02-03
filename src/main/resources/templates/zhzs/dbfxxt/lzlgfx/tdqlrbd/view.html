@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <meta charset="utf-8" />
+    <head>
+        <th:block th:include="include :: layui-header('土地权利人比对')" />
+        <style type="text/css">
+            .layui-card-header {
+                height: auto;
+            }
+        </style>
+    </head>
+    <body class="layui-body-table">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <form id="query-form" class="layui-form">
+                    <div class="layui-form-item layui-row">
+                        <div class="layui-inline layui-col-sm6 layui-col-md2">
+                            <label class="layui-form-label">权利人：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="qlrmc" name="qlrmc" th:value="${param.nsrmc}" autocomplete="off" class="layui-input" />
+                            </div>
+                        </div>
+                        <!--<div class="layui-inline layui-col-sm6 layui-col-md2">-->
+                            <!--<label class="layui-form-label">纳税人名称：</label>-->
+                            <!--<div class="layui-input-block">-->
+                                <!--<input type="text" id="nsrmc" name="nsrmc" autocomplete="off" class="layui-input" />-->
+                            <!--</div>-->
+                        <!--</div>-->
+                        <div class="layui-inline layui-col-sm6 layui-col-md2">
+                            <label class="layui-form-label">匹配状态：</label>
+                            <div class="layui-input-block">
+                                <select type="text" id="ppzt" name="ppzt" class="layui-input">
+                                    <option value=""></option>
+                                    <option value="匹配">匹配</option>
+                                    <option value="未匹配">未匹配</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline layui-col-sm6 layui-col-md2">
+                            <label class="layui-form-label">反馈状态:</label>
+                            <div class="layui-input-block">
+                                <select id="zt" name="zt" class="form-control input-sm">
+                                    <option value=""></option>
+                                    <option value="1">待反馈</option>
+                                    <option value="2">已反馈</option>
+                                    <option value="3">已完成</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline layui-col-sm6 layui-col-md3">
+                            <div class="layui-form-btn">
+                                <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"
+                                    ><i class="layui-icon">&#xe615;</i>&nbsp;搜索</a
+                                >
+                                <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.reset()"
+                                    ><i class="layui-icon">&#xe669;</i>&nbsp;重置</a
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="layui-card-body">
+                <table id="layui-table" lay-filter="layui-table"></table>
+            </div>
+        </div>
+        <script type="text/html" id="ztTpl">
+            {{# if(d.zt > '0'){ }}
+            <a href="javascript:;" onclick="ckfk('{{d.fkid}}')" class="layui-table-link">{{ d.ztmc }}</a>
+            {{# } else { }}
+            {{ d.ztmc }}
+            {{# } }}
+        </script>
+        <th:block th:include="include :: layui-footer" />
+        <script type="text/javascript">
+            var prefix = ctx + "zhzs/dbfxxt/lzlgfx/tdqlrbd";
+
+            $(function () {
+                var options = {
+                    id: "layui-table",
+                    url: prefix + "/list",
+                    exportUrl: prefix + "/expExcel",
+                    title: "土地权利人比对",
+                    showExport: true, // 是否显示导出按钮
+                    height: "full-65",
+                    ataType: "json",
+                    remoteSort: true,
+                    limit: 50,
+                    cols: [
+                        [
+                            { checkbox: true, width: "50" },
+                            { field: "id", title: "ID", hide: true },
+                            { field: "qlrmc", title: "权利人名称", width: 200, align: "center", sort:true, style: "text-align: center" },
+                            { field: "mj", title: "使用权面积(平方米)", width: 150, align: "center", sort:true, style: "text-align: right" },
+                            { field: "nsrmc", title: "纳税人名称", width: 200, align: "center", sort:true, style: "text-align: center" },
+                            { field: "nsrsbh", title: "纳税人识别号", width: 200, align: "center", sort:true, style: "text-align: center" },
+                            { field: "ppzt", title: "匹配状态(匹配、未匹配)", width: 160, align: "center", sort:true, style: "text-align: center" },
+                            { field: "ztmc", title: "反馈状态", width: 100, align: "center", sort:true, templet: '#ztTpl' },
+                        ],
+                    ],
+                };
+                $.table.init(options);
+            });
+        </script>
+    </body>
+</html>

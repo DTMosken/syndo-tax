@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.xtwh.ZjsrncjhwhMapper">
+	<!-- 镇街收入年初计划维护 -->
+	
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="jdxz != null and jdxz != ''"> and jdxz = #{jdxz}</if>
+				<if test="ssnd != null and ssnd != ''"> and ssnd = #{ssnd}</if>
+			</trim>
+		</where>
+	</sql>
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Zjsrncjhwh" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Zjsrncjhwh">
+		SELECT * FROM T_SRFXXT_ZJSRNCJHWH
+		<include refid="whereClause" />
+		order by px
+	</select>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Zjsrncjhwh" parameterType="string">
+		SELECT * FROM T_SRFXXT_ZJSRNCJHWH WHERE JHWH_ID = #{JHWHID}
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Zjsrncjhwh">
+		INSERT INTO T_SRFXXT_ZJSRNCJHWH ( 
+			JDXZ,QKJ, YBYS, SSND, JC, PX ,CREATE_BY, CREATE_TIME
+	    ) VALUES ( 
+	        #{jdxz},#{qkj}, #{ybys}, #{ssnd},#{jc},#{px}, #{createBy}, #{createTime}
+	    )
+      </insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Zjsrncjhwh">
+		UPDATE T_SRFXXT_ZJSRNCJHWH
+		SET JDXZ = #{jdxz},
+			QKJ = #{qkj},
+			YBYS = #{ybys},
+			SSND = #{ssnd},
+			JC = #{jc},
+			PX = #{px},
+			UPDATE_BY = #{updateBy},
+			UPDATE_TIME = #{updateTime}
+		WHERE JHWH_ID = #{jhwhId}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        DELETE FROM T_SRFXXT_ZJSRNCJHWH WHERE JHWH_ID = #{jhwhId}
+    </delete>
+    
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		DELETE FROM T_SRFXXT_ZJSRNCJHWH WHERE JHWH_ID IN 
+		<foreach item="item" index="index" collection="array"
+            open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+</mapper>

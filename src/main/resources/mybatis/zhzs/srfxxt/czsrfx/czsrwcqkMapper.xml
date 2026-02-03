@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.czsrfx.CzsrwcqkMapper">
+
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.czsrfx.Czsrwcqk" 
+           parameterType="com.syndo.project.zhzs.srfxxt.domain.czsrfx.Czsrwcqk" databaseId="mysql">
+		   WITH bywc AS(
+		   		SELECT 
+				<if test="tjkj == 0">
+				SUM(t.sjje) je,
+				</if>
+				<if test="tjkj == 1">
+				SUM(t.qxj) je,
+				</if>
+				IFNULL(t.zsxm, '其他') zsxm
+				FROM t_srfxrkxx t
+				WHERE 1 = 1
+				AND t.RKRQ = SUBSTRING(#{rkrq},1,7)
+				GROUP BY t.zsxm
+			),
+			tbqn AS(
+				SELECT 
+				<if test="tjkj == 0">
+				SUM(t.sjje) je,
+				</if>
+				<if test="tjkj == 1">
+				SUM(t.qxj) je,
+				</if>
+				IFNULL(t.zsxm, '其他') zsxm
+				FROM t_srfxrkxx t
+				WHERE 1 = 1
+				AND t.RKRQ = CONCAT(SUBSTRING(#{rkrq},1,4)-1,SUBSTRING(#{rkrq},5,3))
+				GROUP BY t.zsxm
+			),
+			ncjh AS(
+				SELECT c.zsxm, 
+				<if test="tjkj == 0">
+				SUM(c.qkj) ncjh
+				</if>
+				<if test="tjkj == 1">
+				SUM(c.ybys) ncjh
+				</if>
+				FROM t_srfxxt_czsrncjhwh c
+				WHERE c.ssnd = SUBSTRING(#{rkrq}, 1, 4)
+				GROUP BY c.zsxm
+			),
+			ljwcs AS(
+				SELECT 
+				<if test="tjkj == 0">
+				SUM(t.sjje) je,
+				</if>
+				<if test="tjkj == 1">
+				SUM(t.qxj) je,
+				</if>
+				IFNULL(t.zsxm, '其他') zsxm
+				FROM t_srfxrkxx t
+				WHERE 1 = 1
+				AND t.RKRQ <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{rkrq}, 1, 4),'-01')
+				AND t.RKRQ <![CDATA[ <= ]]> SUBSTRING(#{rkrq}, 1, 7)
+				GROUP BY t.zsxm
+			),
+			dict AS (
+				SELECT * FROM sys_dict_data WHERE dict_type='dm_zsxm'
+			),
+			jg as (
+				SELECT b.zsxm zsxm,
+				ROUND(n.ncjh/#{dw},2) ncjh,
+				ROUND(b.je/#{dw},2) bywcs,
+				ROUND(l.je/#{dw},2) ljwcs,
+				ROUND(l.je/n.ncjh*100,2)  zjh,
+				ROUND(tb.je/#{dw},2) sntq,
+				ROUND((b.je - tb.je)/#{dw},2) bsnzjs,
+				ROUND((b.je - tb.je)/tb.je *100, 2) bsn,
+				d.dict_label
+				FROM bywc b
+				LEFT JOIN tbqn tb ON b.zsxm = tb.ZSXM
+				LEFT JOIN ncjh n ON b.zsxm = n.ZSXM
+				LEFT JOIN ljwcs l ON b.zsxm = l.ZSXM
+				LEFT JOIN dict d on b.zsxm=d.dict_label
+				WHERE 1=1
+				<if test="zsxm != null and zsxm != ''"> and b.zsxm = #{zsxm} </if>
+				ORDER BY d.dict_sort
+			)
+			select * from jg where dict_label is not null
+			union all
+			select "其他非税收入" zsxm, sum(ncjh)ncjh, sum(bywcs)bywcs, sum(ljwcs)ljwcs,
+			ROUND(sum(ljwcs)/sum(ncjh)*100,2) zjh, sum(sntq)sntq, sum(bsnzjs)bsnzjs, 
+			ROUND(sum(bsnzjs)/sum(sntq) *100, 2) bsn, "其他非税收入" dict_label from jg where dict_label is null
+	</select>
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.xtgl.FdcxszjbMapper">
+	
+	<!-- 对比分析系统-系统维护-房地产销售中间表维护 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Fdcxszjb" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Fdcxszjb">
+		select id as objid,qymc,nsrmc,'税务入库' flag from t_tmp_spfxs
+		where 1=1
+		<if test="nsrmc != null and nsrmc != ''"> and nsrmc like'%'||#{nsrmc}||'%'</if>
+		<if test="qymc != null and qymc != ''"> and qymc like '%'||#{qymc}||'%'</if>
+	</select>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Fdcxszjb" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Fdcxszjb">
+		select id as objid,nsrmc,qymc,'税务入库' flag from t_tmp_spfxs where id = #{objId}
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Fdcxszjb">
+		insert into t_tmp_spfxs(qymc,nsrmc) values(#{qymc},#{nsrmc})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Fdcxszjb">
+		update t_tmp_spfxs
+			<set>
+				nsrmc=#{nsrmc},qymc = #{qymc}
+			</set>
+		where id = #{objId}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        delete from t_tmp_spfxs where id = #{objId}
+    </delete>
+	<!-- 批量删除 -->
+    <delete id="deleteByIds" parameterType="String">
+       delete from t_tmp_spfxs where id in 
+        <foreach item="objId" collection="array" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+    </delete>
+</mapper>

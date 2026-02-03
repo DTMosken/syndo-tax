@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.zjsrfx.ZjsrwcqkMapper">
+	<!-- 镇街收入完成情况(全口径) -->
+	
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjsrwcqk" parameterType="com.syndo.project.zhzs.srfxxt.domain.zjsrfx.Zjsrwcqk">
+		WITH RECURSIVE sj1(dt, num) AS (
+			SELECT DATE_FORMAT(STR_TO_DATE(CONCAT(#{rkrq},'-01'),'%Y-%m-%d'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{rkrq},'-01'),'%Y-%m-%d'), INTERVAL num MONTH), '%Y-%m'), @num := @num + 1 FROM sj1 WHERE num &lt; 
+			TIMESTAMPDIFF(MONTH, STR_TO_DATE(CONCAT(SUBSTR(#{rkrq}, 1, 4),'-01-01'),'%Y-%m-%d'), STR_TO_DATE(CONCAT(#{rkrq},'-01'),'%Y-%m-%d'))+1
+		),
+		sj2(dt, num) AS (
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{rkrq},'-01'),'%Y-%m-%d'), INTERVAL 12 MONTH), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(#{rkrq},'-01'),'%Y-%m-%d'), INTERVAL num+12 MONTH), '%Y-%m'), @num := @num + 1 FROM sj2 WHERE num &lt; 
+			TIMESTAMPDIFF(MONTH, STR_TO_DATE(CONCAT(SUBSTR(#{rkrq}, 1, 4),'-01-01'),'%Y-%m-%d'), STR_TO_DATE(CONCAT(#{rkrq},'-01'),'%Y-%m-%d'))+1
+		),
+		sj AS (
+			SELECT dt FROM sj1 UNION SELECT dt FROM sj2
+		),
+
+
+		rk AS(
+		SELECT t.jdxz,
+			ROUND(SUM(IF(SUBSTR(rkrq, 1, 7)=#{rkrq}, REPLACE(sjje, ',', '')*1, 0)),2) bqs,
+			ROUND(SUM(IF(SUBSTR(rkrq, 1, 4)=SUBSTR(#{rkrq}, 1, 4), REPLACE(sjje, ',', '')*1, 0)),2) bnlj,
+			ROUND(SUM(IF(SUBSTR(rkrq, 1, 4)=SUBSTR(#{rkrq}, 1, 4)-1, REPLACE(sjje, ',', '')*1, 0)),2) sntq
+		FROM t_db_swj_jrkxx t
+		WHERE 1=1
+		AND t.jdxz != ''and t.jdxz is not null
+		AND t.tzlx IN ('未被调账的税款', '调账后产生的新税款') 
+		AND t.yskm not in('出口业务退增值税')
+		<if test="zsxmList==null">
+			AND t.zsxm !='个人所得税'
+			AND t.zsxm like '%税'
+		</if>
+		<if test="zsxmList!=null">
+			AND t.zsxm in(<foreach collection="zsxmList" item="item" separator=",">#{item}</foreach>)
+		</if>
+		AND (
+			(SUBSTR(t.RKRQ, 1, 7)&lt;=#{rkrq} AND SUBSTR(t.RKRQ, 1, 7)>=CONCAT(SUBSTR(#{rkrq}, 1, 4), '-01'))
+			OR (SUBSTR(t.RKRQ, 1, 7)&lt;=CONCAT(SUBSTR(#{rkrq}, 1, 4)-1, '-', SUBSTR(#{rkrq}, 6, 7)) AND SUBSTR(t.RKRQ, 1, 7)>=CONCAT(SUBSTR(#{rkrq}, 1, 4)-1, '-01'))
+			)
+		GROUP BY t.jdxz
+		
+		UNION ALL	 
+		SELECT t.jdxz,
+			ROUND(SUM(IF(SUBSTR(RTKRQ, 1, 7)=#{rkrq}, REPLACE(sjjetkje, ',', '')*1, 0)),2) bqs,
+			ROUND(SUM(IF(SUBSTR(RTKRQ, 1, 4)=SUBSTR(#{rkrq}, 1, 4), REPLACE(sjjetkje, ',', '')*1, 0)),2) bnlj,
+			ROUND(SUM(IF(SUBSTR(RTKRQ, 1, 4)=SUBSTR(#{rkrq}, 1, 4)-1, REPLACE(sjjetkje, ',', '')*1, 0)),2) sntq
+		FROM t_db_swj_swjrkgsgr t
+		WHERE 1=1
+		and t.jdxz != ''
+		and t.jdxz is not null
+		<if test="zsxmList==null">
+			AND t.zsxm !='个人所得税'
+			AND t.zsxm like '%税'
+		</if>
+		<if test="zsxmList!=null">
+			AND t.zsxm in(<foreach collection="zsxmList" item="item" separator=",">#{item}</foreach>)
+		</if>
+		AND ((SUBSTR(t.`RTKRQ`, 1, 7)&lt;=#{rkrq} AND SUBSTR(t.`RTKRQ`, 1, 7)>=CONCAT(SUBSTR(#{rkrq}, 1, 4), '-01'))
+		OR (SUBSTR(t.`RTKRQ`, 1, 7)&lt;=CONCAT(SUBSTR(#{rkrq}, 1, 4)-1, '-', SUBSTR(#{rkrq}, 6, 7)) AND SUBSTR(t.`RTKRQ`, 1, 7)>=CONCAT(SUBSTR(#{rkrq}, 1, 4)-1, '-01')))
+		GROUP BY t.jdxz
+		
+		UNION ALL
+		SELECT jdxz,
+			ROUND(SUM(IF(SUBSTR(RTKRQ, 1, 7)=#{rkrq}, REPLACE(sjjetkje, ',', '')*1, 0)),2) bqs,
+			ROUND(SUM(IF(SUBSTR(RTKRQ, 1, 4)=SUBSTR(#{rkrq}, 1, 4), REPLACE(sjjetkje, ',', '')*1, 0)),2) bnlj,
+			ROUND(SUM(IF(SUBSTR(RTKRQ, 1, 4)=SUBSTR(#{rkrq}, 1, 4)-1, REPLACE(sjjetkje, ',', '')*1, 0)),2) sntq
+		FROM t_db_swj_swjrkgsqy t
+
+		WHERE 1=1
+		AND t.jdxz != ''and t.jdxz is not null
+		<if test="zsxmList==null">
+			AND t.zsxm !='个人所得税'
+			AND t.zsxm like '%税'
+		</if>
+		<if test="zsxmList!=null">
+			AND t.zsxm in(<foreach collection="zsxmList" item="item" separator=",">#{item}</foreach>)
+		</if>
+		AND ((SUBSTR(t.`RTKRQ`, 1, 7)&lt;=#{rkrq} AND SUBSTR(t.`RTKRQ`, 1, 7)>=CONCAT(SUBSTR(#{rkrq}, 1, 4), '-01'))
+		OR (SUBSTR(t.`RTKRQ`, 1, 7)&lt;=CONCAT(SUBSTR(#{rkrq}, 1, 4)-1, '-', SUBSTR(#{rkrq}, 6, 7)) AND SUBSTR(t.`RTKRQ`, 1, 7)>=CONCAT(SUBSTR(#{rkrq}, 1, 4)-1, '-01')))
+		GROUP BY t.jdxz
+		)
+
+		SELECT * FROM (
+		<!-- SELECT '全区总计' jdxz, 
+			FORMAT(SUM(NULLIF(qkj,'')),0) ncjh, 
+			FORMAT(SUM(bqs)/#{dw},0) bqs, 
+			FORMAT(SUM(bnlj)/#{dw},0) bnlj, 
+			FORMAT(SUM(bnlj)/#{dw}/NULLIF(SUM(qkj), 0)*100, 2) wcjh, 
+			FORMAT(SUM(sntq)/#{dw}, 0) sntq, 
+			FORMAT( (ROUND(SUM(bnlj)/#{dw},0) - ROUND(SUM(sntq)/#{dw},0))/ NULLIF(ROUND(SUM(sntq)/#{dw},0), 0) *100, 2) bsn 
+			FROM (SELECT ys.jdxz, ys.qkj, rk.bqs, rk.bnlj, rk.sntq FROM t_srfxxt_zjsrncjhwh ys LEFT JOIN rk ON ys.jdxz=rk.jdxz WHERE ys.ssnd=SUBSTR(#{rkrq}, 1, 4)
+			UNION
+			SELECT rk.jdxz, ys.qkj, rk.bqs, rk.bnlj, rk.sntq FROM t_srfxxt_zjsrncjhwh ys RIGHT JOIN rk ON ys.jdxz=rk.jdxz AND ys.ssnd=SUBSTR(#{rkrq}, 1, 4)) tmp
+			
+		UNION ALL -->
+		SELECT IFNULL(jdxz, '乡镇小计') jdxz, 
+			FORMAT(SUM(NULLIF(qkj,'')),0) ncjh, 
+			FORMAT(SUM(bqs)/#{dw},0) bqs, 
+			FORMAT(SUM(bnlj)/#{dw},0) bnlj, 
+			FORMAT(SUM(bnlj)/#{dw}/NULLIF(SUM(qkj), 0)*100, 2) wcjh, 
+			FORMAT(SUM(sntq)/#{dw}, 0) sntq, 
+			FORMAT( (ROUND(SUM(bnlj)/#{dw},0) - ROUND(SUM(sntq)/#{dw},0))/ NULLIF(ROUND(SUM(sntq)/#{dw},0), 0) *100, 2) bsn 
+			FROM (SELECT ys.jdxz, ys.qkj, rk.bqs, rk.bnlj, rk.sntq FROM t_srfxxt_zjsrncjhwh ys LEFT JOIN rk ON ys.jdxz=rk.jdxz AND rk.jdxz !='其他' WHERE ys.ssnd=SUBSTR(#{rkrq}, 1, 4)
+			UNION
+			SELECT rk.jdxz, ys.qkj, rk.bqs, rk.bnlj, rk.sntq FROM t_srfxxt_zjsrncjhwh ys RIGHT JOIN rk ON ys.jdxz=rk.jdxz AND ys.ssnd=SUBSTR(#{rkrq}, 1, 4) WHERE rk.jdxz !='其他'
+			) tmp
+		GROUP BY jdxz WITH ROLLUP ) tt
+		ORDER BY (CASE jdxz WHEN '全区总计' THEN CONCAT('1', jdxz) WHEN '乡镇小计' THEN CONCAT('3', jdxz) ELSE jdxz END)
+		
+	</select>
+
+	<resultMap id="selectZsxmMap" type="map">
+		<result property="name" column="zsxm" />
+		<result property="value" column="zsxm" />
+	</resultMap>
+	<select id="selectZsxm" resultMap="selectZsxmMap">
+		SELECT zsxm FROM(
+			SELECT DISTINCT zsxm 
+			FROM t_db_swj_jrkxx 
+			WHERE zsxm IS NOT NULL 
+			AND zsxm != ''
+		) t LEFT JOIN sys_dict_data d ON t.zsxm=d.dict_label AND d.dict_type='dm_zsxm'
+		ORDER BY IF(dict_sort IS NULL, CONCAT('8', zsxm), IF(dict_sort&lt;10, CONCAT('0', dict_sort), dict_sort))
+	</select>
+
+</mapper>

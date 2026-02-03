@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8" />
+<head>
+    <th:block th:include="include :: layui-header('缴纳契税未缴纳房产税与土地使用税')" />
+    <style type="text/css">
+        .layui-card-header {
+            height: auto;
+        }
+    </style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">纳税人名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="nsrmc" name="nsrmc" th:value="${param.nsrmc}" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">所属年度： </label>
+                    <div class="layui-input-block">
+                        <input
+                                type="text"
+                                id="ssnd"
+                                name="ssnd"
+                                readonly="readonly"
+                                autocomplete="off"
+                                data-type="year"
+                                data-format="yyyy"
+                                class="layui-input time-input"
+                        />
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm2 layui-col-md2">
+                    <label class="layui-form-label">对比类型：</label>
+                    <div class="layui-input-block">
+                        <select id="dblx" name="dblx"  class="form-control input-sm">
+                            <option value="">全部</option>
+                            <option value="fcs">缴纳契税未缴纳房产税</option>
+                            <option value="tds">缴纳契税未缴纳土地使用税</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm2 layui-col-md2">
+                    <label class="layui-form-label">反馈状态:</label>
+                    <div class="layui-input-block">
+                        <select id="zt" name="zt" class="form-control input-sm">
+                            <option value=""></option>
+                            <option value="1">待反馈</option>
+                            <option value="2">已反馈</option>
+                            <option value="3">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm2 layui-col-md2">
+                    <div class="layui-form-btn" style="text-align: right">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                            <i class="layui-icon">&#xe615;</i> 查询
+                        </a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                            <i class="layui-icon">&#xe669;</i> 重置
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+<script type="text/html" id="ztTpl">
+    {{# if(d.zt > '0'){ }}
+    <a href="javascript:;" onclick="ckfk('{{d.fkid}}')" class="layui-table-link">{{ d.ztmc }}</a>
+    {{# } else { }}
+    {{ d.ztmc }}
+    {{# } }}
+</script>
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+    var prefix = ctx + 'zhzs/dbfxxt/lzlgfx/jnqswjnfcstdsys'
+
+    $(function () {
+        var options = {
+            url: prefix + '/list',
+            exportUrl: prefix + '/expExcel',
+            title: '缴纳契税未缴纳房产税与土地使用税',
+            height: 'full-70',
+            showExport: true,
+            remoteSort: true,
+            clickToSelect: true, // 点击选中行
+            cols: [
+                [
+                    {
+                        checkbox: true
+                    },
+                    {
+                        field: 'objId',
+                        hide: true
+                    },
+                    {
+                        field: 'nsrsbh',
+                        title: '纳税人识别号',
+                        sort: true,
+                        width: 190,
+                        align: 'center'
+                    },
+                    {
+                        field: 'nsrmc',
+                        title: '纳税人名称',
+                        sort: true,
+                        width: 260,
+                        align: 'center'
+                    },
+                    {
+                        field: 'zsxm',
+                        title: '征收项目',
+                        sort: true,
+                        width: 100,
+                        align: 'center'
+                    },
+                    {
+                        field: 'zspm',
+                        title: '征收品目',
+                        sort: true,
+                        width: 190,
+                        align: 'center'
+                    },
+                    {
+                        field: 'hyml',
+                        title: '行业门类',
+                        sort: true,
+                        width: 190,
+                        align: 'center'
+                    },
+                    {
+                        field: 'skssq',
+                        title: '税款所属期',
+                        sort: true,
+                        width: 120,
+                        align: 'center'
+                    },
+                    {
+                        field: 'rkrq',
+                        title: '入库日期',
+                        sort: true,
+                        width: 120,
+                        align: 'center'
+                    },
+                    {
+                        field: 'jsyj',
+                        title: '计税依据',
+                        sort: true,
+                        width: 120,
+                        align: 'right'
+                    },
+                    {
+                        field: 'kssl',
+                        title: '课税数量',
+                        sort: true,
+                        width: 120,
+                        align: 'right'
+                    },
+                    {
+                        field: 'sl',
+                        title: '税率',
+                        sort: true,
+                        width: 120,
+                        align: 'right'
+                    },
+                    {
+                        field: 'sjje',
+                        title: '实缴金额',
+                        sort: true,
+                        width: 120,
+                        align: 'right'
+                    },
+                    {
+                        field: 'dblx',
+                        title: '对比类型',
+                        sort: true,
+                        width: 180,
+                        align: 'center'
+                    },{ field: "ztmc", title: "反馈状态", width: 100, align: "center", templet: '#ztTpl' },
+                ]
+            ]
+        }
+        $.table.init(options)
+    })
+    layui.use('laydate', function () {
+        var laydate = layui.laydate
+        laydate.render({ elem: '#ssnd', type: 'year' })
+    })
+    /* 查看 */
+    function ck1(nsrmc, qdrq) {
+        var url = prefix + '/tdxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq
+        $.modal.openFull('查看详情', url, false)
+    }
+    function ck2(nsrmc, qdrq) {
+        var url = prefix + '/ptfxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq
+        $.modal.openFull('查看详情', url, false)
+    }
+    function ck4(nsrmc, qdrq) {
+        var url = prefix + '/rkxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq
+        $.modal.openFull('查看详情', url, false)
+    }
+</script>
+</body>
+</html>

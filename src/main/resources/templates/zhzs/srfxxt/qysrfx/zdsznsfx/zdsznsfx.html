@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('重点税种纳税分析')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">入库日期:</label>
+					<div class="layui-input-block">
+						<div class="layui-col-sm5">
+							<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+						<span class="layui-input-sp layui-col-sm1">-</span>
+						<div class="layui-col-sm5">
+							<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">纳税人名称：</label>
+					<div class="layui-input-block">
+						<input type="text" id="nsrmc" name="nsrmc" autocomplete="off" class="layui-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<label class="layui-form-label">统计口径：</label>
+					<div class="layui-input-block">
+						<select id="tjkj" name="tjkj">
+							<option value="0">全口径</option>
+							<option value="1">地方收入</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="10000">万元</option>
+							<option value="1">元</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<div class="layui-form-btn">
+					<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+					<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.reset()"><i class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+	var prefix = ctx + "zhzs/srfxxt/qysrfx/zdsznsfx";
+
+	$(function(){
+		var options = {
+			id: 'layui-table',
+			url: prefix + "/list",
+			exportUrl: prefix + "/expExcel",
+			title: '重点税种纳税分析',
+			showExport: true,
+			height: 'full-105',
+			ataType: "json",
+			limit: 50,
+			cols: [
+				[
+					{type:'checkbox',rowspan: 2},
+					// {field: 'nsrsbh', title: '纳税人识别号', width: 160, align: 'center', rowspan: 2, style:'text-align: left'},
+					{field: 'nsrmc', title: '纳税人名称', width: 260, align: 'center', rowspan: 2, style:'text-align: left'},
+					{title: '增值税', width: 140, colspan: 3, align: 'center'},
+					{title: '城镇土地使用税', width: 140, colspan: 3, align: 'center'},
+					{title: '房产税', width: 140, colspan: 3, align: 'center'},
+					{title: '车船税', width: 140, colspan: 3, align: 'center'},
+				],[
+					{field: 'zzsbn', align: 'center', title: '本年', width: 100, style:'text-align: right'},
+					{field: 'zzssn', align: 'center', title: '上年', width: 100, style:'text-align: right'},
+					{field: 'zzszje', align: 'center', title: '增减额', width: 100, style:'text-align: right'},
+					{field: 'cztdsysbn', align: 'center', title: '本年', width: 100, style:'text-align: right'},
+					{field: 'cztdsyssn', align: 'center', title: '上年', width: 100, style:'text-align: right'},
+					{field: 'cztdsyszje', align: 'center', title: '增减额', width: 100, style:'text-align: right'},
+					{field: 'fcsbn', align: 'center', title: '本年', width: 100, style:'text-align: right'},
+					{field: 'fcssn', align: 'center', title: '上年', width: 100, style:'text-align: right'},
+					{field: 'fcszje', align: 'center', title: '增减额', width: 100, style:'text-align: right'},
+					{field: 'ccsbn', align: 'center', title: '本年', width: 100, style:'text-align: right'},
+					{field: 'ccssn', align: 'center', title: '上年', width: 100, style:'text-align: right'},
+					{field: 'ccszje', align: 'center', title: '增减额', width: 100, style:'text-align: right'},
+				]
+			]
+		};
+		$.table.init(options);
+	});
+
+	layui.use('laydate', function(){
+		var laydate = layui.laydate;
+		laydate.render({elem: '#qsrq', type:'month', format:'yyyy-MM'});
+		laydate.render({elem: '#zzrq', type:'month', format:'yyyy-MM'});
+	});
+
+</script>
+</body>
+</html>

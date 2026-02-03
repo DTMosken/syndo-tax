@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+<th:block th:include="include :: layui-header('企业纳税下降额排名')" />
+<style type="text/css">
+	.layui-card-header{
+		height: auto;
+	}
+</style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">入库日期:</label>
+					<div class="layui-input-block" id="test-range">
+						<div class="layui-col-sm5">
+							<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+						<span class="layui-form-mid">-</span>
+						<div class="layui-col-sm5">
+							<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">企业名称：</label>
+					<div class="layui-input-block">
+						<input type="text" id="nsrmc" name="nsrmc" autocomplete="off" class="layui-input">
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<label class="layui-form-label">统计口径：</label>
+					<div class="layui-input-block">
+						<select id="tjkj" name="tjkj"
+								class="form-control input-sm">
+							<option value="0">全口径</option>
+							<option value="1">一般预算</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="1">元</option>
+							<option value="10000">万元</option>
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<div class="layui-form-btn">
+						<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+							<i class="layui-icon">&#xe615;</i> 查询
+						</a>
+						<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+							<i class="layui-icon">&#xe669;</i> 重置
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+	<th:block th:include="include :: layui-footer" />
+	<script th:inline="javascript">
+		var prefix = ctx + "zhzs/srfxxt/qysrfx/qynsxjepm";
+
+		$(function() {
+			var options = {
+				url : prefix + "/list",
+				title : "企业纳税下降额排名",
+				exportUrl: prefix + "/expExcel",
+				showExport : true,
+				showSearch : false,
+				ataType: "json",
+				height: 'full-105',
+				cols : [ [ {
+					type:'checkbox',colspan : 1,
+					rowspan : 2
+				}, {
+					field : 'objId',
+
+					colspan : 1,
+					rowspan : 2,
+					hide:true,
+					align : "center",
+					visible : false
+				}, {
+					title : '行号',
+					width : '60',
+					colspan : 1,
+					rowspan : 2,
+					align : "center",
+					type:"numbers"
+				}, 
+				// {
+				// 	field : 'nsrsbh',
+				// 	title : '统一社会信用代码',
+				// 	width : '170',
+
+				// 	align : "center",
+				// 	colspan : 1,
+				// 	rowspan : 2,
+				// 	sortable : true
+				// }, 
+				{
+					field : 'nsrmc',
+					title : '纳税人名称',
+					width : '200',
+					align : "center",
+					colspan : 1,
+					rowspan : 2,
+					sortable : true
+				}, {
+					title : '本期',
+					align : "center",
+					width : '300',
+					colspan : 2,
+					rowspan : 1,
+					sortable : true
+				}, {
+					title : '同期',
+					width : '300',
+					align : "center",
+					colspan : 2,
+					rowspan : 1,
+					sortable : true
+				}, {
+					field : 'zze',
+					title : '下降额',
+					width : '150',
+					align : "right",
+					colspan : 1,
+					rowspan : 2,
+					templet:'#zze',
+					sortable : true
+				}, {
+					field : 'zs',
+					title : '下降率%',
+					width : '150',
+					align : "right",
+					colspan : 1,
+					rowspan : 2,
+					templet:'#zs',
+					sortable : true
+				} ], [ {
+					field : 'bqhj',
+					title : '总计',
+					width : '100',
+					templet:'#bqhj',
+					align : "right",
+
+					sortable : true
+				}, {
+					field : 'bqzts',
+					title : '主体税(增值税+所得税)',
+					valign : "middle",
+					align : "center",
+					width : '200',
+					templet:'#bqzts',
+					sortable : true
+				}, {
+					field : 'tqhj',
+					title : '总计',
+					width : '100',
+					templet:'#tqhj',
+					align : "right",
+
+					sortable : true
+				}, {
+					field : 'tqzts',
+					title : '主体税(增值税+所得税)',
+					width : '200',
+					templet:'#tqzts',
+					align : "right",
+
+					sortable : true
+				} ] ]
+			};
+			$.table.init(options);
+		});
+		function onSjyChange(sjy){
+			if(sjy == '20'){
+				$('#qsrq').parent().hide().next().hide();
+				$('#zzrq').parent().removeClass().addClass("layui-col-sm12");
+			}else{
+				$('#qsrq').parent().show().next().show();
+				$('#zzrq').parent().removeClass().addClass("layui-col-sm5");
+			}
+		}
+		layui.use(['form'], function () {
+			var form = layui.form;
+			form.on('select(sjy)', function(data){
+				onSjyChange(data.value);
+			});
+		});
+		layui.use('laydate', function() {
+			var laydate = layui.laydate;
+			laydate.render({
+				elem : '#qsrq',
+				type : 'month',
+				format : 'yyyy-MM'
+			});
+			laydate.render({
+				elem : '#zzrq',
+				type : 'month',
+				format : 'yyyy-MM'
+			});
+		});
+		function fixed(str, len){
+			if (str !== '' && str != null){
+				if(str == 0){  //当为0时，不用处理
+					return 0 ;
+				}else {
+					str = parseFloat(str)
+					return str.toFixed(len).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				}
+			} else {
+				return '';
+			}
+		}
+	</script>
+	<script type="text/html" id="bqhj">{{fixed(d.bqhj,0)}}</script>
+	<script type="text/html" id="tqzts">{{fixed(d.tqzts,0)}}</script>
+	<script type="text/html" id="tqhj">{{fixed(d.tqhj,0)}}</script>
+	<script type="text/html" id="bqzts">{{fixed(d.bqzts,0)}}</script>
+	<script type="text/html" id="zze">{{fixed(d.zze,0)}}</script>
+	<script type="text/html" id="zs">{{fixed(d.zs,2)}}</script>
+</body>
+</html>

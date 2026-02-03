@@ -1,0 +1,370 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 工程项目标注 -->
+<div th:fragment="xmgl">
+    <style>
+        .xmglComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 65px);
+        }
+    </style>
+    <template id="xmglTemplate">
+        <my-panel :width.sync="width">
+            <xmgl-queryfilter-dialog ref="dialog" @do-query="handleDoQuery"></xmgl-queryfilter-dialog>
+            <div>
+                <h3 style="padding-left: 20px">项目列表 {{queryParams.sfbz=='1'?'(已标注)':'(未标注)'}}</h3>
+                <el-button
+                    @click="queryFilter"
+                    icon="fa fa-filter"
+                    style="position: absolute; top: 10px; right: 80px"
+                    circle
+                    title="筛选"
+                ></el-button>
+                <el-button @click="refresh" icon="fa fa-refresh" style="position: absolute; top: 10px; right: 30px" circle title="刷新"></el-button>
+                <my-el-table
+                    ref="table"
+                    table-class="xmglComponentTable"
+                    :columns="columns"
+                    @row-click="rowClick"
+                    @on-load="onLoad"
+                    :data-url="queryUrl"
+                    :query-params="queryParams"
+                >
+                </my-el-table>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component("xmglComponent", {
+            template: "#xmglTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+            },
+            data() {
+                return {
+                    width: 340,
+                    layerType: "xmgl",
+                    saveUrl: "/module/taxgis/SaveXmxx",
+                    delUrl: "/module/taxgis/DelXmxx",
+                    queryUrl: "/module/taxgis/GetXmxxBz",
+                    queryParams: { sfbz: "0" },
+                    columns: [
+                        { prop: "id", label: "ID", width: "30", show: false },
+                        { prop: "xmmc", label: "项目名称", width: "100", show: true },
+                        { prop: "xmdz", label: "项目地址", width: "100", show: true },
+                        { prop: "jsnr", label: "建设内容", width: "100", show: true },
+                        { prop: "kgsj", label: "开工时间", width: "100", show: true },
+                        { prop: "jgsj", label: "竣工时间", width: "100", show: true },
+                        { prop: "jsdw", label: "建设单位", width: "100", show: true },
+                        { prop: "jsdwlxr", label: "建设单位联系人", width: "120", show: true },
+                        { prop: "lxfs", label: "联系方式", width: "100", show: true },
+                        { prop: "jsqx", label: "建设期限", width: "100", show: true },
+                        { prop: "tze", label: "投资额（元）", width: "110", show: true },
+                        { prop: "njhtz", label: "年计划投资", width: "100", show: true },
+                        { prop: "jsgm", label: "建设规模（㎡）", width: "120", show: true },
+                        { prop: "lxsj", label: "立项时间", width: "100", show: true },
+                        { prop: "zjly", label: "资金来源", width: "100", show: true },
+                    ],
+                };
+            },
+            mounted() {
+                this.$refs.table.queryList();
+
+                this.pubVue.$on("delXmgl", (data) => {
+                    let params = new URLSearchParams();
+                    params.append("id", data.id);
+                    this.axios
+                        .post(this.delUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.$notify({
+                                type: "success",
+                                message: "删除成功",
+                                position: "top-right",
+                                offset: 50,
+                            });
+                            this.pubVue.$emit("deleteLayer", { id: data.id, layerType: this.layerType });
+                            this.$refs.table.loadData();
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                });
+                this.pubVue.$on("saveXmgl", (data) => {
+                    let params = new URLSearchParams();
+                    params.append("id", data.id);
+                    params.append("xmmc", data.xmmc);
+                    params.append("xmdz", data.xmdz);
+                    params.append("lat", data.newlat || data.lat);
+                    params.append("lon", data.newlon || data.lon);
+                    this.axios
+                        .post(this.saveUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.pubVue.$emit("afterSaveMarker", { id: data.id, layerType: this.layerType });
+                            this.$notify({
+                                type: "success",
+                                message: "保存成功",
+                                position: "top-right",
+                                offset: 50,
+                            });
+                            this.$refs.table.loadData();
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                });
+            },
+            destroyed: function () {
+                this.pubVue.$emit("removeMarkers", { layerType: this.layerType });
+            },
+            methods: {
+                rowClick(row) {
+                    let rowObj = {};
+                    $.extend(rowObj, row, { layerType: this.layerType });
+                    this.pubVue.$emit("drawPoint", { row: rowObj, marker: xmglMarkerContentCmp });
+                },
+                refresh() {
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList();
+                    });
+                },
+                queryFilter() {
+                    this.$refs.dialog.showDialog();
+                },
+                handleDoQuery(form) {
+                    this.queryParams = form;
+                    this.refresh();
+                },
+                onLoad(data) {
+                    if (data && data.total && data.total > 0 && this.queryParams.sfbz === "1") {
+                        this.pubVue.$emit("showMarker", { rows: data.rows, marker: xmglMarkerContentCmp, layerType: this.layerType });
+                    }
+                },
+            },
+        });
+    </script>
+
+    <!-- 查询条件 -->
+    <style>
+        /*dialog*/
+        .xmglQueryfilterDialogClass {
+            width: 500px;
+        }
+        /*dialog>form*/
+        .xmglQueryfilterDialogClass .el-form {
+            width: 460px;
+        }
+        .xmglQueryfilterDialogClass .el-select .el-input {
+            width: 340px;
+        }
+    </style>
+    <template id="xmglQueryfilterDialogTemplate">
+        <el-dialog
+            title="筛选条件"
+            custom-class="xmglQueryfilterDialogClass"
+            :append-to-body="false"
+            :fullscreen="false"
+            :modal="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogTableVisible"
+            :before-close="handleDialogClose"
+        >
+            <el-form :model="form" size="medium" :label-width="formLabelWidth">
+                <el-form-item label="是否标注">
+                    <el-radio-group v-model="form.sfbz">
+                        <el-radio label="0">未标注</el-radio>
+                        <el-radio label="1">已标注</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item label="项目名称">
+                    <el-input v-model="form.xmmc" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="项目地址">
+                    <el-input v-model="form.xmdz" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="handleDialogClose">取 消</el-button>
+                <el-button type="primary" @click="handleSumbit">确 定</el-button>
+            </div>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component("xmglQueryfilterDialog", {
+            template: "#xmglQueryfilterDialogTemplate",
+            data() {
+                return {
+                    dialogTableVisible: false,
+                    form: {
+                        sfbz: "0",
+                        xmmc: "",
+                        xmdz: "",
+                    },
+                    formLabelWidth: "120px",
+                };
+            },
+            methods: {
+                showDialog() {
+                    this.dialogTableVisible = true;
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false;
+                },
+                handleSumbit() {
+                    this.dialogTableVisible = false;
+                    let params = {};
+                    $.extend(params, this.form);
+                    this.$emit("do-query", params);
+                },
+            },
+        });
+    </script>
+
+    <!-- 地图信息框 -->
+    <style>
+        /* marker样式 */
+        .xmgl_popup_content {
+            padding: 0;
+        }
+
+        .xmgl_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 310px;
+        }
+
+        .xmgl_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .xmgl_info_container .title:after {
+            clear: both;
+            content: "";
+            display: table;
+        }
+
+        .xmgl_collect_box {
+            position: relative;
+            /*width: 14px;*/
+            /*height: 14px;*/
+            display: inline-block;
+        }
+
+        .xmgl_info_container .props p {
+            margin: 10px 0;
+        }
+
+        .xmgl_info_container p {
+            font-size: 12px;
+        }
+    </style>
+    <template id="xmglMarkerTemplate">
+        <div class="xmgl_popup_content">
+            <div class="xmgl_info_container">
+                <div class="title">
+                    <span><a href="#">{{markerData.xmmc}}</a></span>
+                    <div class="xmgl_collect_box" style="float: right; text-align: right">
+                        <span v-if="editable"><button class="fa fa-edit" @click="doClick">{{btnTxt}}</button></span>
+                        <span v-if="editable&&btnStatus==1"><button class="fa fa-cancel" @click="doCancel">取消</button></span>
+                        <span v-if="delable"><button class="fa fa-remove" @click="delClick">删除</button></span>
+                    </div>
+                </div>
+                <div class="props">
+                    <p><span>项目地址：</span> <span>{{markerData.xmdz}}</span></p>
+                    <p><span>建设内容：</span> <span>{{markerData.jsnr}}</span></p>
+                    <p><span>开工时间：</span> <span>{{markerData.kgsj}}</span></p>
+                    <p><span>竣工时间：</span> <span>{{markerData.jgsj}}</span></p>
+                    <p><span>建设单位：</span> <span>{{markerData.jsdw}}</span></p>
+                    <p><span>建设单位联系人：</span> <span>{{markerData.jsdwlxr}}</span></p>
+                    <p><span>联系方式：</span> <span>{{markerData.lxfs}}</span></p>
+                    <p><span>建设期限：</span> <span>{{markerData.jsqx}}</span></p>
+                    <p><span>投资额（元）：</span> <span>{{markerData.tze}}</span></p>
+                    <p><span>年计划投资：</span> <span>{{markerData.njhtz}}</span></p>
+                    <p><span>建设规模（㎡）：</span> <span>{{markerData.jsgm}}</span></p>
+                    <p><span>立项时间：</span> <span>{{markerData.lxsj}}</span></p>
+                    <p><span>资金来源：</span> <span>{{markerData.zjly}}</span></p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let xmglMarkerContentCmp = Vue.extend({
+            template: "#xmglMarkerTemplate",
+            props: {
+                // 可编辑
+                editable: {
+                    type: Boolean,
+                    default: false,
+                },
+                // 可删除
+                delable: {
+                    type: Boolean,
+                    default: false,
+                },
+                // 按钮状态
+                btnStatus: {
+                    type: Number,
+                    default: 0,
+                },
+                pubVue: {
+                    type: Object,
+                },
+                markerData: {
+                    type: Object,
+                },
+            },
+            data: function () {
+                let btnTxts = ["修改", "保存"];
+                return {
+                    btnTxts: btnTxts,
+                    btnTxt: btnTxts[this.btnStatus],
+                };
+            },
+            watch: {
+                btnStatus: function (val, oldVal) {
+                    this.btnTxt = this.btnTxts[val];
+                    this.delable = !val;
+                },
+            },
+            methods: {
+                doClick() {
+                    if (this.btnTxt === this.btnTxts[0]) {
+                        this.btnStatus = 1;
+                        this.pubVue.$emit("editGeo", { data: this.markerData, marker: xmglMarkerContentCmp, layerType: "xmgl" });
+                    } else {
+                        this.btnStatus = 0;
+                        this.pubVue.$emit("saveXmgl", this.markerData);
+                    }
+                },
+                doCancel() {
+                    this.btnStatus = 0;
+                    this.pubVue.$emit("cancelGeo", { data: this.markerData, layerType: "xmgl" });
+                },
+                delClick() {
+                    this.$confirm("此操作将删除标注点, 是否继续?", "提示", {
+                        confirmButtonText: "确定",
+                        cancelButtonText: "取消",
+                        type: "warning",
+                    })
+                        .then(() => {
+                            this.pubVue.$emit("delXmgl", this.markerData);
+                        })
+                        .catch(() => {});
+                },
+            },
+        });
+    </script>
+</div>

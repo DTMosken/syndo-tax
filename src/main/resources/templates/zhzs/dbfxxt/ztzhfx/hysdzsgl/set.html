@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('行业税电指数管理')" />
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content" style="padding-left: 60px;padding-top: 20px;">
+        <form class="layui-form" id="form-hysdzsgl-set" th:object="${hysdzsgl}">
+            <input name="id" th:field="*{id}" type="hidden">
+            <div class="layui-form-item">
+                <label class="layui-col-sm3 layui-label">行业：</label>
+                <div class="layui-col-sm8">
+                    <input id="sshy" name="sshy" th:field="*{sshy}"
+                           class="layui-input form-control" type="text" readonly="readonly">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-col-sm3 layui-label">税电指数最高值：</label>
+                <div class="layui-col-sm8">
+                    <input id="sdzszgz" name="sdzszgz" class="layui-input form-control"  type="number">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-col-sm3 layui-label">税电指数最低值：</label>
+                <div class="layui-col-sm8">
+                    <input id="sdzszdz" name="sdzszdz" class="layui-input form-control"  type="number">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-col-sm3 layui-label">税电指数：</label>
+                <div class="layui-col-sm8">
+                    <input id="sdzs" name="sdzs"  th:field="*{sdzs}"
+                            class="layui-input form-control"  type="text" readonly="readonly">
+                </div>
+            </div>
+            <div class="layui-form-item layui-hide">
+                <input type="button" lay-submit lay-filter="form-submit" id="form-submit" onclick="submitHandler()" value="确认">
+            </div>
+        </form>
+</div>
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/dbfxxt/ztzhfx/hysdzsgl";
+
+    layui.use(['laydate','form'], function() {
+        var form = layui.form;
+        form.on('submit(form-submit)', function(data) {
+            var field = data.field;
+            $.operate.save(prefix + "/set", $('#form-submit').serialize());
+        });
+    })
+
+        function submitHandler() {
+            var data = {
+                sshy: $("#sshy").val(),//所属行业
+                sdzszgz: $("#sdzszgz").val(),//税电最高指数值
+                sdzszdz: $("#sdzszdz").val(),//税电最低指数值
+                sdzs: $("#sdzs").val()//税电指数值
+            }
+            $.ajax({
+                url:prefix + "/set",
+                contentType: "application/json;charset=UTF-8",
+                data:JSON.stringify(data),
+                type: "POST",
+                success:function (obj) {
+                    if("操作成功" == obj.msg){
+                        var index = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(index);//关闭当前页
+                        alert("设置成功！")
+                    }
+                }
+            })
+        }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 土地转让契税分析 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.TdzrnsfxMapper">
+	<!-- mysql查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdzrnsfx"
+			parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdzrnsfx" databaseId="mysql">
+		WITH ts AS(
+			SELECT id, ywid, nsrmc, zt, fklx FROM(
+				SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='tdzrnsfx'
+			) ts WHERE rn=1
+		),
+		td AS(
+			SELECT
+				qlrxm NSRMC
+			FROM
+			  	t_db_zrghj_tdzrxx t 
+			  	<where>
+					<if test="nsrmc != '' and nsrmc != null ">
+						AND srfmc LIKE CONCAT('%',#{nsrmc},'%')
+					</if>
+				</where>
+			GROUP BY qlrxm
+		),
+		sw AS(
+			SELECT 
+				t.nsrmc,
+			  	SUM(REPLACE(sjje,',','')) qs 
+			FROM
+				t_db_swj_jrkxx t JOIN td ON t.nsrmc = td.nsrmc
+			WHERE ZSPM NOT IN ('滞纳金','罚款') 
+				AND ZSXM = '契税' 
+			  	AND tzlx IN ('未被调账的税款','调账后产生的新税款')
+				<if test="nsrmc != '' and nsrmc != null ">
+					and t.nsrmc LIKE CONCAT('%',#{nsrmc},'%')
+				</if>
+			GROUP BY nsrmc
+		)
+		<if test="nsrmc==null or nsrmc==''">
+		SELECT
+			'合计' nsrmc,
+			FORMAT(IFNULL(SUM(SW.QS), 0),2) SJQS,
+		    '' zt, null fkid
+		FROM td LEFT JOIN sw ON td.nsrmc = sw.nsrmc
+		
+		UNION ALL
+		</if>
+		SELECT
+		td.nsrmc,
+			FORMAT(IFNULL(SW.QS, 0),2) SJQS,
+		ifnull(ts.zt,'0') zt, ts.id fkid
+		FROM td LEFT JOIN sw ON td.nsrmc = sw.nsrmc
+		LEFT JOIN ts ON td.nsrmc=ts.nsrmc AND MD5(td.nsrmc)=ts.ywid
+		where 1=1
+		<if test='zt == "0"'>
+			and ts.id is null
+		</if>
+		<if test='zt == "1"'>
+			and ts.zt in ('1', '3.1')
+		</if>
+		<if test='zt == "2"'>
+			and ts.zt = #{zt}
+		</if>
+		<if test='zt == "3"'>
+			and ts.zt in ('3', '3.0','3.2','3.3')
+		</if>
+	</select>
+
+	
+	<select id="getTdxxList" resultType="TdzrTdxx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdzrnsfx" databaseId="mysql">
+		SELECT id,
+			ywrxm zrf,
+			'' zrffddbr,
+			qlrxm srf,
+			'' srffddbr,
+			'' tdwz,
+			'' tdmj,
+			'' zrsj,
+			'' zrzje
+		FROM t_db_zrghj_tdzrxx t 
+			<where>
+				<if test="nsrmc != '' and nsrmc != null and nsrmc != '合计'">
+				  	AND qlrxm = #{nsrmc}
+				</if>
+			</where>
+	</select>
+
+	<select id="getRkxxList" resultType="Rkxx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdzrnsfx" databaseId="mysql">
+		SELECT 
+			id,
+			t.nsrsbh,
+			t.nsrmc,
+			t.dzsphm,
+			t.pzhm,
+			t.zsxm,
+			t.zspm,
+			t.skssqq,
+			t.skssqz,
+			t.hy,
+			t.zsdlfs,
+			t.jsyj,
+			t.kssl,
+			t.sl,
+			t.sjje,
+			t.rkrq,
+			t.yskm,
+			t.ysfpbl,
+			t.skssswjg,
+			t.zgswskfj,
+			t.pzzl,
+			t.skzl,
+			t.sbfs,
+			t.zsfs,
+			t.jdxz,
+			t.djxh
+			FROM
+			t_db_swj_jrkxx t JOIN (
+				SELECT
+					qlrxm NSRMC,
+					'' zrsj
+				FROM
+				t_db_zrghj_tdzrxx t 
+				<where>
+					<if test="nsrmc != '' and nsrmc != null and nsrmc != '合计'">
+						AND qlrxm LIKE CONCAT('%',#{nsrmc},'%')
+					</if>
+				</where>
+				GROUP BY qlrxm
+			) td ON t.nsrmc = td.nsrmc
+			WHERE ZSPM NOT IN ('滞纳金','罚款') 
+				AND ZSXM = '契税' 
+				AND tzlx IN ('未被调账的税款','调账后产生的新税款')
+				<if test="nsrmc != '' and nsrmc != null and nsrmc != '合计'">
+					and t.nsrmc = #{nsrmc}
+				</if>
+	</select>
+	
+	<!-- oracle查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdzrnsfx"
+			parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Tdzrnsfx" databaseId="oracle">
+		WITH TD AS(
+			SELECT SRF NSRMC,SUM(TDMJ) * 10000 ZRMJ,SUM(ZRZJE) * 10000 ZRZJE
+			FROM MD_ZRZYJ_TDZRXX
+			WHERE SUBSTR(ZRSJ,0,7) >= #{skssqq}
+			AND SUBSTR(ZRSJ,0,7) &lt;= #{skssqz}
+			<if test="nsrmc != '' and nsrmc != null ">
+				AND SRF LIKE '%'||#{nsrmc}||'%'
+			</if> 
+			GROUP BY SRF
+		),
+		SW AS(
+		  	SELECT NSRMC,
+       			SUM(DECODE(ZSXM,'契税',SJJE,'0')) QS,
+			 	SUM(CASE WHEN ZSXM = '印花税' AND ZSPM='产权转移书据' THEN SJJE ELSE '0' END) YHS
+			FROM MD_SWJ_RKXX
+			WHERE SUBSTR(SKSSQQ,0,7) >= #{skssqq}
+			AND SUBSTR(SKSSQQ,0,7) &lt;= #{skssqz}
+			AND ZSPM NOT IN ('滞纳金')
+			<if test="nsrmc != '' and nsrmc != null ">
+				AND NSRMC LIKE '%'||#{nsrmc}||'%'
+			</if> 
+			GROUP BY NSRMC
+		),
+		TJ AS(
+		  	SELECT TD.NSRMC,#{skssqq} SKSSQQ,#{skssqz} SKSSQZ,
+			FROM TD,SW
+			WHERE TD.NSRMC = SW.NSRMC(+)
+		)
+		SELECT * FROM TJ
+	</select>
+</mapper>

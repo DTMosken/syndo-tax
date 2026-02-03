@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="com.syndo.project.zhzs.srfxxt.mapper.qysrfx.ZdsznsfxMapper">
+
+	<!-- 重点税种纳税分析 -->
+	<!-- 查询 -->
+	<select id="selectList"
+		resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Zdsznsfx"
+		parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Zdsznsfx">
+		SELECT * FROM (
+		SELECT BN.NSRSBH,
+		BN.NSRMC,
+		FORMAT(IFNULL(BN.ZZS,0),2) ZZSBN,
+		FORMAT(IFNULL(SN.ZZS,0),2) ZZSSN,
+		FORMAT(IFNULL(BN.ZZS- IFNULL(SN.ZZS,0),0),2) ZZSZJE,
+		FORMAT(IFNULL(BN.FCS,0),2) FCSBN,
+		FORMAT(IFNULL(SN.FCS,0),2) FCSSN,
+		FORMAT(IFNULL(BN.FCS - IFNULL(SN.FCS,0),0),2) FCSZJE,
+		FORMAT(IFNULL(BN.CZTDSYS,0),2) CZTDSYSBN,
+		FORMAT(IFNULL(SN.CZTDSYS,0),2) CZTDSYSSN,
+		FORMAT(IFNULL(BN.CZTDSYS - IFNULL(SN.CZTDSYS,0),0),2) CZTDSYSZJE,
+		FORMAT(IFNULL(BN.CCS,0),2) CCSBN,
+		FORMAT(IFNULL(SN.CCS,0),2) CCSSN,
+		FORMAT(IFNULL(BN.CCS - IFNULL(SN.CCS,0),0),2) CCSZJE,
+		FORMAT(IFNULL((BN.ZZS - IFNULL(SN.ZZS,0))+(BN.FCS - IFNULL(SN.FCS,0))+(BN.CZTDSYS - IFNULL(SN.CZTDSYS,0))+(BN.CCS - IFNULL(SN.CCS,0)),0),2) PM
+		FROM (SELECT GROUP_CONCAT(DISTINCT NSRSBH)NSRSBH,
+		NSRMC,
+		<if test="tjkj == 0">
+			SUM(if(ZSXM = '增值税', replace(SJJE,',','')/#{dw}, 0)) AS ZZS,
+			SUM(if(ZSXM = '房产税', replace(SJJE,',','')/#{dw}, 0)) AS FCS,
+			SUM(if(ZSXM = '城镇土地使用税', replace(SJJE,',','')/#{dw}, 0)) AS CZTDSYS,
+			SUM(if(ZSXM = '车船税', replace(SJJE,',','')/#{dw}, 0)) AS CCS
+		</if>
+		<if test="tjkj == 1">
+			SUM(if(ZSXM = '增值税', replace(QXJ,',','')/#{dw}, 0)) AS ZZS,
+			SUM(if(ZSXM = '房产税', replace(QXJ,',','')/#{dw}, 0)) AS FCS,
+			SUM(if(ZSXM = '城镇土地使用税', replace(QXJ,',','')/#{dw}, 0)) AS CZTDSYS,
+			SUM(if(ZSXM = '车船税', replace(QXJ,',','')/#{dw}, 0)) AS CCS
+		</if>
+		FROM t_srfxrkxx
+		WHERE rkrq >= #{qsrq}
+		AND rkrq &lt;= #{zzrq}
+		<if test="nsrmc!=null and nsrmc!=''">
+			AND nsrmc LIKE CONCAT('%',#{nsrmc},'%')
+		</if>
+		GROUP BY NSRMC) BN
+		left join
+		(SELECT GROUP_CONCAT(DISTINCT NSRSBH)NSRSBH,
+		NSRMC,
+		<if test="tjkj == 0">
+			SUM(if(ZSXM = '增值税', replace(SJJE,',','')/#{dw}, 0)) AS ZZS,
+			SUM(if(ZSXM = '房产税', replace(SJJE,',','')/#{dw}, 0)) AS FCS,
+			SUM(if(ZSXM = '城镇土地使用税', replace(SJJE,',','')/#{dw}, 0)) AS CZTDSYS,
+			SUM(if(ZSXM = '车船税', replace(SJJE,',','')/#{dw}, 0)) AS CCS
+		</if>
+		<if test="tjkj == 1">
+			SUM(if(ZSXM = '增值税', replace(QXJ,',','')/#{dw}, 0)) AS ZZS,
+			SUM(if(ZSXM = '房产税', replace(QXJ,',','')/#{dw}, 0)) AS FCS,
+			SUM(if(ZSXM = '城镇土地使用税', replace(QXJ,',','')/#{dw}, 0)) AS CZTDSYS,
+			SUM(if(ZSXM = '车船税', replace(QXJ,',','')/#{dw}, 0)) AS CCS
+		</if>
+		FROM t_srfxrkxx
+		WHERE rkrq >= CONCAT(#{qsrq}-1 , substr(#{qsrq},5,7))
+		AND rkrq &lt;= CONCAT(#{zzrq}-1 , substr(#{zzrq},5,7))
+		GROUP BY NSRMC) SN
+		on BN.NSRMC = SN.NSRMC) zdsz
+		ORDER BY cast(replace(PM,',','') as Decimal) DESC
+	</select>
+
+	<select id="selectQxList"
+		resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Zdsznsfx"
+		parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Zdsznsfx">
+		SELECT BN.NSRSBH,
+		       BN.NSRMC,
+		       NUMBER_FORMAT(BN.ZZS) ZZSBN,
+		       NUMBER_FORMAT(SN.ZZS) ZZSSN,
+		       NUMBER_FORMAT(BN.ZZS - SN.ZZS) ZZSZJE,
+		       NUMBER_FORMAT(BN.FCS) FCSBN,
+		       NUMBER_FORMAT(SN.FCS) FCSSN,
+		       NUMBER_FORMAT(BN.FCS - SN.FCS) FCSZJE,
+		       NUMBER_FORMAT(BN.CZTDSYS) CZTDSYSBN,
+		       NUMBER_FORMAT(SN.CZTDSYS) CZTDSYSSN,
+		       NUMBER_FORMAT(BN.CZTDSYS - SN.CZTDSYS) CZTDSYSZJE,
+		       NUMBER_FORMAT(BN.CCS) CCSBN,
+		       NUMBER_FORMAT(SN.CCS) CCSSN,
+		       NUMBER_FORMAT(BN.CCS - SN.CCS) CCSZJE
+		  FROM (SELECT NSRSBH,
+		               NSRMC,
+		               SUM(if(ZSXM, '增值税', QXJ, 0)) AS ZZS,
+		               SUM(if(ZSXM, '房产税', QXJ, 0)) AS FCS,
+		               SUM(if(ZSXM, '城镇土地使用税', QXJ, 0)) AS CZTDSYS,
+		               SUM(if(ZSXM, '车船税', QXJ, 0)) AS CCS
+		          FROM t_srfxrkxx
+		         WHERE rkrq &gt;= #{rkrq}
+					and rkrq &lt;= #{rkrq}
+				<if test="nsrmc != null and nsrmc != ''">
+					and nsrmc like '%' || #{nsrmc} || '%'
+				</if>
+		         GROUP BY NSRSBH, NSRMC) BN,
+		       (SELECT NSRSBH,
+		               NSRMC,
+		               SUM(if(ZSXM, '增值税', QXJ, 0)) AS ZZS,
+		               SUM(if(ZSXM, '房产税', QXJ, 0)) AS FCS,
+		               SUM(if(ZSXM, '城镇土地使用税', QXJ, 0)) AS CZTDSYS,
+		               SUM(if(ZSXM, '车船税', QXJ, 0)) AS CCS
+		          FROM t_srfxrkxx
+		         WHERE rkrq &gt;= substr(#{rkrq},0,4)-1 || substr(#{rkrq},5,7)
+					and rkrq &lt;= substr(#{rkrq},0,4)-1 || substr(#{rkrq},5,7)
+					<if test="nsrmc != null and nsrmc != ''">
+						and nsrmc like '%' || #{nsrmc} || '%'
+					</if>
+		         GROUP BY NSRSBH, NSRMC) SN
+		 WHERE BN.NSRSBH = SN.NSRSBH(+)
+	</select>
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.xtwh.QykwhMapper">
+	<!-- 企业库维护 -->
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Qykwh" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Qykwh">
+		SELECT Q.ID,Q.LINE_NUM,Q.DATE_TIME,Q.CREATE_BY,Q.CREATE_TIME,Q.UPDATE_BY,Q.UPDATE_TIME,
+       		Q.TYSHXYDM,Q.NSRMC,Q.JDXZ,Q.GSRQ,Q.FCBL
+		FROM T_SRFXXT_QYK Q
+		LEFT JOIN SYS_DEPT D ON Q.JDXZ = D.DEPT_NAME
+		WHERE 1=1
+		<if test="tyshxydm != null and tyshxydm != ''"> AND Q.TYSHXYDM = #{tyshxydm}</if>
+		<if test="nsrmc != null and nsrmc != ''"> AND Q.NSRMC LIKE '%'||#{nsrmc}||'%'</if>
+		<if test="jdxz != null and jdxz != ''"> AND Q.JDXZ= #{jdxz}</if>
+		<if test="dt == 1">
+			AND (Q.TYSHXYDM, Q.NSRMC, Q.JDXZ, ifnull(Q.GSRQ, '-')) IN (
+				SELECT TYSHXYDM, NSRMC, JDXZ, ifnull(GSRQ,'-') FROM T_SRFXXT_QYK
+				GROUP BY TYSHXYDM, NSRMC, JDXZ, ifnull(GSRQ,'-')
+				HAVING COUNT(1) > 1
+			)
+		</if>
+		<!-- 数据权限 -->
+		${params.dataScope}
+		ORDER BY Q.TYSHXYDM, Q.NSRMC, Q.JDXZ, Q.CREATE_TIME DESC
+	</select>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Qykwh" parameterType="string">
+		SELECT * FROM T_SRFXXT_QYK WHERE ID = #{id}
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Qykwh">
+		INSERT INTO T_SRFXXT_QYK ( 
+			create_by, create_time, tyshxydm, nsrmc, fcbl, jdxz, gsrq
+	    ) VALUES ( 
+	        #{createBy}, #{createTime}, #{tyshxydm}, #{nsrmc}, #{fcbl}, #{jdxz}, #{gsrq}
+	    )
+   </insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Qykwh">
+		UPDATE T_SRFXXT_QYK
+		SET 
+			UPDATE_BY = #{updateBy},
+			UPDATE_TIME = #{updateTime},
+			tyshxydm = #{tyshxydm},
+			nsrmc = #{nsrmc},
+			jdxz = #{jdxz},
+			fcbl=#{fcbl},
+			gsrq = #{gsrq}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        DELETE FROM T_SRFXXT_QYK WHERE ID = #{id}
+    </delete>
+    
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		DELETE FROM T_SRFXXT_QYK WHERE ID IN 
+		<foreach item="item" index="index" collection="array"
+            open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</delete>
+	<!-- 插入删除记录到历史表 -->
+	<insert id="insertDeleteHistory">
+		insert into T_SRFXXT_QYK_DEL(qyk_id,line_num,date_time,create_by,create_time,update_by,update_time,tyshxydm,nsrmc,jdxz,gsrq,fcbl,DELTET_TIME,delete_by)
+		select id,line_num,date_time,create_by,create_time,update_by,update_time,tyshxydm,nsrmc,jdxz,gsrq,fcbl,now(),#{deleteBy} from T_SRFXXT_QYK 
+		WHERE ID IN 
+		<foreach item="item" index="index" collection="array"
+            open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+	</insert>
+	<!-- 插入修改前记录到历史表 -->
+	<insert id="insertUpdateHistory" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Qykwh">
+		insert into T_SRFXXT_QYK_DEL(qyk_id,line_num,date_time,create_by,create_time,update_by,update_time,tyshxydm,nsrmc,jdxz,gsrq,fcbl)
+		select id,line_num,date_time,create_by,create_time,#{updateBy}, #{updateTime},tyshxydm,nsrmc,jdxz,gsrq,fcbl from T_SRFXXT_QYK 
+		WHERE ID = #{id}
+	</insert>
+	
+</mapper>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('建筑施工企业管理')"/>
+    <style type="text/css">
+        .layui-card-header {
+            height: auto;
+        }
+    </style>
+</head>
+
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">项目名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="xmmc" name="xmmc" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">建设单位：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="jsdw" name="jsdw" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">施工单位：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="sgdw" name="sgdw" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">所属年度:</label>
+                    <div class="layui-input-block">
+                        <div class="layui-col-sm5">
+                            <input type="text" id="ssnd" name="ssnd" th:value="${ssnd}"
+                                   readonly="readonly" autocomplete="off"
+                                   data-type="month" data-format="yyyy-MM"
+                                   class="layui-input time-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">数据来源：</label>
+                    <div class="layui-input-block">
+                        <select id="sjly" name="sjly" th:with="type=${@dict.getType('dm_ml')}"
+                                title="请选择" class="selectpicker form-control input-sm">
+                            <option value=""></option>
+                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}"
+                                    th:value="${dict.dictLabel}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">是否本地企业：</label>
+                    <div class="layui-input-block">
+                        <select id="sfbdqy" name="sfbdqy"
+                                title="请选择" class="selectpicker form-control input-sm">
+                            <option value="y">是</option>
+                            <option value="n">否</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3" style="white-space:nowrap!important;">
+                    <label class="layui-form-label">是否加入核查库：</label>
+                    <div class="layui-input-block">
+                        <select id="sfjrhck" name="sfjrhck"
+                                title="请选择" class="selectpicker form-control input-sm">
+                            <option value="y">是</option>
+                            <option value="n">否</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <div class="layui-form-btn">
+                        <button type="button" class="layui-btn layui-btn-radius layui-btn-sm layui-btn-normal">将所选项目加入核查项目库</button>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3" style="align-items: right">
+                    <div class="layui-form-btn">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i
+                                class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.reset()"><i
+                                class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+
+<th:block th:include="include :: layui-footer"/>
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/gcxmxt/jzsgqygl";
+
+    $(function () {
+        var options = {
+            id: 'layui-table',
+            url: prefix + "/list",
+            exportUrl: prefix + "/expExcel",
+            title: '建筑施工企业管理列表',
+            showExport: true,
+            height: 'full-65',
+            ataType: "json",
+            limit: 50,
+            cols: [
+                [
+                    {
+                        field: 'xmmc',
+                        title: '项目名称',
+                        width: 160,
+                        fixed: 'left',
+                        align: 'center',
+                        style: 'text-align: left'
+                    },
+                    {
+                        field: 'xmzt',
+                        title: '项目状态',
+                        width: 160,
+                        fixed: 'left',
+                        align: 'center',
+                        style: 'text-align: left'
+                    },
+                    {field: 'xmdz', title: '项目地址', width: 140, align: 'center', style: 'text-align: right'},
+                    {field: 'jsdw', title: '建设单位', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'zbdx', title: '中标对象（核查对象）', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'fgsmc', title: '分公司名称', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'xmje', title: '项目金额（元）', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'lxr', title: '联系人', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'lxdh', title: '联系电话', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sjyf', title: '数据月份', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'kgzbsj', title: '开工/中标时间', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sjly', title: '数据来源', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sfrk', title: '是否入库', width: 130, align: 'center', style: 'text-align: right'}
+                ]
+            ]
+        };
+        $.table.init(options);
+    });
+
+    layui.use('laydate', function () {
+        var laydate = layui.laydate;
+        laydate.render({elem: '#ssnd', type: 'month', format: 'yyyy-MM'});
+    });
+</script>
+<style>
+    .layui-col-md3 {
+        width: 20%;
+    }
+</style>
+</body>
+</html>

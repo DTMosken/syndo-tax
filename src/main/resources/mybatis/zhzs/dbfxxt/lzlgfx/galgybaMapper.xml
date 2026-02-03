@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--户籍比对 - 公安旅馆业备案未在税务注册 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.GalgybaMapper">
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Galg"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Galg">
+		SELECT * FROM (
+			SELECT BA.ID,'1'TYPE,'1'FLAG,BA.QYMC,BA.XXDZ,BA.FRMC fzr,BA.LXDH dh,'税务局'CLDW,'旅馆业备案信息未在税务局登记'INFO 
+			FROM T_DB_GAJ_LGYXXXX BA
+			WHERE QYMC IS NOT NULL
+			AND NOT EXISTS(SELECT 0 FROM T_DB_SWJ_SWDJXX D WHERE BA.QYMC = D.NSRMC)
+		)T
+		<where>
+	    <if test="type != null and type != ''"> AND TYPE=#{type}</if>
+	    <if test="qymc != null and qymc != ''"> AND QYMC LIKE concat(concat('%',#{qymc}),'%')</if>
+	    </where>
+	</select>
+	
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Lgydj"
+		parameterType="string">
+		SELECT * FROM T_DB_GAJ_LGYXXXX WHERE id = #{id}
+	</select>
+	
+</mapper>

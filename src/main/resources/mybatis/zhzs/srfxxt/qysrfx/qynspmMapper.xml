@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.qysrfx.QynspmMapper">
+    
+	<!-- 企业纳税排名 -->
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qynspm" parameterType="com.syndo.project.zhzs.srfxxt.domain.qysrfx.Qynspm" databaseId="mysql">		
+		WITH DFSS AS
+			(SELECT T.NSRMC, SUM(T.QXJ) DFSS, SUM(T.SJJE) QKJSS
+			FROM t_srfxrkxx T
+			WHERE 1 = 1
+			AND T.RKRQ <![CDATA[ >= ]]> #{qsrq}
+			AND T.RKRQ <![CDATA[ <= ]]> #{zzrq}
+			GROUP BY T.NSRMC),
+		DFSSQN AS
+			(SELECT T.NSRMC, SUM(T.QXJ) QNDFSS, SUM(T.SJJE) QNQKJSS
+			FROM t_srfxrkxx T
+			WHERE 1 = 1
+			AND T.RKRQ <![CDATA[ >= ]]> CONCAT(SUBSTRING(#{qsrq},1,4)-1,SUBSTRING(#{qsrq},5,3))
+			AND T.RKRQ <![CDATA[ <= ]]> CONCAT(SUBSTRING(#{zzrq},1,4)-1,SUBSTRING(#{zzrq},5,3))
+			GROUP BY T.NSRMC),
+		LSB AS
+			(SELECT A.NSRMC,
+			DENSE_RANK() OVER(ORDER BY
+				<if test="tjkj == 0">
+					A.QKJSS DESC
+				</if>
+				<if test="tjkj == 1">
+					A.DFSS DESC
+				</if>
+				
+			) PM,
+			A.DFSS DFSSBN,
+			IFNULL(B.QNDFSS, 0) DFSSSN,
+			A.DFSS - IFNULL(B.QNDFSS, 0) DFSSZJE,
+			A.QKJSS QKJBN,
+			IFNULL(B.QNQKJSS, 0) QKJSN
+			FROM DFSS A
+			LEFT JOIN DFSSQN B ON A.NSRMC = B.NSRMC
+			)
+		SELECT 
+			NSRMC, PM, 
+			FORMAT(IFNULL(DFSSBN,0)/#{dw},2) DFSSBN,
+			FORMAT(IFNULL(DFSSSN,0)/#{dw},2) DFSSSN,
+			FORMAT(IFNULL(DFSSBN - DFSSSN,0)/#{dw},2) DFSSZJE,
+			CONCAT(FORMAT(ROUND(DFSSBN/DFSSSN-1,4)*100,2),'%') DFSSZJL,
+			FORMAT(IFNULL(QKJBN,0)/#{dw},2) QKJBN,
+			FORMAT(IFNULL(QKJSN,0)/#{dw},2) QKJSN,
+			FORMAT(IFNULL(QKJBN - QKJSN,0)/#{dw},2) QKJZJE,
+			CONCAT(FORMAT(ROUND(QKJBN/QKJSN-1,4)*100,2),'%') QKJZJL
+			FROM LSB T
+			WHERE 1=1
+			<if test="pm != null and pm != ''">
+				AND PM&lt;=#{pm}
+			</if>
+	</select>
+</mapper>

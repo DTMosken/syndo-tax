@@ -1,0 +1,269 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('绩效考核')" />
+</head>
+<body class="gray-white">
+    <style>
+    	.container-div .row {
+		    height: 80%;
+		}
+    	.table-striped {
+		    min-height: 65%;
+		}
+    	.td_label{
+    		border:1px solid #A2C4DD;
+    		height:40px;
+		    padding:4px;
+		    text-align: center; 
+		    font-size: 13px;
+		    font-weight: bold;
+		    color:#336666;
+    	}
+    	.td_1{
+    		border: 1px solid #A2C4DD;
+    		height:20px;
+		    padding:4px;
+		    background-color: #CFE3FC;
+		    text-align: center; 
+		    font-size: 13px; 
+    	}
+    	.td_left{
+    		border: 1px solid #A2C4DD;
+    		height:20px;
+		    padding:4px;
+		    background-color: #CFE3FC;
+		    text-align: left; 
+		    font-size: 13px; 
+    	}
+		.td_button{
+			border: 1px solid #A2C4DD;
+		    height:25px;
+		    text-align: center;
+		}
+		.message_div {   
+		    height:25px;
+		    padding:4px;
+		    text-align: left; 
+		    font-size: 14px;
+		    color:#336666; 
+		    font-weight: bold; 
+		}  
+    </style>
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+			<div class="col-sm-12 search-collapse">
+				<form id="post-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								考核日期：<input type="text" id="khrq" name="khrq" th:value="${khrq}" readonly="readonly"/>
+							</li>
+							<li>
+								部门名称：
+        						<input name="dept"  type="hidden" id="treeId"/>
+								<input type="text" id="treeName" name="deptName" onclick="selectDeptTree()" readonly="readonly" >
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+			
+		</div>
+		<div class="row" style="padding-top: 10px">
+	      	<form id="dataForm" name="dataForm" method="post" action="">
+	      		<input type="hidden" id="dept_id" name="dept_id">
+			    <table class="table table-bordered">
+			        <tr>
+					    <td class="td_label" width="10%">指标</td>
+					    <td class="td_label" width="22%">考核内容</td>
+					    <td class="td_label" width="13%">满分</td>
+					    <td class="td_label" width="41%">考核标准</td>
+					    <td class="td_label" width="14%">得分</td>
+					</tr>
+					
+					<tr>
+					    <td rowspan="7" class="td_1" width="10%">共性指标100分</td>
+					    <td rowspan="2" class="td_left" width="22%">1.配备综合治税系统负责人</td>
+					    <td rowspan="2" class="td_1" width="13%">20</td>
+					    <td class="td_left" width="41%">1.配备专职人员得10分,否则不得分</td>
+					    <td class="td_1" width="14%"><input id="fs1" name="fs1" value="10" /></td>
+					</tr>
+					
+					 <tr>
+					    <td class="td_left" width="41%">2.明确分管领导、科室及工作人员职责,且上报至综合治税管理部门的得10分,否则不得分</td>
+					    <td class="td_1" width="14%"><input id="fs2" name="fs2" value="10"/></td>
+					</tr>
+					
+					 <tr>
+					    <td class="td_left" width="22%">2.依法办事</td>
+					    <td class="td_1" width="13%">5</td>
+					    <td class="td_left" width="41%">按照规定依法办事得5分,出现违法、违规行为不得分</td>
+					    <td class="td_1" width="14%"><input id="fs3" name="fs3" value="5"/></td>
+					</tr>
+					
+					<tr>
+					    <td rowspan="3" class="td_left" width="22%">3.提供平台涉税信息</td>
+					    <td rowspan="3" class="td_1" width="13%">70</td>
+					    <td class="td_left" width="41%">1.未按时传递信息的,每延一天减1分(20分)</td>
+					    <td class="td_1" width="14%"><input readonly="readonly" id="pjfs" name="pjfs" /></td>
+					</tr>
+					
+					<tr>
+					    <td class="td_left" width="41%">2.私自篡改、删减数据,隐瞒数据的出现一次减5分(30分)</td>
+					    <td class="td_1" width="14%"><input id="fs4"  name="fs4" value="30"/></td>
+					</tr>
+					
+					<tr>
+					    <td class="td_left" width="41%">3.出现瞒报、谎报且情节严重的不得分(20分)</td>
+					    <td class="td_1" width="14%"><input id="fs5"  name="fs5" value="20"/></td>
+					</tr>
+					 
+					 <tr>
+					    <td class="td_left" width="22%">4.对综合治税管理部门临时交办的任务完成情况</td>
+					    <td class="td_1" width="13%">5</td>
+					    <td class="td_left" width="41%">4.按要求完成综合治税管理部门临时交办的特殊性任务和事项得5分,否则不得分</td>
+						<td class="td_1" width="14%"><input id="fs6" name="fs6" value="5" /></td>
+					</tr>
+						
+					<tr>
+						<td colspan="5" class="td_button">
+						      <div style="float:left; padding-left:250px; "><input type="button" id="defaultBn" name="defaultBn" value="考 核" class="btn btn-primary btn-sm" onclick="save();"/></div>
+						      <div id="runInfo" class="message_div" style="float: left; padding-left: 100px"></div>
+						      <div style="float:right;padding-right:250px; "><input type="button" id="closeButton" name="closeButton" value="取 消" class="btn btn-default btn-sm" onclick="doClear();"/></div>
+						</td>
+					</tr>
+			    </table>
+			</form>
+	    </div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/xxgxxt/jxkh";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/save",
+                modalName: "绩效考核",
+                showSearch: false,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'logId', 
+					visible: false
+				},
+				{
+					field : 'zbmc', 
+					title : '指标名称',
+					sortable: true
+				},
+				{
+					field : 'yscsj', 
+					title : '应报送时间',
+					sortable: true
+				},
+				{
+					field : 'sjscsj', 
+					title : '实际报送时间',
+					sortable: true
+				},
+				{
+					field : 'sjdf', 
+					title : '得分值',
+					sortable: true,
+					show: false
+				}]
+            };
+            $.table.init(options);
+            //getcount();
+        });
+        
+        function query() {
+        	$.table.search();
+        	// window.setTimeout(getcount,500); 
+	        	
+        }
+              
+      //覆写 $.table.onLoadSuccess
+        (function($) {
+      	  //备份下原来的方法
+      	  var _onLoadSuccess = $.table.onLoadSuccess;
+      	  $.table.onLoadSuccess = function(data) {
+      		  getcount();
+      		  return _onLoadSuccess(data);
+      	  }
+        })(jQuery);
+      
+        function getcount(){
+        	 $.ajax({
+                 type: "post",
+                 dataType:"json",
+                 url: prefix+"/getfscount",
+                 success: function(data) {
+                	 $("#pjfs").val(data.pjfs);
+                     doClear();
+                 }
+        	 
+             }); 
+        } 
+        
+        function save(){
+        	var param = $("#dataForm").serialize();
+            var url=prefix +"/save?dept="+$("#treeId").val();
+            $.operate.post(url,param);
+        }
+        
+        function doClear(){
+          	$("#fs1").val(10);
+          	$("#fs2").val(10);
+          	$("#fs3").val(5);
+          	$("#fs4").val(30);
+          	$("#fs5").val(20);
+          	$("#fs6").val(5);
+          }
+        
+      layui.use('laydate', function(){
+      	var laydate = layui.laydate;
+  	  	laydate.render({elem: '#khrq',type:'month',format: 'yyyy-MM'});
+      });
+      
+      function selectDeptTree() {
+      	var treeId = $("#treeId").val();
+      	var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+      	var url = ctx + "system/dept/selectDeptTree/" + deptId;
+			var options = {
+				title: '选择部门',
+				width: "380",
+				height: "380",
+				url: ctx + "system/dept/selectDeptTree/" + deptId,
+				callBack: writeBack
+			};
+			$.modal.openOptions(options);
+		}
+
+		function writeBack(index, layero){
+			var tree = layero.find("iframe")[0].contentWindow.$._tree;
+			if ($.tree.notAllowParents(tree)) {
+				var body = layer.getChildFrame('body', index);
+  			$("#treeId").val(body.find('#treeId').val());
+  			$("#treeName").val(body.find('#treeName').val());
+  			layer.close(index);
+			}
+		}
+    </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('竣工项目查询')"/>
+    <style type="text/css">
+        .layui-card-header {
+            height: auto;
+        }
+    </style>
+</head>
+
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">项目名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="xmmc" name="xmmc" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">建设单位：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="jsdw" name="jsdw" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">施工单位：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="sgdw" name="sgdw" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">备案日期:</label>
+                    <div class="layui-input-block">
+                        <div class="layui-col-sm5">
+                            <input type="text" id="barq" name="barq" th:value="${barq}"
+                                   readonly="readonly" autocomplete="off"
+                                   data-type="month" data-format="yyyy-MM-dd"
+                                   class="layui-input time-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <div class="layui-form-btn" style="text-align: left;">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i
+                                class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.reset()"><i
+                                class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+
+<th:block th:include="include :: layui-footer"/>
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/gcxmxt/jgxmcx";
+
+    $(function () {
+        var options = {
+            id: 'layui-table',
+            url: prefix + "/list",
+            exportUrl: prefix + "/expExcel",
+            title: '竣工项目查询列表',
+            showExport: true,
+            height: 'full-65',
+            ataType: "json",
+            limit: 50,
+            cols: [
+                [
+                    {
+                        field: 'xmmc',
+                        title: '项目名称',
+                        width: 160,
+                        fixed: 'left',
+                        align: 'center',
+                        style: 'text-align: left'
+                    },
+                    {
+                        field: 'barq',
+                        title: '备案日期',
+                        width: 160,
+                        fixed: 'left',
+                        align: 'center',
+                        style: 'text-align: left'
+                    },
+                    {field: 'gcxz', title: '工程详址', width: 140, align: 'center', style: 'text-align: right'},
+                    {field: 'jsdw', title: '建设单位', width: 140, align: 'center', style: 'text-align: right'},
+                    {field: 'jglx', title: '结构类型', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'gcyt', title: '工程用途', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'jzgm', title: '建筑规模(平方米）', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'zj', title: '造价(万元)', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'kgsj', title: '开工时间', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'jgsj', title: '竣工时间', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'kcdw', title: '勘察单位', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sjdw', title: '设计单位', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sgdw', title: '施工单位', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'jldw', title: '监理单位', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sgxkzh', title: '施工许可证号', width: 130, align: 'center', style: 'text-align: right'}
+                ]
+            ]
+        };
+        $.table.init(options);
+    });
+
+    layui.use('laydate', function () {
+        var laydate = layui.laydate;
+        laydate.render({elem: '#barq', type: 'month', format: 'yyyy-MM-dd'});
+    });
+</script>
+<style>
+    .layui-col-md3 {
+        width: 20%;
+    }
+</style>
+</body>
+</html>

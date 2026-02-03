@@ -1,0 +1,421 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('修改企业房土信息')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-qyftxxwhs-edit" th:object="${entity}">
+	            <input id="objId" name="objId" th:field="*{objId}"  type="hidden">
+	            <div class="form-group">	
+	                <label class="col-sm-3 control-label ">企业名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{title}" name="title" id="title">
+					</div>
+	            </div>
+	            <div class="form-group">
+					<label class="col-sm-3 control-label ">标准地址：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{staddress}" name="staddress" id="staddress">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">是否租赁：</label>
+					<div class="col-sm-8">
+						<select id="zl" name="zl" th:with="type=${@dict.getType('dm_dbfxxt_ftlsjxhgl_qyftxxwhs_zl')}" th:field="*{zl}" class="form-control">
+								<option value=""></option>
+								<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">档次：</label>
+					<div class="col-sm-8">
+						<select id="dc" name="dc" th:with="type=${@dict.getType('dm_dbfxxt_ftlsjxhgl_qyftxxwhs_dc')}" th:field="*{dc}"  class="form-control">
+								<option value=""></option>
+								<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">土地类别：</label>
+					<div class="col-sm-8">
+						<select id="tdlb" name="tdlb" th:with="type=${@dict.getType('dm_dbfxxt_ftlsjxhgl_qyftxxwhs_tdlb')}" th:field="*{tdlb}" class="form-control">
+								<option value=""></option>
+								<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">报送日期：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{bszq}" name="bszq" id="bszq" readonly="readonly" >
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">定位地址：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{address}" name="address" id="address">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">描述备注：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{remark}" name="remark" id="remark">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">经度：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{longitude}" name="longitude" id="longitude">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">纬度：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{latitude}" name="latitude" id="latitude">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">电表号：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{electricitynumber}" name="electricitynumber" id="electricitynumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">水表号：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{waternumber}" name="waternumber" id="waternumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">天然气号：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{gasnumber}" name="gasnumber" id="gasnumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">经营状态：</label>
+					<div class="col-sm-8">
+						<select id="businessstate" name="businessstate" th:with="type=${@dict.getType('dm_dbfxxt_ftlsjxhgl_qyftxxwhs_jyzt')}" th:field="*{businessstate}" class="form-control">
+								<option value=""></option>
+								<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">经营者电话：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{businessphone}" name="businessphone" id="businessphone">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">应税面积：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{taxAcreage}" name="taxAcreage" id="taxAcreage">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">非税面积：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{noTaxAcreage}" name="noTaxAcreage" id="noTaxAcreage">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">税务号：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{taxnumber}" name="taxnumber" id="taxnumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">行业名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{industryname}" name="industryname" id="industryname">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">工商注册名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{businesstitle}" name="businesstitle" id="businesstitle">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">工商注册号：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{businessnumber}" name="businessnumber" id="businessnumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权号码：</label>
+					<div class="col-sm-6">
+						<input class="form-control" type="text" th:field="*{ownnumber}" name="ownnumber" id="ownnumber">
+					</div>
+					<div class="col-sm-2">
+						<a class="btn btn-success" onclick="getCQSJ()">查询 </a>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权人身份证号码：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{owneridnumber}" name="owneridnumber" id="owneridnumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权人名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{ownername}" name="ownername" id="ownername">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权人电话号码：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{ownerphnumber}" name="ownerphnumber" id="ownerphnumber">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">纳税人识别号：</label>
+					<div class="col-sm-6">
+						<input class="form-control" type="text" th:field="*{nsrsbh}" name="nsrsbh" id="nsrsbh">
+					</div>
+					<div class="col-sm-2">
+						<a class="btn btn-success" onclick="getNSRK()">查询 </a>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">纳税人名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{nsrmc}" name="nsrmc" id="nsrmc">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">生产经营地址：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{scjydz}" name="scjydz" id="scjydz">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">月核定营业额：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{jye}" name="jye" id="jye">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">联系电话：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{lxdh}" name="lxdh" id="lxdh">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">从业人数：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{cyrs}" name="cyrs" id="cyrs">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">工商注册号：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{businessnumber2}" name="businessnumber2" id="businessnumber2">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">工商注册名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{businesstitle2}" name="businesstitle2" id="businesstitle2">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">法人名称：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{frmc}" name="frmc" id="frmc">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">经营范围：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{jyfw}" name="jyfw" id="jyfw">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权号码：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{ownnumber2}" name="ownnumber2" id="ownnumber2">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权人：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{xcqr}" name="xcqr" id="xcqr">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">产权人身份证号码：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{cqrzjh}" name="cqrzjh" id="cqrzjh">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">房屋来源：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{fwly}" name="fwly" id="fwly">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">房产原值：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{fwjz}" name="fwjz" id="fwjz">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">房产面积：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{fcmj}" name="fcmj" id="fcmj">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">出租房产原值：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{czfcyz}" name="czfcyz" id="czfcyz">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">出租房产面积：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{czfcmj}" name="czfcmj" id="czfcmj">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">房产租赁金额：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{fczlje}" name="fczlje" id="fczlje">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">房产税执行标准：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{fcszxbz}" name="fcszxbz" id="fcszxbz">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">土地等级标准：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{tddjbz}" name="tddjbz" id="tddjbz">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">全年应纳房、土两税：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{qnynftls}" name="qnynftls" id="qnynftls">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">减免房、土税额及年度：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{jmftse}" name="jmftse" id="jmftse">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">已缴纳房、土两税税款年度：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{yjnftls}" name="yjnftls" id="yjnftls">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">税票号码：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{sbhm}" name="sbhm" id="sbhm">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label ">管理编码：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" th:field="*{glbm}" name="glbm" id="glbm">
+					</div>
+				</div>
+			</form>
+	    </div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+			var prefix = ctx + "zhzs/dbfxxt/ftlsjxhgl/qyftxxwhs";
+			$("#form-qyftxxwhs-edit").validate({
+				// 表单验证，参考notes文件
+				rules:{	
+					title:{
+						required:true
+						},
+					staddress:{
+						required:true
+						}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/edit", $('#form-qyftxxwhs-edit').serialize());
+		        }
+		    }
+			
+			/* 查询产权数据 */
+			function getCQSJ() {
+				var ownnumber = $("#ownnumber").val();
+				if(ownnumber) {
+					$.ajax({
+						url:prefix + "/getcqsj?ownnumber=" + ownnumber,
+						async:false,
+						cache:false,
+						success:function(data) {
+							if(data.xcqr) {
+								alert("【产权人】：" + data.xcqr + "\n【产权人证件号】：" + data.cqrzjh + "\n【房屋价值】：" + data.fwjz + "\n【面积】：" + data.fcmj);
+	       						$("#xcqr").val(data.xcqr);
+	       						$("#cqrzjh").val(data.cqrzjh);
+	       						$("#fwjz").val(data.fwjz);
+	       						$("#fcmj").val(data.fcmj);
+							} else {
+								alert('未查询到任何相关数据！');
+							}
+						}
+					})
+				} else {
+					alert("不能查询空内容！")
+				}
+			}
+			
+			/* 查询纳税人入库数据 */
+		    function getNSRK() {
+	        	 var nsrsbh = $("#nsrsbh").val();
+	        	 if(nsrsbh){
+	        		 $.ajax({
+	        			 url:prefix +"/getnsrk?nsrsbh="+ nsrsbh,
+       					 async:false,
+       					 cache:false,
+       					 success:function(data){
+       						 if(data.nsrmc){
+       							 if(data.jyfw == null)data.jyfw = '';
+       							 if(data.frmc == null)data.frmc = '';
+       							 if(data.scjydz == null)data.scjydz = '';
+       							 if(data.lxdh == null)data.lxdh = '';
+       							 alert("【纳税人名称】：" + data.nsrmc + "\n【纳税人识别号】：" + data.taxnumber  + "\n【生产经营地址】：" + data.scjydz
+       									 + "\n【联系电话】：" + data.lxdh + "\n【月核营业额】：" + data.jye + "\n【从业人数】：" + data.cyrs);
+       							 $("#nsrmc").val(data.nsrmc);
+        						 $("#scjydz").val(data.scjydz);
+        						 $("#lxdh").val(data.lxdh);
+        						 $("#jye").val(data.jye);
+        						 $("#cyrs").val(data.cyrs);
+       						 }else{
+       							 alert('未查询到任何相关数据！');
+       						 }
+       						
+       					}
+	        		})
+	        	 }else{
+	        		 alert("不能查询空内容！");
+	        	 }
+	         }
+			
+			 layui.use('laydate', function(){
+		        	var laydate = layui.laydate;
+		    	  	laydate.render({elem: '#bszq',format: 'yyyy-MM-dd'});
+		       });
+		</script>
+	</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('土地使用税趋势分析')" />
+    <style type="text/css">
+        .layui-card-header{
+            height: auto;
+        }
+    </style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">所属年度： </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="ssnd" name="ssnd" th:value="${ssnd}"
+                               readonly="readonly" autocomplete="off"
+                               data-type="month" data-format="yyyy"
+                               class="layui-input time-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">本年少缴税款：</label>
+					<div class="layui-input-block">
+						<select id="sfsj" name="sfsj" th:with="type=${@dict.getType('dm_dbfxxt_syztfx_sfqj')}"  class="form-control input-sm">
+							<option value=""></option>
+							<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+                <div class="layui-inline layui-col-sm6 layui-col-md4">
+                    <label class="layui-form-label">纳税人名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="nsrmc" name="nsrmc" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm12 layui-col-md4">
+                    <div class="layui-form-btn" style="text-align: left">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                            <i class="layui-icon">&#xe615;</i> 查询
+                        </a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                            <i class="layui-icon">&#xe669;</i> 重置
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+<th:block th:include="include :: layui-footer" />
+<script th:inline="javascript">
+    var prefix = ctx + "zhzs/dbfxxt/syztfx/ccsjnqsfx";
+
+    $(function() {
+        var options = {
+            url: prefix + "/list",
+            exportUrl: prefix + "/expExcel",
+            title: "车船税缴纳趋势分析",
+            height: 'full-65',
+            showExport: true,
+            totalRow:true,//合计
+            clickToSelect: true, // 点击选中行
+            cols: [[{
+                checkbox: true
+            },
+                {
+                    field : 'objId',
+                    hide:true
+                },
+                {
+                    field : 'nsrmc',
+                    title : '纳税人名称',
+                    sortable: true
+                },
+                {
+                    field : 'qnjn',
+                    title : '去年缴纳',
+                    sortable: true
+                },
+                {
+                    field : 'bnjn',
+                    title : '本年缴纳',
+                    sortable: true
+                },
+                {
+                    field : 'ce',
+                    title : '差额',
+                    sortable: true
+                }] ]
+        };
+        $.table.init(options);
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        laydate.render({elem: '#ssnd',type:'year'});
+    });
+</script>
+</body>
+</html>

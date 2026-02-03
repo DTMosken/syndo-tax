@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('查看图表')" />
+</head>
+<body class="gray-bg">
+		<input type="hidden" id="nsrmc" name="nsrmc" th:field="*{nsrmc}"/>
+		<input type="hidden" id="yf" name="yf" th:field="*{yf}"/>
+	        <div class="col-sm-12">
+                    <div class="ibox-content">
+                        <div class="echarts" id="echarts-line-chart" style="height:420px"></div>
+                    </div>
+            </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: echarts-js" />
+		
+    <script th:inline="javascript">
+    var prefix = ctx + "zhzs/dbfxxt/ztzhfx/ahyysfx";
+    $.ajax({
+        type: "GET",
+        url: prefix + "/getChartData?nsrmc="+encodeURIComponent([[*{nsrmc}]])+"&yf="+encodeURIComponent([[*{yf}]]),
+        traditional: true,//传数组进后台需要设置该属性
+        dataType : 'json',
+        success: function (data) {
+        	var e = echarts.init(document.getElementById("echarts-line-chart")),
+        	a = {
+        		tooltip: {
+        			trigger: "axis"
+        		},
+        		legend: {
+        			data: ["水量 (吨)", "税额(￥)"]
+        		},
+        		grid: {
+        			x: 65,
+        			y: 40,
+        			x2: 50,
+        			y2: 24
+        		},
+        		calculable: true,
+        		xAxis: [{
+        				type: "category",
+        				//boundaryGap: !1,
+        				data: ['一月', '二月', '三月', '四月', '五月', '六月','七月', '八月', '九月', '十月', '十一月', '十二月']
+        			}
+        		],
+        		yAxis: [
+        			{
+        				name: '税额(元)',
+        				type: "value"
+        			}
+        			,{
+        				name: '水量 (吨)', 
+        				type: "value"
+        	        }
+        		],
+        		series: 
+        			[{
+        	            name: '水量 (吨)',
+        	            color: '#89A54E',  
+        	            type: 'bar',  
+        	            yAxisIndex: 1, 
+        	            data:[ parseInt(data['01'].qyysl), parseInt(data['02'].qyysl), parseInt(data['03'].qyysl), parseInt(data['04'].qyysl), parseInt(data['05'].qyysl),parseInt(data['06'].qyysl), parseInt(data['07'].qyysl), parseInt(data['08'].qyysl), parseInt(data['09'].qyysl), parseInt(data['10'].qyysl), parseInt(data['11'].qyysl), parseInt(data['12'].qyysl)],
+        	        },{
+        	            name: '税额(￥)',
+        	            color: '#4572A7',  
+        	            type: 'line',  
+        	            yAxisIndex: 0, 
+        	            data:[ parseInt(data['01'].qynse), parseInt(data['02'].qynse), parseInt(data['03'].qynse), parseInt(data['04'].qynse), parseInt(data['05'].qynse), parseInt(data['06'].qynse), parseInt(data['07'].qynse), parseInt(data['08'].qynse), parseInt(data['09'].qynse), parseInt(data['10'].qynse),parseInt(data['11'].qynse), parseInt(data['12'].qynse)],
+        	        }
+        			]
+        	};
+        	e.setOption(a),
+        	$(window).resize(e.resize);
+        }
+
+    });
+    
+	   
+    </script>
+</body>
+</html>

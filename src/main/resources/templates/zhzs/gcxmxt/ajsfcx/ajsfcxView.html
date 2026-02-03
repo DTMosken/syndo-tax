@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('按建设方查询')"/>
+    <style type="text/css">
+        .layui-card-header {
+            height: auto;
+        }
+    </style>
+</head>
+
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">项目名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="xmmc" name="xmmc" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">建设单位：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="jsdw" name="jsdw" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <label class="layui-form-label">所属年度:</label>
+                    <div class="layui-input-block">
+                        <div class="layui-col-sm5">
+                            <input type="text" id="ssnd" name="ssnd" th:value="${ssnd}"
+                                   readonly="readonly" autocomplete="off"
+                                   data-type="month" data-format="yyyy-MM"
+                                   class="layui-input time-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md3">
+                    <div class="layui-form-btn">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()"><i
+                                class="layui-icon">&#xe615;</i>&nbsp;搜索</a>
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.reset()"><i
+                                class="layui-icon">&#xe669;</i>&nbsp;重置</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+
+<th:block th:include="include :: layui-footer"/>
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/gcxmxt/ajsfcx";
+
+    $(function () {
+        var options = {
+            id: 'layui-table',
+            url: prefix + "/list",
+            exportUrl: prefix + "/expExcel",
+            title: '按建设方查询列表',
+            showExport: true,
+            height: 'full-65',
+            ataType: "json",
+            limit: 50,
+            cols: [
+                [
+                    {
+                        field: 'jsdw',
+                        title: '建设单位',
+                        width: 160,
+                        fixed: 'left',
+                        align: 'center',
+                        style: 'text-align: left'
+                    },
+                    {
+                        field: 'xmmc',
+                        title: '项目名称',
+                        width: 160,
+                        fixed: 'left',
+                        align: 'center',
+                        style: 'text-align: left'
+                    },
+                    {field: 'xmzt', title: '项目状态', width: 140, align: 'center', style: 'text-align: right'},
+                    {field: 'xmdz', title: '项目地址', width: 140, align: 'center', style: 'text-align: right'},
+                    {field: 'jsnr', title: '建设内容', width: 140, align: 'center', style: 'text-align: right'},
+                    {field: 'jsgm', title: '建设规模(㎡)', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'tze', title: '投资额(元)', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'ljwctz', title: '累计完成投资（元）', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'sgdw', title: '施工单位', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'lxr', title: '联系人', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'lxdh', title: '联系电话', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'kgsj', title: '开工时间', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'jgsj', title: '竣工时间', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'htqdsj', title: '合同签订时间', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'htqdje', title: '合同签订金额(元)', width: 130, align: 'center', style: 'text-align: right'},
+                    {field: 'ljbk', title: '累计拨款（元）', width: 130, align: 'center', style: 'text-align: right'}
+                ]
+            ]
+        };
+        $.table.init(options);
+    });
+
+    layui.use('laydate', function () {
+        var laydate = layui.laydate;
+        laydate.render({elem: '#ssnd', type: 'month', format: 'yyyy-MM'});
+    });
+</script>
+</body>
+</html>

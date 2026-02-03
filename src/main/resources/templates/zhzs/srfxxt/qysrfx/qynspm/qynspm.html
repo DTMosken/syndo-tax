@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: layui-header('企业纳税排名')" />
+		<style type="text/css">	
+			.layui-card-header{
+				height: auto;
+			}
+			.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+				width: 60px;
+			}
+			.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+				margin-left: 66px;
+			}
+		</style>
+	</head>
+	
+	<body class="layui-body-table">
+		<div class="layui-card">
+			<div class="layui-card-header">
+				<form id="query-form" class="layui-form">
+					<div class="layui-form-item layui-row">
+						<div class="layui-inline layui-col-sm4 layui-col-md3">
+							<label class="layui-form-label">入库日期:</label>
+							<div class="layui-input-block" id="test-range">
+								<div class="layui-col-sm5">
+									<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+										   readonly="readonly" autocomplete="off"
+										   data-type="month" data-format="yyyy-MM"
+										   class="layui-input time-input">
+								</div>
+								<span class="layui-form-mid">-</span>
+								<div class="layui-col-sm5">
+									<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+										   readonly="readonly" autocomplete="off"
+										   data-type="month" data-format="yyyy-MM"
+										   class="layui-input time-input">
+								</div>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm4 layui-col-md2">
+							<label class="layui-form-label">纳税前：</label>
+				            <div class="layui-input-block">
+			              		<div class="layui-col-xs6 layui-col-sm8">
+					              	<input type="text" id="pm" name="pm" value="20" autocomplete="off" class="layui-input">
+				            	</div>
+				             	<span class="layui-input-sp layui-col-xs6 layui-col-sm4" style="text-align: left">&nbsp名</span>
+				            </div>
+                        </div>
+						<div class="layui-inline layui-col-sm4 layui-col-md2">
+							<label class="layui-form-label">排序口径：</label>
+							<div class="layui-input-block">
+								<select id="tjkj" name="tjkj"
+										class="form-control input-sm">
+									<option value="0">全口径</option>
+									<option value="1">一般预算</option>
+								</select>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm2 layui-col-md2">
+							<label class="layui-form-label">单位：</label>
+							<div class="layui-input-block">
+								<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+									<option value="1">元</option>
+									<option value="10000">万元</option>
+								</select>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-sm4 layui-col-md3">
+							<div class="layui-form-btn" style="text-align: left; white-space: nowrap; overflow: hidden;">
+								<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+									<i class="layui-icon">&#xe615;</i> 查询
+								</a>
+								<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+									<i class="layui-icon">&#xe669;</i> 重置
+								</a>
+							</div>
+						</div>
+		          	</div>
+				</form>
+			</div>
+			<div class="layui-card-body">
+				<table id="layui-table" lay-filter="layui-table"></table>
+			</div>
+		</div>
+		
+		<th:block th:include="include :: layui-footer" />
+		<script type="text/javascript">
+			var prefix = ctx + "zhzs/srfxxt/qysrfx/qynspm";
+			$(function(){
+				var options = {
+					id: 'layui-table',
+					loadUrl: prefix + "/list",
+					exportUrl: prefix + "/expExcel",
+					title: '企业纳税排名',
+					cols: [
+			    		[
+							{field: 'pm', title: '排名', width: 60, align: 'center', rowspan: 2},
+							{field: 'nsrmc', title: '企业名称', width: 240, align: 'center', rowspan: 2, style:'text-align: left'},
+							{title: '地方税收', width: 140, colspan: 4, align: 'center'},
+							{title: '全口径税收', width: 140, colspan: 4, align: 'center'},
+				    	],[
+				    		{field: 'dfssbn', align: 'center', title: '本期', width: 140, style:'text-align: right'},
+				    		{field: 'dfsssn', align: 'center', title: '同期', width: 140, style:'text-align: right'},
+				    		{field: 'dfsszje', align: 'center', title: '增减额', width: 140, style:'text-align: right'},
+				    		{field: 'dfsszjl', align: 'center', title: '增减率', width: 140, style:'text-align: right' },
+				    		{field: 'qkjbn', align: 'center', title: '本期', width: 140, style:'text-align: right'},
+				    		{field: 'qkjsn', align: 'center', title: '同期', width: 140, style:'text-align: right'},
+				    		{field: 'qkjzje', align: 'center', title: '增减额', width: 140, style:'text-align: right'},
+				    		{field: 'qkjzjl', align: 'center', title: '增减率', width: 140, style:'text-align: right'},
+				    	]
+			    	]
+				};
+				$.table.init(options);
+			});
+			
+			layui.use('laydate', function(){
+				var laydate = layui.laydate;
+				laydate.render({elem: '#qsrq', type:'month', format:'yyyy-MM'});
+				laydate.render({elem: '#zzrq', type:'month', format:'yyyy-MM'});
+			});
+		</script>
+	</body>
+</html>

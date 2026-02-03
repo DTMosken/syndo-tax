@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('加油站销售纳税分析')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+							<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">所属月份起： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" readonly="readonly" id="ssyfq" name="ssyfq" th:value="${ssyfq}"/>
+									</div>
+								</div>
+							</div>
+							<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">所属月份止： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" readonly="readonly" id="ssyfz" name="ssyfz" th:value="${ssyfz}"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">加油站名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="jyzname" name="jyzname"/>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+	        <!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<!-- <a class="btn btn-success" onclick="">
+		            <i class="fa fa-sign-out"></i> 派发
+		        </a>
+				<a class="btn btn-warning" onclick="">
+		            <i class="fa fa-print"></i> 打印
+		        </a>
+				<a class="btn btn-danger multiple disabled" onclick="">
+		            <i class="fa fa-times"></i> 终止流程
+		        </a> -->
+	        </div>
+	        
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/sybd/jyzxsnsfx";
+
+        $(function() {
+            var options = {
+                //url: prefix + '/list?ssyfq=' + $("#ssyfq").val()+'&ssyfz='+$("#ssyfz").val(),
+                data:Data,
+                modalName: "加油站销售纳税分析",
+                showSearch: false,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false
+				},
+				{
+					field : 'ssyfx', 
+					title : '所属月份起',
+					sortable: true
+				},
+				{
+					field : 'ssyfd', 
+					title : '所属月份止',
+					sortable: true
+				},
+				{
+					field : 'jyzname', 
+					title : '加油站名称',
+					sortable: true
+				},
+				{
+					field : 'xsyl', 
+					title : '销售油量(汽油+柴油)',
+					sortable: true
+				},
+				{
+					field : 'xse', 
+					title : '销售额',
+					sortable: true
+				},
+				{
+					field : 'yjsk', 
+					title : '应缴税款',
+					sortable: true
+				},
+				{
+					field : 'shuie', 
+					title : '实缴税款',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					sortable: true
+				}/*,
+				 {
+					field : 'sfht', 
+					title : '状态',
+					sortable: true
+				},
+				{
+					field : 'nsrsbh', 
+					title : '纳税人识别号',
+					sortable: true
+				},
+				{
+					field : 'zgsws', 
+					title : '主管税务所',
+					sortable: true
+				}, 
+				{
+				    field : 'xx', 
+					title : '查看详情',
+					align: 'center',
+					formatter: function(value, row, index) {
+		                var actions = [];
+		                actions.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\''  + row.ssyfx+'\',\'' + row.ssyfd+'\',\'' + row.jyzname  +'\')"><i class="fa fa-edit"></i>查看详情</a> ');
+		                return actions.join('');
+		            }
+				},
+				{
+					field : 'htyy', 
+					title : '回退原因',
+					sortable: true
+				}*/
+				]
+            };
+            $.table.init(options);
+        });
+        
+        Data=[{objId:1,ssyfx:'2020-01',ssyfd:'2020-10',jyzname:'崇东石化加油站 ',xsyl:'1700000',xse:'8840000',yjsk:'1,149,200',shuie:'802,100',ce:'347,100'},
+			{objId:2,ssyfx:'2020-01',ssyfd:'2020-10',jyzname:'中原石化加油站 ',xsyl:'1650000',xse:'8580000',yjsk:'1,115,400',shuie:'703,302',ce:'412,098'},
+			{objId:3,ssyfx:'2020-01',ssyfd:'2020-10',jyzname:'上蔡县张庄加油站 ',xsyl:'2340000',xse:'12160000',yjsk:'1,580,800',shuie:'543,123',ce:'1,037,677'},
+			{objId:4,ssyfx:'2020-01',ssyfd:'2020-10',jyzname:'中国国际能源加油站 ',xsyl:'1890000',xse:'9820000',yjsk:'1,276,600',shuie:'435,123',ce:'841,477'},
+			{objId:5,ssyfx:'2020-01',ssyfd:'2020-10',jyzname:'上蔡石化加油站 ',xsyl:'2120000',xse:'11020000',yjsk:'1,432,600',shuie:'665,332',ce:'767,268'},
+			{objId:6,ssyfx:'2020-01',ssyfd:'2020-10',jyzname:'官庄加油站 ',xsyl:'3320000',xse:'17264000',yjsk:'2,244,320',shuie:'1,023,022',ce:'1,221,298'}];
+
+        /*查看详情*/
+        function ckxq(ssyfq,ssyfz,jyzname) {   
+        	var url = prefix + '/twoList?ssyfq='+ssyfq+'&ssyfz='+ssyfz+'&jyzname='+decodeURIComponent(jyzname);;
+        	$.modal.openFull("查看详情", url, false);
+		}
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#ssyfq',type: 'month', format: 'yyyy-MM'});
+    	  	laydate.render({elem: '#ssyfz',type: 'month', format: 'yyyy-MM'});
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ztzhfx.AhyysfxMapper">
+	
+	<!-- 子句 企业用水量 -->
+	<sql id="qyView">
+    	QYYS AS(
+				SELECT T.qshmc HM,
+				SUM(T.ysl) BYSL,
+				SUBSTR(DATE_FORMAT(CONCAT(T.YF, '-01'), '%Y-%m-%d'), 1, 7) YF
+				FROM T_DB_SLJ_QYYSXX T 
+				WHERE 1=1 
+				AND T.ysl IS NOT NULL
+				GROUP BY hm, SUBSTR(DATE_FORMAT(CONCAT(T.YF, '-01'), '%Y-%m-%d'), 1, 7)
+			)
+	</sql>
+	
+	<!-- 子句 入库信息 -->
+	<sql id="rkView">
+    	RK AS (
+			SELECT GROUP_CONCAT(DISTINCT NSRSBH) NSRSBH,
+			RKXX.NSRMC,
+			SUM(SJJE) SHUIE, 
+    		SUBSTR(SKSSQQ, 1, 7) SSQQ,
+			GROUP_CONCAT(DISTINCT HYML) HYML
+            FROM T_DB_SWJ_JRKXX RKXX 
+			GROUP BY RKXX.NSRMC,SUBSTR(SKSSQQ, 1, 7)
+			)
+	</sql>
+	
+	<!-- 子句 综合查询 -->
+	<sql id="allView">
+    	ZONG AS (
+			SELECT * FROM
+			(
+				SELECT RK.NSRSBH,QYYS.HM NSRMC, ROUND(IFNULL(QYYS.BYSL,0),2) QYYSL, QYYS.YF,ROUND(IFNULL(RK.SHUIE,0),2)QYNSE,
+				IF(QYYS.BYSL=0,0,RK.SHUIE/QYYS.BYSL) SLCSE, RK.HYML 
+				FROM QYYS left join RK on QYYS.HM = RK.NSRMC AND QYYS.YF = RK.SSQQ
+			)A
+			<include refid="allClause" />
+		)
+	</sql>
+	
+	<!-- 综合查询条件 -->
+	<sql id="allClause">
+		<where>
+			<trim prefix="" prefixOverrides="and">
+		 		<if test="cxsjq!= null and cxsjq != ''"><![CDATA[AND YF>=#{cxsjq}]]></if>
+				<if test="cxsjz!= null and cxsjz != ''"><![CDATA[AND YF<=#{cxsjz}]]></if>
+				<if test="sshy!= null and sshy != ''"><![CDATA[AND INSTR(HYML,#{sshy})>0]]></if>
+				<if test="nsrmc!= null and nsrmc != ''"><![CDATA[AND NSRMC like '%'||#{nsrmc}||'%']]></if>
+			</trim>
+		</where>
+	</sql>  
+	
+	<!--列表 查询条件 -->
+	<sql id="listClause">
+		<where>
+			<trim prefix="" prefixOverrides="and">
+			    <if test="yslq!=null and yslq!=''"><![CDATA[AND QYYSL>=#{yslq}]]></if>
+			    <if test="yslz!=null and yslz!=''"><![CDATA[AND QYYSL<=#{yslz}]]></if>
+			</trim>
+		</where>
+	</sql>
+	
+	<!-- 图表 查询条件 -->
+	<sql id="chartClause">
+		<where>
+			<trim prefix="" prefixOverrides="and">
+		 		<if test="nsrmc != null and nsrmc != ''"><![CDATA[ AND QYYS.HM=#{nsrmc} ]]></if>
+           		<if test="yf != null and yf != ''"><![CDATA[ AND SUBSTR(YF,1,4) = SUBSTR(#{yf},1,4) ]]></if>
+           		) tt
+			</trim>
+		</where>
+	</sql>
+	<!-- 列表 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyysfx"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyysfx">
+		WITH 
+			<include refid="qyView"/>,
+			<include refid="rkView"/>,
+			<include refid="allView"/>
+	    SELECT UUID() OBJ_ID,'' NSRSBH,'合计' NSRMC,format(SUM(QYYSL), 2) QYYSL,'' YF,
+	    format(SUM(QYNSE),2) QYNSE, format((SUM(QYNSE)/SUM(QYYSL)),2) SLCSE,'' HYML 
+	    FROM ZONG
+		<include refid="listClause" />
+	    UNION ALL
+	    SELECT UUID() OBJ_ID,NSRSBH,NSRMC,format(QYYSL,2) QYYSL,YF,format(QYNSE,2) QYNSE,format(SLCSE,2)SLCSE,HYML
+	    FROM ZONG
+		<include refid="listClause" />
+	</select>
+	<!-- 图表 获取数据 -->
+	<select id="find" resultType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyysfx"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ztzhfx.Ahyysfx">
+		WITH 
+			<include refid="qyView"/>,
+			<include refid="rkView"/>
+	    SELECT * FROM (
+	    	SELECT HM QYMC,YF,BYSL QYYSL, round(IFNULL(SHUIE,0),2) QYNSE
+	    	FROM QYYS left join RK 
+			on QYYS.HM=RK.NSRMC AND QYYS.YF=RK.SSQQ
+		<include refid="chartClause" />
+	</select>
+</mapper>

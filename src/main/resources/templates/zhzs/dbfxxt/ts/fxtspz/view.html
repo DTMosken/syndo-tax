@@ -1,0 +1,188 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('风险推送设置')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:90px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 96px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+	<div class="layui-card">
+		<div class="layui-card-header">
+			<form id="config-form" class="layui-form" th:object="${config}">
+				<fieldset class="layui-elem-field">
+					<legend>配置项</legend>
+				<div class="layui-field-box layui-form-item layui-row" style="margin-top: 5px">
+					<div class="layui-inline layui-col-sm4 layui-col-md2" style="display: none;">
+						<label class="layui-form-label">每月推送日期：</label>
+						<div class="layui-input-block">
+							<input type="number" id="tsrq" name="tsrq" th:value="*{tsrq}" min="1" max="31" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">推送时限：</label>
+						<div class="layui-input-block">
+							<input type="number" id="fksx" name="fksx" th:value="*{fksx}" min="1" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm2 layui-col-md4">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="doSave()">
+								<i class="layui-icon">&#xe614;</i> 保存
+							</a>
+						</div>
+					</div>
+				</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+     <div class="layui-card" style="display: none;">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row" style="background-color: #eeeeee;font-weight: 400;line-height: 40px;font-size: 16px">
+					<div class="layui-inline layui-col-sm4 layui-col-md2 layui-col-md-offset2">
+						<span style="padding: 9px 3px;">自动推送情况查询</span>
+					</div>
+				</div>
+				<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">所属期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="ssq" name="ssq"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm2 layui-col-md4">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search('query-form')">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset('query-form')">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/fxtspz";
+
+        $(function() {
+            // var options = {
+			// 	id: 'layui-table',
+			// 	url: prefix + "/list",
+			// 	title: "风控小组设置",
+			// 	limit: 200,
+			// 	limits: [200],
+			// 	ataType: "json",
+			// 	height: 'full-270',
+			// 	even: true,
+			// 	where: $.table.where('query-form'),
+			// 	bottomToolbar:[],
+			// 	cols: [
+            //     	[
+			// 			{
+			// 				type:'checkbox'
+			// 			},
+			// 			{
+            //             	field : 'ssq',
+            //                 title : '所属期',
+            //                 align: 'left', 
+			// 				width: '100'
+            //             },
+            //             {
+            //             	field : 'lxmc',
+            //                 title : '类型',
+            //                 align: 'center',
+			// 				width: '100'
+            //             },
+			// 			{
+			// 				field : 'wtsSl',
+			// 				title : '待推送',
+			// 				align: 'center',
+			// 				style: 'text-align:right',
+			// 				width: '100'
+			// 			},
+			// 			{
+			// 				field : 'tsSl',
+			// 				title : '推送',
+			// 				align: 'center',
+			// 				style: 'text-align:right',
+			// 				width: '100'
+			// 			},
+			// 			{
+			// 				field : 'zdxcSl',
+			// 				title : '自动消除',
+			// 				align: 'center',
+			// 				style: 'text-align:right',
+			// 				width: '120'
+			// 			},
+			// 			{
+			// 				field : 'msg',
+			// 				title : '消息',
+			// 				align: 'center',
+			// 				style: 'text-align:left',
+			// 				width: '200'
+			// 			},
+			// 			{
+			// 				field : 'logTime',
+			// 				title : '推送时间',
+			// 				align: 'center',
+			// 				width: '150'
+			// 			}
+            //         ]
+            //     ]
+            // };
+            // $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#ssq',type:'month',format:'yyyy-MM'});
+        });
+
+		function doSave() {
+			var url = prefix + "/save";
+			var data = $("#config-form").serializeArray();
+			$.operate.submit(url, "post", "json", data);
+		}
+
+
+    </script>
+</body>
+</html>

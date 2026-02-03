@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.szqkfx.FjcsrqkMapper">
+    
+	<!-- 分级次收入情况 -->
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.szqkfx.Fjcsrqk" parameterType="com.syndo.project.zhzs.srfxxt.domain.szqkfx.Fjcsrqk">
+		select * from t_rkxx
+	</select>
+	
+</mapper>

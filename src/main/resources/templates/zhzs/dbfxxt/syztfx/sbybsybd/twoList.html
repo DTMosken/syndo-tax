@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看详情')" />
+</head>
+<body class="gray-white">
+    <input id="ydmc" name="ydmc" type="hidden" th:value="${ydmc}"/>
+    <input id="skssqq" name="skssqq" type="hidden" th:value="${skssqq}"/>
+    <input id="skssqz" name="skssqz" type="hidden" th:value="${skssqz}"/>
+    <input id="xsje" name="xsje" type="hidden" th:value="${xsje}"/>
+    <input id="type" name="type" type="hidden" th:value="${type}"/>
+    <input id="cedy" name="cedy" type="hidden" th:value="${cedy}"/>
+    <input id="cexy" name="cexy" type="hidden" th:value="${cexy}"/>
+     <div class="container-div">
+		<div class="row">
+	        <div class="btn-group-sm" id="toolbar" role="group">
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+    	var prefix = ctx + "zhzs/dbfxxt/sybd/sbybsybd";
+        
+        $(function() {
+            var options = {
+                url: prefix + '/getTwoList?ydmc=' + $("#ydmc").val()+'&skssqq='+$("#skssqq").val()+'&skssqz='+$("#skssqz").val()+'&xsje='+$("#xsje").val()+'&type='+$("#type").val()+'&cedy='+$("#cedy").val()+'&cexy='+$("#cexy").val(),
+                title: "查看详情",
+                showExport: true,
+                cols: [[{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+				     field : 'ydmc', 
+				     title : '药店名称',
+				     sortable: true
+				},
+				{
+				     field : 'sj', 
+				     title : '时间',
+				     sortable: true
+				},
+				{
+				     field : 'xsje', 
+				     title : '销售金额',
+				     sortable: true
+				},
+				{
+				     field : 'jsyj', 
+				     title : '计税依据',
+				     sortable: true
+				},
+				{
+				     field : 'jsce', 
+				     title : '计税差额',
+				     sortable: true
+				},
+				{
+				     field : 'yjje', 
+				     title : '应缴金额',
+				     sortable: true
+				},
+				{
+				     field : 'sjje', 
+				     title : '实缴金额',
+				     sortable: true
+				},
+				{
+				     field : 'ce', 
+				     title : '差额',
+				     sortable: true
+				},
+				{
+				    field : 'ck', 
+					title : '查看详情',
+					align: 'center',
+					templet: function(row) {
+		                var actions = [];
+		                actions.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\''  + row.ydmc+'\',\'' + row.sj +'\')"><i class="fa fa-edit"></i>查看详情</a> ');
+		                return actions.join('');
+		            }
+				}] ]
+            };
+            $.table.init(options);
+            
+        });
+		/*查看明细*/
+        function ckxq(ydmc,sj) {   
+        	var url = prefix + '/threeList?ydmc=' + ydmc+'&sj='+sj;
+        	$.modal.openFull("查看明细", url, false);
+		} 
+    </script>
+</body>
+</html>

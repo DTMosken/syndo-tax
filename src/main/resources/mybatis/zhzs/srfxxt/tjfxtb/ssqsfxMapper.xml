@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.tjfxtb.SsqsfxMapper">
+	
+	<!-- 税收趋势分析 -->
+	<!-- 查询 -->
+	<select id="selectData" resultType="com.syndo.project.zhzs.srfxxt.domain.tjfxtb.Ssqsfx" parameterType="com.syndo.project.zhzs.srfxxt.domain.tjfxtb.Ssqsfx">
+	  with 
+		rq as(
+	        SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(substr(#{cxsj},0,4)-1||substr(#{cxsj},5,3),'yyyy-MM'),LEVEL-1),'yyyy-MM') MONTHSTR 
+	        FROM DUAL CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{cxsj},'YYYY-MM'),TO_DATE(substr(#{cxsj},0,4)-1||substr(#{cxsj},5,3),'yyyy-MM')),0)+1 ORDER BY MONTHSTR
+		),
+		zsr as(
+			select round(sum(sjje)/10000,2) zsr, substr(rkrq,0,7) rkrq
+			from md_swj_rkxx where substr(rkrq,0,7) >= substr(#{cxsj},0,4)-1||substr(#{cxsj},5,3)
+			and substr(rkrq,0,7) &lt; #{cxsj}
+			group by substr(rkrq,0,7)
+		),
+		dfsr as(
+			select round(sum(replace(qxj,',',''))/10000,2) dfsr, substr(rkrq,0,7) rkrq
+			from md_swj_rkxx where substr(rkrq,0,7) >= substr(#{cxsj},0,4)-1||substr(#{cxsj},5,3)
+			and substr(rkrq,0,7) &lt; #{cxsj}
+			group by substr(rkrq,0,7)
+		)
+		select ('['||wm_concat('''' || dateStr || '''')||']')rq, ('['||wm_concat(zsr)||']')zsr, ('['||wm_concat(dfsr)||']')dfsr from (
+		    select MONTHSTR dateStr,to_number(nvl(zsr,0)) zsr, to_number(nvl(dfsr,0)) dfsr from rq,zsr,dfsr where rq.MONTHSTR = zsr.rkrq(+) and 
+			rq.MONTHSTR = dfsr.rkrq(+) order by dateStr
+		)
+	</select>
+	
+</mapper>

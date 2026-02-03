@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.SbybsybdMapper">
+	<!-- 社保医保刷卡税源比对 -->
+	<sql id="andClause">
+		<if test="type !=null and type != ''">
+			<if test="type == 1">
+			AND CE &lt; 0
+				<if test="cedy != null and cedy != ''">
+					AND CE*-1 &gt;= #{cedy}	
+				</if>
+				<if test="cexy != null and cexy != ''">
+					AND CE*-1 &lt;= #{cexy}
+				</if>
+			</if>
+			
+			<if test="type == 2">
+			AND CE &gt;= 0
+				<if test="cedy != null and cedy != ''">
+					AND CE &gt;= #{cedy}	
+				</if>
+				<if test="cexy != null and cexy != ''">
+					AND CE &lt;= #{cexy}
+				</if>
+			</if>
+		</if> 
+	</sql>
+
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" databaseId="mysql">
+		select
+		  yb.ydmc nsrmc,
+		  format(yb.skjey,2) skje,
+		  format(case when ybnsr.nsrmc is not null then yb.skjey * #{skjecj} /(1 + 0.13) * 0.13 - ifnull(dk.sjdkse,0)
+		  else yb.skjey * #{skjecj} /(1 + 0.03) * 0.03 - ifnull(dk.sjdkse,0) end, 2) ynzzs,
+		  ifnull(rk.sjje,0) sjzzs,
+		  format(ifnull(rk.sjje,0) - (case when ybnsr.nsrmc is not null then yb.skjey * #{skjecj} /(1 + 0.13) * 0.13 - ifnull(dk.sjdkse,0)
+		  else yb.skjey * #{skjecj} /(1 + 0.03) * 0.03 - ifnull(dk.sjdkse,0) end),2) ysce
+
+		from (
+			select 	ddmc ydmc, sum(yljgxsypzfy) skjey
+			from t_db_ybj_ybkjsxx
+			<where>
+				<if test="nsrmc != null and nsrmc != ''">
+					and ddmc like concat('%',#{nsrmc},'%')
+				</if>
+				<if test="ssqq != null and ssqq != ''">
+					and DATE_FORMAT(yf,'%Y-%m') &gt;= #{ssqq}
+				</if>
+				<if test="ssqz != null and ssqz != ''">
+					and DATE_FORMAT(yf,'%Y-%m') &lt;= #{ssqz}
+				</if>
+			</where>
+			group by ydmc
+		) yb
+		LEFT JOIN(
+			SELECT DISTINCT ydmc,nsrmc FROM t_tmp_ybsk
+		) zjb ON yb.ydmc=zjb.ydmc
+		left join (
+			select distinct nsrmc from t_db_swj_ybnsrdjxx
+		) ybnsr on ybnsr.nsrmc = IFNULL(zjb.nsrmc, yb.ydmc)
+		left join (
+			select nsrmc, sum(sjje) sjje
+			from t_db_swj_jrkxx
+			where zspm not in('罚款', '滞纳金') and zsxm='增值税'
+			<if test="nsrmc != null and nsrmc != ''">
+				and nsrmc like concat('%',#{nsrmc},'%')
+			</if>
+			<if test="ssqq != null and ssqq != ''">
+				and DATE_FORMAT(SKSSQQ,'%Y-%m') &gt;= #{ssqq}
+			</if>
+			<if test="ssqz != null and ssqz != ''">
+				and DATE_FORMAT(SKSSQZ,'%Y-%m') &lt;= #{ssqz}
+			</if>
+			group by nsrmc
+		) rk on IFNULL(zjb.nsrmc, yb.ydmc) = rk.nsrmc
+		left join (
+			select nsrmc, sum(sjdkse) sjdkse
+			from t_db_swj_zzsynsrsbmxqc
+			<where>
+				<if test="nsrmc != null and nsrmc != ''">
+					and nsrmc like concat('%',#{nsrmc},'%')
+				</if>
+				<if test="ssqq != null and ssqq != ''">
+					and DATE_FORMAT(SKSSQQ,'%Y-%m') &gt;= #{ssqq}
+				</if>
+				<if test="ssqz != null and ssqz != ''">
+					and DATE_FORMAT(SKSSQZ,'%Y-%m') &lt;= #{ssqz}
+				</if>
+			</where>
+			group by nsrmc
+		) dk on IFNULL(zjb.nsrmc, yb.ydmc) = dk.nsrmc
+		<where>
+			<if test="yscedy != null and yscedy != ''">
+				and abs(ifnull(rk.sjje,0) - (case when ybnsr.nsrmc is not null then yb.skjey * #{skjecj} /(1 + 0.13) * 0.13 - ifnull(dk.sjdkse,0)
+				else yb.skjey * #{skjecj} /(1 + 0.03) * 0.03 - ifnull(dk.sjdkse,0) end)) &gt;= #{yscedy}
+			</if>
+			<if test="yscexy != null and yscexy != ''">
+				and abs(ifnull(rk.sjje,0) - (case when ybnsr.nsrmc is not null then yb.skjey * #{skjecj} /(1 + 0.13) * 0.13 - ifnull(dk.sjdkse,0)
+				else yb.skjey * #{skjecj} /(1 + 0.03) * 0.03 - ifnull(dk.sjdkse,0) end)) &lt;= #{yscexy}
+			</if>
+		</where>
+
+	</select>
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" databaseId="oracle">
+		WITH A AS(
+			SELECT DISTINCT YDMC FROM MD_YBJ_YDYBSKXX 
+			WHERE SUBSTR(SKYF,0,7) >= #{skssqq}
+		    AND SUBSTR(SKYF,0,7) &lt;= #{skssqz}
+		),
+		T AS(
+		    SELECT BB.MONTHSTR SJ,AA.NSRMC,AA.YDMC FROM (
+		    	SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(#{skssqq},'YYYY-MM'),LEVEL-1),'YYYY-MM') MONTHSTR 
+			    FROM DUAL 
+			    CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{skssqz},'YYYY-MM'),TO_DATE(#{skssqq},'YYYY-MM')),0)+2 
+		    ) BB
+		    LEFT JOIN (
+		    	SELECT YDMC,NSRMC FROM (SELECT A.YDMC,Z.NSRMC FROM A LEFT JOIN TMP_YD_SW Z ON A.YDMC=Z.YDMC) D
+		    	WHERE 1=1
+		    	AND NOT EXISTS(SELECT 0 FROM TMP_DB_YBSKSYBD B WHERE D.YDMC=B.YDMC AND STATE='1')
+		    	<if test="ydmc != null and ydmc != ''">
+		   			AND YDMC like '%'||#{ydmc}||'%'
+		   		</if>
+		    ) AA ON 1=1
+		),
+		G AS(
+		    SELECT NSRMC,SUM(REPLACE(SJJE,',','')) SJJE,SUBSTR(SKSSQQ,0,7) SKSSQQ,SUM(REPLACE(JSYJ,',','')) JSYJ
+		    FROM MD_SWJ_RKXX
+		    WHERE 1=1
+		    AND SUBSTR(SKSSQQ,0,7) &gt;= #{skssqq}
+		    AND SUBSTR(SKSSQQ,0,7) &lt;= #{skssqz}
+		    AND ZSXM='增值税'
+		    GROUP BY NSRMC,SUBSTR(SKSSQQ,0,7)
+		)
+		,GS AS(
+		   SELECT T.NSRMC,T.SJ,T.YDMC,G.SJJE,G.JSYJ
+		   FROM T,G 
+		   WHERE T.NSRMC = G.NSRMC(+)
+		   AND T.SJ = G.SKSSQQ(+)
+		),
+		YD AS (
+		     SELECT YDMC,NVL(SUM(SKJE),0) JE,SUBSTR(SKYF,0,7) SJ
+		     FROM MD_YBJ_YDYBSKXX
+		     WHERE 1=1
+		     AND SUBSTR(SKYF,0,7) >= #{skssqq}
+		     AND SUBSTR(SKYF,0,7) &lt;= #{skssqz}
+		     GROUP BY YDMC,SUBSTR(SKYF,0,7)
+		),
+		HJ AS(
+		    SELECT G.YDMC,G.SJ,NVL(ROUND(F.JE,2),0) XSJE,
+		    	NVL(G.JSYJ,0) JSYJ,NVL(G.JSYJ,0) - NVL(ROUND(F.JE,2),0) JSCE,
+		    	NVL(ROUND(G.SJJE,2),0) SJJE,NVL(ROUND(F.JE * 0.13,2),0) YJJE,
+		    	NVL(ROUND(NVL(G.SJJE,0) - NVL(F.JE * 0.13,0),2),0) CE
+		    FROM YD F,GS G
+		    WHERE F.YDMC(+) = G.YDMC
+		    AND F.SJ(+) = G.SJ
+		    
+		),
+		HJS AS(
+			SELECT * FROM(
+				SELECT SYS_GUID() OBJ_ID, YDMC,#{skssqq} SKSSQQ,#{skssqz} SKSSQZ,SUM(XSJE) XSJE,
+					SUM(JSYJ) JSYJ,SUM(JSCE) JSCE,
+					SUM(SJJE) SJJE,SUM(YJJE) YJJE, NVL(SUM(CE),0) CE
+				FROM HJ WHERE 1=1 
+				<if test="xsje != null and xsje != ''">
+					AND XSJE >= #{xsje}
+				</if>
+				GROUP BY YDMC
+			)
+			WHERE 1=1
+			<include refid="andClause"/>
+			ORDER BY TO_NUMBER(CE)
+		)
+		SELECT SYS_GUID() OBJ_ID, '合计'YDMC, #{skssqq} SKSSQQ,#{skssqz} SKSSQZ,SUM(XSJE) XSJE,
+			SUM(JSYJ) JSYJ,SUM(JSCE) JSCE, SUM(SJJE) SJJE,SUM(YJJE) YJJE, NVL(SUM(CE),0) CE
+			FROM HJS
+		UNION ALL
+		SELECT * FROM HJS
+	</select>
+	
+	<select id="getTwoList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd">
+		WITH  A AS(
+			SELECT DISTINCT YDMC FROM MD_YBJ_YDYBSKXX
+			WHERE SUBSTR(SKYF,0,7) >= #{skssqq}
+		    AND SUBSTR(SKYF,0,7) &lt;= #{skssqz}
+		),
+		T AS(
+		    SELECT BB.MONTHSTR SJ,AA.NSRMC,AA.YDMC FROM (SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(#{skssqq},'YYYY-MM'),LEVEL-1),'YYYY-MM') MONTHSTR 
+		    FROM DUAL 
+		    CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{skssqz},'YYYY-MM'),TO_DATE(#{skssqq},'YYYY-MM')),0)+2 ORDER BY MONTHSTR ) BB
+		    LEFT JOIN (
+		    	SELECT YDMC,NSRMC FROM (SELECT A.YDMC,Z.NSRMC FROM A LEFT JOIN TMP_YD_SW Z ON A.YDMC=Z.YDMC) D
+		    	WHERE YDMC = #{ydmc}
+		    ) AA ON 1=1
+		),
+		G AS(
+		    SELECT NSRMC,SUM(REPLACE(SJJE,',','')) SJJE,SUBSTR(SKSSQQ,0,7) SKSSQQ,SUM(REPLACE(JSYJ,',','')) JSYJ
+		    FROM MD_SWJ_RKXX
+		    WHERE 1=1
+		    AND SUBSTR(SKSSQQ,0,7) >=#{skssqq}
+		    AND SUBSTR(SKSSQQ,0,7) &lt;=#{skssqz}
+		    AND ZSXM='增值税'
+		    GROUP BY NSRMC,SUBSTR(SKSSQQ,0,7)
+		)
+		,GS AS(
+		   SELECT T.NSRMC,T.SJ,T.YDMC,G.SJJE,G.JSYJ
+		   FROM T,G 
+		   WHERE T.NSRMC = G.NSRMC(+)
+		   AND T.SJ = G.SKSSQQ(+)
+		),
+		YD AS (
+		     SELECT YDMC,NVL(SUM(SKJE),0) JE,SUBSTR(SKYF,0,7) SJ
+		     FROM MD_YBJ_YDYBSKXX
+		     WHERE 1=1
+		     AND SUBSTR(SKYF,0,7) &gt;= #{skssqq}
+		     AND SUBSTR(SKYF,0,7) &lt;= #{skssqz}
+		     GROUP BY YDMC,SUBSTR(SKYF,0,7)
+		),
+		HJ AS(
+		    SELECT G.YDMC,G.SJ,NVL(ROUND(F.JE,2),0) XSJE,
+		    	NVL(G.JSYJ,0) JSYJ,NVL(G.JSYJ,0) - NVL(ROUND(F.JE,2),0) JSCE,
+		    	NVL(ROUND(G.SJJE,2),0) SJJE,NVL(ROUND(F.JE * 0.13,2),0) YJJE,
+		    	NVL(ROUND(NVL(G.SJJE,0) - NVL(F.JE * 0.13,0),2),0) CE
+		    FROM YD F,GS G
+		    WHERE F.YDMC(+) = G.YDMC
+		    AND F.SJ(+) = G.SJ
+		    <!-- <if test="xsje != null and xsje != ''">
+				AND F.JE >= #{xsje}
+			</if> -->
+		)
+		<![CDATA[
+		SELECT '合计' YDMC,'' SJ,SUM(XSJE) XSJE,
+			SUM(JSYJ) JSYJ,SUM(JSCE) JSCE,
+			SUM(SJJE) SJJE,SUM(YJJE) YJJE, NVL(SUM(CE),0) CE
+		]]>
+		FROM HJ
+		WHERE 1=1
+		UNION ALL
+		SELECT * FROM (
+			SELECT * FROM HJ
+			WHERE 1=1
+			ORDER BY SJ
+		)
+	</select>
+	
+	<select id="getThreeList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd">
+		SELECT * FROM MD_YBJ_YDYBSKXX
+		WHERE 1=1
+		AND YDMC = #{ydmc}
+		AND SUBSTR(SKYF,0,7) = #{sj}
+	</select>
+		
+	<select id="getZgjg" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" resultType="string">
+		SELECT NVL(WM_CONCAT(DISTINCT G.ZGSWS),'暂未注册') ZGJG FROM MD_SWJ_NSRDJXX G,TMP_YD Y
+		WHERE G.NSRMC = Y.NSRMC
+		AND Y.YDMC = #{ydmc}
+	</select>
+	
+	<insert id="batchInsert" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Sbybsybd" >
+		INSERT INTO TMP_DB_YBSKSYBD(
+			OBJ_ID,YDMC,SKSSQQ,SKSSQZ,XSJE,YJJE,SJJE,CE,JSYJ,JSCE
+		)
+	    <foreach collection="list" item="item" index="index" separator="union all" >  
+	        select #{item.objId},#{item.ydmc},#{item.skssqq},#{item.skssqz},
+	        	#{item.xsje},#{item.yjje},#{item.sjje},#{item.ce},#{item.jsyj},#{item.jsce}
+	        from dual
+	    </foreach> 
+	</insert>
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- App用户管理  -->
+<mapper namespace="com.syndo.project.app.mapper.AppUser2Mapper">
+
+	<select id="selectById" parameterType="string" resultType="com.syndo.project.app.domain.AppUser">
+		select * from sys_app_user
+		where user_id=#{objId}
+	</select>
+
+	<select id="selectList" parameterType="com.syndo.project.app.domain.AppUser" resultType="com.syndo.project.app.domain.AppUser">
+		select user_id, username, password, fullname, phone, deptname, if(status='1','已授权','未授权') status, create_time, update_time from sys_app_user
+		<where>
+			<if test="username != null and username != ''">and username like concat('%',#{username},'%')</if>
+		</where>
+	</select>
+
+	<insert id="insert" parameterType="com.syndo.project.app.domain.AppUser">
+		insert into sys_app_user (
+			user_id,
+			<if test="username != null and username != '' ">username, </if>
+			<if test="password != null and password != '' ">password, </if>
+ 			<if test="fullname != null and fullname != ''">fullname,</if>
+ 			<if test="phone != null and phone != ''">phone,</if>
+ 			<if test="deptname != null and deptname != ''">deptname,</if>
+			status,
+ 			create_time
+ 		)values(
+			 #{userId},
+			<if test="username != null and username != ''">#{username}, </if>
+			<if test="password != null and password != ''">#{password}, </if>
+ 			<if test="fullname != null and fullname != ''">#{fullname},</if>
+ 			<if test="phone != null and phone != ''">#{phone},</if>
+ 			<if test="deptname != null and deptname != ''">#{deptname},</if>
+			'1',
+ 			#{createTime}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.syndo.project.app.domain.AppUser">
+		update sys_app_user 
+        <set>
+            <if test="username != null and username != ''">username = #{username}, </if>
+            <if test="password != null and password != ''">password = #{password}, </if>
+            <if test="fullname != null and fullname != ''">fullname = #{fullname}, </if>
+            <if test="phone != null and phone != ''">phone = #{phone}, </if>
+            <if test="deptname != null and deptname != ''">deptname = #{deptname}, </if>
+            <if test="status != null">status = #{status}, </if>
+			update_time=#{updateTime}
+        </set>
+        where user_id = #{userId}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="String">
+		delete from sys_app_user where user_id in 
+        <foreach item="userId" collection="array" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+	</delete>
+
+	<update id="resetPwd" parameterType="string">
+		update sys_app_user set password=SHA1('123456') where user_id=#{userId}
+	</update>
+</mapper>

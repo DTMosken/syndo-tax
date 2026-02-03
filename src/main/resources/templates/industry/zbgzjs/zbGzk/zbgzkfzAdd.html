@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+	<th:block th:include="include :: header('新增指标规则分组')" />
+	<th:block th:include="include :: ztree-css-default" />
+	<style type="text/css">		
+		ul.ztree {position: absolute;margin-top: 10px;border: 1px solid #617775;background: #f0f6e4;width:220px;height:360px;overflow-y:scroll;overflow-x:auto;z-index:100}
+		label.error{right:38px;}
+	</style>
+</head>
+<body class="white-bg">
+	<div class="path-banner">
+		<span style="font-size:14px;"><i class="fa fa-chevron-right"></i>&nbsp;规则库管理 / 修改规则库 / 新增规则分组</span>
+	</div>
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content" style="border-top:0">
+		<form class="form-horizontal m" id="form-post-add">
+			<input id="fzid" name="fzid" type="hidden" th:value="${fzid}"/>
+			<input id="gzid" name="gzid" type="hidden" th:value="${gzid}"/>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">分组名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="fzmc" id="fzmc" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">分组类型：</label>
+				<div class="col-sm-8">
+					<select class="form-control" id="fzlx" name="fzlx" th:with="type=${@dict.getType('dm_zb_gzkfzlx')}" required onchange="fzlxChange(this.value)">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">企业规模：</label>
+				<div class="col-sm-8">
+					<select class="form-control" id="qygm" name="qygm" th:with="type=${@dict.getType('dm_zb_qygm')}">
+						<option value="">所有</option>
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">行业：</label>
+				<div class="col-sm-8">					
+					<input type="hidden" name="hydm" id="hydm">
+					<input class="form-control" type="text" name="hymc" id="hymc" onclick="showMenu();" readonly="readonly">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">省定评价满分：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="mfSdzb" id="mfSdzb" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">区县特色指标满分：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="mfQxtszb" id="mfQxtszb" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">加分项满分：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="mfJfx" id="mfJfx" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">分组说明：</label>
+				<div class="col-sm-8">
+					<textarea id="fzsm" name="fzsm" class="form-control"></textarea>
+				</div>
+			</div>
+			<div class="row">
+		        <div class="col-sm-12" style="text-align:center;">
+		            <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+		            <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+		        </div>
+		    </div>
+		    <div id="menuContent" class="menuContent" style="display:none; position: absolute;">
+				<ul id="tree" class="ztree" style="margin-top:0; width:180px; "></ul>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: ztree-js" />
+	<script type="text/javascript">
+		var prefix = ctx + "module/industry/zbGzk";
+			    
+		$("#form-post-add").validate({
+			onkeyup: false,
+			groups: {  
+		        fzyj: "qygm hymc"
+		      },  
+			errorPlacement: function(error, element) {  //错误提示在什么地方  
+				if (element.attr("name") == "qygm" || element.attr("name") == "hymc" ){  
+					error.insertAfter("#qygm");
+				}else{  
+					error.insertAfter(element);  
+				}  
+			},
+			rules:{
+				qygm:{  
+	                required: {  
+	                    depends:function(){ //二选一  
+	                        return ($('input[name=hymc]').val().length <= 0);  
+	                    }  
+	                }  
+	            },  
+	            hymc:{  
+	                required: {  
+	                    depends:function(){ //二选一  
+	                        return ($('select[name=qygm]').val().length <= 0);  
+	                    }  
+	                }  
+	            }
+	            ,mfSdzb:{required: true, number: true}
+	            ,mfQxtszb:{required: true, number: true}
+	            ,mfJfx:{required: true, number: true}
+			},
+			messages: {
+				qygm:"企业规模与行业至少选择一个    ",  
+				hymc:"企业规模与行业至少选择一个    "  
+		    },
+		    focusCleanup: true
+		});
+		
+		function submitHandler() {
+			//二选一解决提醒红框一直存在问题
+			$('#qygm').focus();$('#hymc').focus().blur();
+	        if ($.validate.form()) {
+	        	$.operate.saveTab(prefix + "/zbgzkfzAdd", $('#form-post-add').serialize());
+	        }
+	    }
+		
+		function fzlxChange(fzlx) {
+			if("case" == fzlx) {
+				$("#qygm").removeAttr("disabled").show().parent().parent().show();
+				$("#hymc").removeAttr("disabled").show().parent().parent().show();
+			} else {
+				$("#qygm").attr("disabled","true").hide().parent().parent().hide();
+				$("#hymc").attr("disabled","true").hide().parent().parent().hide();
+			}
+		}
+		
+		$(function() {
+			queryTree();
+			$(window).resize(function() {
+				var cityObj = $("#hymc");
+				var cityOffset = $("#hymc").offset();
+				$("#menuContent").css({left:(cityOffset.left +5) + "px", top:cityOffset.top + "px"});
+				$('#tree').width($('#hymc').width());
+			});
+		});
+		
+		function queryTree() {
+			$('#tree').width($('#hymc').width());
+			var url = prefix + "/hyTreeData";
+			var options = {
+		        url: url,
+		        expandLevel: 0,
+		        check: {
+					enable: true,
+					chkboxType: {"Y":"", "N":""}
+				},
+		        view: {
+					dblClickExpand: false
+				},
+				callback: {
+					beforeClick: beforeClick,
+					onCheck: onCheck
+				}
+		    };
+			$.tree.init(options);
+			
+			function beforeClick(treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId);
+				zTree.checkNode(treeNode, !treeNode.checked, null, true);
+				return false;
+			}
+			function onCheck(e, treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId),
+				nodes = zTree.getCheckedNodes(true),
+				label = "",
+				val = "";
+				for (var i=0, l=nodes.length; i<l; i++) {
+					label += nodes[i].name + "，";
+					val += nodes[i].id + ",";
+				}
+				if (label.length > 0 ) label = label.substring(0, label.length-1);
+				if (val.length > 0 ) val = val.substring(0, val.length-1);
+				var cityObj = $("#hymc");
+				cityObj.attr("value", label);
+				$('#hydm').val(val)
+			}
+		}
+		function showMenu() {
+			var cityObj = $("#hymc");
+			var cityOffset = $("#hymc").offset();
+			$("#menuContent").css({left:(cityOffset.left +3) + "px", top:cityOffset.top + "px"}).slideDown("fast");
+
+			$("body").bind("mousedown", onBodyDown);
+		}
+		function hideMenu() {
+			$("#menuContent").fadeOut("fast");
+			$("body").unbind("mousedown", onBodyDown);
+		}
+		function onBodyDown(event) {
+			if (!(event.target.id == "menuBtn" || event.target.id == "hymc" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+				hideMenu();
+			}
+		}
+	</script>
+</body>
+</html>

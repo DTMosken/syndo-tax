@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+	<th:block th:include="include :: header('新增指标规则库')" />
+	<th:block th:include="include :: ztree-css-default" />
+	<style type="text/css">		
+		ul.ztree {margin-top: 10px;border: 1px solid #617775;background: #f0f6e4;width:220px;height:360px;overflow-y:scroll;overflow-x:auto;}
+	</style>
+</head>
+<body class="white-bg">
+	<div class="path-banner">
+		<span style="font-size:14px;"><i class="fa fa-chevron-right"></i>&nbsp;规则库管理 / 新增规则库</span>
+	</div>
+ 	<div class="wrapper wrapper-content animated fadeInRight ibox-content" style="border-top:0">
+		<form class="form-horizontal m" id="form-post-add">
+			<input id="id" name="id" type="hidden" th:value="${id}"/>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">规则名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="gzmc" id="gzmc" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">规则分类：</label>
+				<div class="col-sm-8">
+					<input type="hidden" name="flmlid" id="flmlid" th:value="${flmlid}">
+					<input class="form-control" type="text" name="flmc" id="flmc" th:value="${flmc}" onclick="showMenu();" readonly="readonly" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">规则说明：</label>
+				<div class="col-sm-8">
+					<textarea id="gzsm" name="gzsm" class="form-control"></textarea>
+				</div>
+			</div>
+			<div class="row">
+		        <div class="col-sm-12" style="text-align:center;">
+		            <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+		            <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+		        </div>
+		    </div>
+		</form>
+	</div>
+	<div id="menuContent" class="menuContent" style="display:none; position: absolute;background-color: white;border:1px solid gray">
+		<ul id="tree" class="ztree" style="margin-top:0; width:180px; height: 160px;"></ul>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: ztree-js" />
+	<script th:src="@{/main/js/sf-ui.extend.js?v=1.0.0}"></script>
+	<script type="text/javascript">
+		var prefix = ctx + "module/industry/zbGzk";
+		
+		$("#form-post-add").validate({
+			onkeyup: false,
+			rules:{
+			},
+			messages: {
+		    },
+		    focusCleanup: true
+		});
+		
+		function submitHandler() {
+	        if ($.validate.form()) {
+	        	$.operate.saveTab(prefix + "/zbgzkAdd", $('#form-post-add').serialize(), function(){
+	        		$.modal.alertCallback("保存成功！", function(){
+	        			location.replace(prefix+"/zbgzkEdit/"+$('#id').val());
+	        		});
+	        	}, false);
+	        }
+	    }
+		
+		$(function() {
+			queryTree();
+			$(window).resize(function() {
+				var cityObj = $("#flmc");
+				var cityOffset = $("#flmc").offset();
+				$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() + "px"});
+				$('#tree').width($('#flmc').width());
+			});
+		});
+		
+		function queryTree() {
+			$('#tree').width($('#flmc').width());
+			var url = prefix + "/treeData?lx=gzk";
+			var options = {
+		        url: url,
+		        expandLevel: 2,
+		        onClick : zOnClick,
+		        view: {
+					dblClickExpand: false
+				},
+				callback: {
+					beforeClick: beforeClick
+				}
+		    };
+			$.tree.init(options);
+			
+			function beforeClick(treeId, treeNode) {
+				var check = (treeNode && !(treeNode.id=="100"));
+				return check;
+			}
+			function zOnClick(event, treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId),
+				    nodes = zTree.getSelectedNodes(),
+				    label = "",
+				    val="";
+				nodes.sort(function compare(a,b){return a.id-b.id;});
+				for (var i=0, l=nodes.length; i<l; i++) {
+					label += nodes[i].name + ",";
+					val += nodes[i].id + ",";
+				}
+				if (label.length > 0 ) label = label.substring(0, label.length-1);
+				if (val.length > 0 ) val = val.substring(0, val.length-1);
+				var cityObj = $("#flmc");
+				cityObj.attr("value", label);
+				$('#flmlid').val(val)
+				hideMenu();
+			}
+		}
+		function showMenu() {
+			var cityObj = $("#flmc");
+			var cityOffset = $("#flmc").offset();
+			$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() + "px"}).slideDown("fast");
+
+			$("body").bind("mousedown", onBodyDown);
+		}
+		function hideMenu() {
+			$("#menuContent").fadeOut("fast");
+			$("body").unbind("mousedown", onBodyDown);
+		}
+		function onBodyDown(event) {
+			if (!(event.target.id == "menuBtn" || event.target.id == "flmc" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+				hideMenu();
+			}
+		}
+	</script>
+</body>
+</html>

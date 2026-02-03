@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 推送运行 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.TsyxMapper">
+
+    <!-- 
+    <parameterMap id="tsyxParaMap" type="java.util.HashMap">
+        <parameter property="tsr" jdbcType="VARCHAR" mode="IN"/>
+    </parameterMap>
+    <select id="sjbd" parameterMap="tsyxParaMap" statementType="CALLABLE">
+        call prc_dbfx_fxts('1', #{tsr,mode=IN}, null);
+    </select>
+    <select id="fxts" parameterMap="tsyxParaMap" statementType="CALLABLE">
+        call prc_dbfx_fxts('3', #{tsr,mode=IN}, null);
+    </select> 
+    -->
+    <parameterMap id="tsyxParaMap1" type="Tsyx">
+        <parameter property="sid" jdbcType="VARCHAR" mode="IN"/>
+        <parameter property="nsrmc" jdbcType="VARCHAR" mode="IN"/>
+        <parameter property="zbdms" jdbcType="VARCHAR" mode="IN"/>
+        <parameter property="tsr" jdbcType="VARCHAR" mode="IN"/>
+    </parameterMap>
+    <select id="tsyx1" parameterMap="tsyxParaMap1" statementType="CALLABLE" databaseId="mysql">
+        call prc_dbfx_fxts1(#{sid, mode=IN}, #{nsrmc, mode=IN}, #{zbdms, mode=IN}, #{tsr,mode=IN});
+    </select>
+
+    <select id="tsyx2" parameterType="Tsyx" statementType="CALLABLE" databaseId="mysql">
+    	call prc_dbfx_fxts2(#{sid, mode=IN}, #{lx, mode=IN}, #{fs, mode=IN}, #{tsr,mode=IN}, #{result,mode=OUT,jdbcType=INTEGER});
+    </select>
+    
+    <select id="tsyx3" parameterType="string" statementType="CALLABLE" databaseId="mysql">
+    	call prc_dbfx_fxts3(#{sid, mode=IN});
+    </select>
+    
+    <select id="selectList" parameterType="Tsyx" resultType="Tsyx" databaseId="mysql">
+	    select * from(
+	    	select t.id, t.nsrmc, t.zbdm, z.zbmc, t.fxms, z.url
+	    	from tmp_dbfxxt_fkb t
+	    	left join t_dbfxxt_zbxx z on t.zbdm=z.zbdm
+	    	left join t_dbfxxt_fkb f on t.zbdm=f.zbdm and t.ywid=f.ywid
+	    	where t.sid=#{sid} and f.id is null
+	    	<if test="nsrmc!=null and nsrmc!=''"> and t.nsrmc like concat('%',#{nsrmc},'%') </if>
+	    	<if test="zbdmArray!=null">
+	    		and t.zbdm in <foreach collection="zbdmArray" item="dm" open="(" separator="," close=")">#{dm}</foreach>
+	    	</if>
+	    ) tt
+    	<if test="px!=null and px!=''">
+    		order by ${px}
+    	</if>
+    </select>
+    <select id="checkTsyx1" parameterType="Tsyx" resultType="Long" databaseId="mysql">
+    	select count(1) 
+    	from tmp_dbfxxt_fkb t
+    	where sid=#{sid}
+    	<if test="nsrmc!=null and nsrmc!=''"> and t.nsrmc like concat('%',#{nsrmc},'%') </if>
+    	<if test="zbdmArray!=null">
+    		and t.zbdm in <foreach collection="zbdmArray" item="dm" open="(" separator="," close=")">#{dm}</foreach>
+    	</if>
+    </select>
+	<!-- 选择推送时临时记录会话与选择的行，调用存储过程时不用传入长的fkid列表 -->
+    <insert id="tsyx2_pre" parameterType="Tsyx">
+    	insert into tmp_dbfxxt_tsyx(sid, fkid) values(#{sid}, #{fkid})
+    </insert>
+</mapper>

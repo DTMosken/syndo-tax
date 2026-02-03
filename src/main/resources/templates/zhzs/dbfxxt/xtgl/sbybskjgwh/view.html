@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('社保医保刷卡中间表维护')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse in">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">药店名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="ydmc" name="ydmc"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">纳税人名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="nsrmc" name="nsrmc"/>
+									</div>
+								</div>
+							</div>
+							<div class="col-sm-4">
+			        			<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+	            <a class="btn btn-primary single" onclick="$.operate.edit()">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple" onclick="$.operate.removeAll()">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+	        </div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+	    var editFlag = [[${@permission.hasPermi('module:dbfxxt:xtgl:sbybskjgwh:edit')}]];
+	    var removeFlag = [[${@permission.hasPermi('module:dbfxxt:xtgl:sbybskjgwh:remove')}]];
+        var prefix = ctx + "zhzs/dbfxxt/xtgl/sbybskjgwh";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                modalName: "社保医保刷卡中间表维护",
+                height: $(window).height() - 130,
+                pageSize: 25,
+                showSearch: false,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					visible: false
+				},
+				{
+					field : 'ydmc', 
+					title : '药店名称',
+					sortable: true
+				},
+				{
+					field : 'nsrmc', 
+					title : '纳税人名称',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+            
+            // 双击修改
+            $("#bootstrap-table").on('dbl-click-row.bs.table', function (e, row, ele,field) {
+            	if(editFlag != 'hidden') {
+            		$.operate.edit(row.id);
+            	}
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('财政收入年初计划维护')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+			<div class="col-sm-12 search-collapse">
+				<form id="zjsrjh-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								所属年度：<input id="ssnd" name="ssnd" th:value="${ssnd}" type="text" readonly="readonly" />
+							</li>
+							<li>
+								预算科目：<select id="zsxm" name="zsxm" th:with="type=${@dict.getType('dm_yskm')}">
+											<option value=""></option>
+											<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+										</select>
+							</li>
+							<li>
+								单位：万元
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+			<!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group" >
+				<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="module:srfxxt:xtwh:czsrncjhwh:add">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+	            <a class="btn btn-primary single" onclick="$.operate.edit()" shiro:hasPermission="module:srfxxt:xtwh:czsrncjhwh:edit">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple" onclick="$.operate.removeAll()" shiro:hasPermission="module:srfxxt:xtwh:czsrncjhwh:remove">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+	        </div>
+			
+			<div class="col-sm-12 full-table table-bordered">
+				<table id="bootstrap-table"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/czsrncjhwh";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                modalName: "财政收入年初计划维护",
+                pageSize: 25,
+    		    pageList: [25, 50, 100],
+    		    height: $(window).height() - 125,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'jhwhId', 
+					visible: false
+				},
+				{
+					field : 'zsxmmc',
+					title : '预算科目',
+					sortable: true,
+					align: 'center',
+				},
+				{
+					field : 'qkj', 
+					title : '全口径计划（万元）',
+					sortable: true,
+					align: 'right'
+				},
+				{
+					field : 'ybys', 
+					title : '一般预算计划（万元）',
+					sortable: true,
+					align: 'right'
+
+				},
+				{
+					field : 'ssnd', 
+					title : '所属年度',
+					sortable: true,
+					align: 'center',
+
+				}]
+            };
+            $.table.init(options);
+            
+            $(window).resize(function() {
+            	$("#bootstrap-table").bootstrapTable('resetView', {
+                    height: $(window).height() - 125
+                });
+            });
+        });
+        
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#ssnd',type:'year',format: 'yyyy',trigger: 'click'});
+        });
+		function fixed(str){
+			if (str !== '' && str != null){
+				if(str === 0){  //当为0时，不用处理
+					return 0 ;
+				}else {
+					return str.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				}
+			} else {
+				return '';
+			}
+		}
+    </script>
+	 <script type="text/html" id="qkj">{{fixed(d.qkj)}}</script>
+	 <script type="text/html" id="ybys">{{fixed(d.ybys)}}</script>
+</body>
+</html>

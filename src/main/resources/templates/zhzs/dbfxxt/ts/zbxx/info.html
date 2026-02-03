@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<th:block th:include="include :: header('查看指标')" />
+		<style type="text/css">
+			.layui-timeline-axis {
+				color: #0b86e2;
+			}
+			.layui-timeline-content p {
+				white-space: pre-wrap;
+				white-space: -moz-pre-wrap;
+				white-space: -pre-wrap;
+				white-space: -o-pre-wrap;
+				*word-wrap: break-word;
+				*white-space: normal;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="layui-fluid">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md12">
+					<ul class="layui-timeline" th:object="${entity}" style="margin-top: 10px">
+						<li class="layui-timeline-item">
+							<i class="layui-icon layui-timeline-axis"></i>
+							<div class="layui-timeline-content layui-text">
+								<h4 class="layui-timeline-title">指标类型</h4>
+								<p th:utext="*{zblxmc}"></p>
+							</div>
+						</li>
+						<li class="layui-timeline-item">
+							<i class="layui-icon layui-timeline-axis"></i>
+							<div class="layui-timeline-content layui-text">
+								<h4 class="layui-timeline-title">指标描述</h4>
+								<p th:text="*{zbms}"></p>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

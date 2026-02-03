@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.syndo.project.industry.sjsb.mapper.TQyJjyxzkMapper">
+    
+    <resultMap type="com.syndo.project.industry.sjsb.domain.TQyJjyxzk" id="TQyJjyxzkResult">
+        <result property="id"    column="id"    />
+        <result property="tyshxydm"    column="tyshxydm"    />
+        <result property="qymc"    column="qymc"    />
+        <result property="qydz"    column="qydz"    />
+        <result property="frdb"    column="frdb"    />
+        <result property="ssyf"    column="ssyf"    />
+        <result property="gyzcz"    column="gyzcz"    />
+        <result property="xssr"    column="xssr"    />
+        <result property="ls"    column="ls"    />
+        <result property="rq"    column="rq"    />
+    </resultMap>
+
+    <sql id="selectTQyJjyxzkVo">
+        select id, tyshxydm, qymc, qydz, frdb, ssyf, gyzcz, xssr, ls, rq from t_qy_jjyxzk
+    </sql>
+
+    <select id="selectTQyJjyxzkList" parameterType="TQyJjyxzk" resultMap="TQyJjyxzkResult">
+        <include refid="selectTQyJjyxzkVo"/>
+        <where>
+        	<if test="shxydm != null  and shxydm != ''"> and shxydm = #{shxydm}</if>
+        </where>
+    </select>
+    
+    <select id="selectTQyJjyxzkById" parameterType="String" resultMap="TQyJjyxzkResult">
+        <include refid="selectTQyJjyxzkVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectLastTQyJjyxzk" resultType="com.syndo.project.industry.sjsb.domain.TQyJjyxzk">
+       select jj.GYZCZ as lastGyzcz,jj.XSSR as lastXssr,jj.LS as lastLs from T_QY_JJYXZK jj
+            where jj.RQ = (
+            	select TO_CHAR(ADD_MONTHS(TO_DATE(#{rq}, 'yyyy'), -1), 'yyyy') from dual
+            ) and jj.QYMC = #{qymc} and jj.SSYF = #{ssyf}
+    </select>
+
+    <insert id="insertTQyJjyxzk" parameterType="TQyJjyxzk">
+        <selectKey keyProperty="id" resultType="string" order="BEFORE">
+            SELECT sys_guid() as id FROM DUAL
+        </selectKey>
+        insert into t_qy_jjyxzk
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null  and id != ''">id,</if>
+            <if test="tyshxydm != null  and tyshxydm != ''">tyshxydm,</if>
+            <if test="qymc != null  and qymc != ''">qymc,</if>
+            <if test="qydz != null  and qydz != ''">qydz,</if>
+            <if test="frdb != null  and frdb != ''">frdb,</if>
+            <if test="ssyf != null  and ssyf != ''">ssyf,</if>
+            <if test="gyzcz != null ">gyzcz,</if>
+            <if test="xssr != null ">xssr,</if>
+            <if test="ls != null ">ls,</if>
+            <if test="rq != null ">rq,</if>
+            <if test="shxydm != null ">shxydm,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null  and id != ''">#{id},</if>
+            <if test="tyshxydm != null  and tyshxydm != ''">#{tyshxydm},</if>
+            <if test="qymc != null  and qymc != ''">#{qymc},</if>
+            <if test="qydz != null  and qydz != ''">#{qydz},</if>
+            <if test="frdb != null  and frdb != ''">#{frdb},</if>
+            <if test="ssyf != null  and ssyf != ''">#{ssyf},</if>
+            <if test="gyzcz != null ">#{gyzcz},</if>
+            <if test="xssr != null ">#{xssr},</if>
+            <if test="ls != null ">#{ls},</if>
+            <if test="rq != null ">#{rq},</if>
+            <if test="shxydm != null ">#{shxydm},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTQyJjyxzk" parameterType="TQyJjyxzk">
+        update t_qy_jjyxzk
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tyshxydm != null  and tyshxydm != ''">tyshxydm = #{tyshxydm},</if>
+            <if test="qymc != null  and qymc != ''">qymc = #{qymc},</if>
+            <if test="qydz != null  and qydz != ''">qydz = #{qydz},</if>
+            <if test="frdb != null  and frdb != ''">frdb = #{frdb},</if>
+            <if test="ssyf != null  and ssyf != ''">ssyf = #{ssyf},</if>
+            <if test="gyzcz != null ">gyzcz = #{gyzcz},</if>
+            <if test="xssr != null ">xssr = #{xssr},</if>
+            <if test="ls != null ">ls = #{ls},</if>
+            <if test="rq != null ">rq = #{rq},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTQyJjyxzkById" parameterType="String">
+        delete from t_qy_jjyxzk where id = #{id}
+    </delete>
+
+    <delete id="deleteTQyJjyxzkByIds" parameterType="String">
+        delete from t_qy_jjyxzk where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

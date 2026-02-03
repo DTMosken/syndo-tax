@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('新增加油站价格')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">加油站名称：</label>
+					<div class="col-sm-4">
+						<input id="jyzname" name="jyzname" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">92#汽油价格：</label>
+					<div class="col-sm-4">
+						<input id="qy92" name="qy92" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">95#汽油价格：</label>
+					<div class="col-sm-4">
+						<input id="qy95" name="qy95" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">98#汽油价格：</label>
+					<div class="col-sm-4">
+						<input id="qy98" name="qy98" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">0#柴油价格：</label>
+					<div class="col-sm-4">
+						<input id="cy0" name="cy0" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">-10#柴油价格：</label>
+					<div class="col-sm-4">
+						<input id="cy10" name="cy10" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">时间起：</label>
+					<div class="col-sm-4">
+						<input id="sjq" name="sjq" class="form-control" type="text" readonly="readonly" />
+					</div>
+					<label class="col-sm-2 control-label">时间止：</label>
+					<div class="col-sm-4">
+						<input id="sjz" name="sjz" class="form-control" type="text" readonly="readonly" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">备 注：</label>
+					<div class="col-sm-10">
+						<textarea id="bz" name="bz" class="form-control" rows="3"></textarea>
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+        var prefix = ctx + "zhzs/dbfxxt/xtgl/jyzjgwh";
+			$("#form-add").validate({
+				// 表单验证，参考notes文件
+				rules:{
+					jyzname:{
+						required:true
+					},
+					qy92:{
+						required: true,
+						number: true
+					},
+					qy95:{
+						number:true
+					},
+					qy98:{
+						number:true
+					},
+					cy0:{
+						number:true
+					},
+					cy10:{
+						number:true
+					},
+					sjq:{
+						required: true
+					},
+					sjz:{
+						required: true
+					}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#sjq',type:'datetime',format: 'yyyy-MM-dd HH:mm:ss',trigger: 'click'});
+	    	  	laydate.render({elem: '#sjz',type:'datetime',format: 'yyyy-MM-dd HH:mm:ss',trigger: 'click'});
+	        });
+		</script>
+	</body>
+</html>

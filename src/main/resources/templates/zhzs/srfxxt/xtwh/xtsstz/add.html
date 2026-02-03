@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('新增协调税收调整')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">纳税人识别号：</label>
+					<div class="col-sm-4">
+						<input id="nsrsbh" name="nsrsbh" class="form-control" type="text" />
+					</div>
+					<label class="col-sm-2 control-label is-required">纳税人名称：</label>
+					<div class="col-sm-4">
+						<input id="nsrmc" name="nsrmc" class="form-control" type="text" />
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">调整月份：</label>
+					<div class="col-sm-4">
+						<input id="tzyf" name="tzyf" th:value="${tzyf}" class="form-control" type="text" readonly="readonly" />
+					</div>
+					<label class="col-sm-2 control-label is-required">征收项目：</label>
+					<div class="col-sm-4">
+						<select id="zsxm" name="zsxm" th:with="type=${@dict.getType('dm_zsxm')}" class="form-control">
+							<option value=""></option>
+							<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">街道乡镇：</label>
+					<div class="col-sm-4">
+						<select id="jdxz" name="jdxz" th:with="type=${@dict.getType('dm_jdxz')}" class="form-control">
+							<option value=""></option>
+							<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+					<label class="col-sm-2 control-label">预算科目：</label>
+					<div class="col-sm-4">
+						<input id="yskm" name="yskm" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">实缴金额（元）：</label>
+					<div class="col-sm-4">
+						<input id="sjje" name="sjje" th:value="0" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label is-required">中央级（元）：</label>
+					<div class="col-sm-4">
+						<input id="zyj" name="zyj" th:value="0" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">省市级（元）：</label>
+					<div class="col-sm-4">
+						<input id="ssj" name="ssj" th:value="0" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label is-required">区县级（元）：</label>
+					<div class="col-sm-4">
+						<input id="qxj" name="qxj" th:value="0" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">乡镇级（元）：</label>
+					<div class="col-sm-4">
+						<input id="xzj" name="xzj" th:value="0" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">调整因素：</label>
+					<div class="col-sm-4">
+						<input id="tzys" name="tzys" class="form-control" type="text">
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/xtsstz";
+			$("#form-add").validate({
+				rules:{
+					nsrsbh: {required: true},
+					nsrmc: {required: true},
+					zsxm: {required: true},
+					jdxz: {required: true},
+					tzyf: {required:true},
+					sjje: {required:true, number: true},
+					zyj: {required:true, number: true},
+					ssj: {required:true, number: true},
+					qxj: {required:true, number: true},
+					xzj: {required:true, number: true}
+				}
+			});
+
+			function additCheck() {
+				var sjje = $('#sjje').val();
+				var zyj = $('#zyj').val();
+				var ssj = $('#ssj').val();
+				var qxj = $('#qxj').val();
+				var xzj = $('#xzj').val();
+				if(sjje - zyj - ssj - qxj - xzj != 0) {
+					$.modal.alertError("实缴金额=中央级+省市级+区县级+乡镇级");
+					return false;
+				}else{
+					return true;
+				}
+			}
+			
+			function submitHandler() {
+		        if ($.validate.form() && additCheck()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#tzyf',type:'month',format: 'yyyy-MM',trigger: 'click'});
+	        });
+		</script>
+	</body>
+</html>

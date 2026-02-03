@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--户籍比对 - 行政审批局办理登记未在税务注册 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.lzlgfx.XzspbldjMapper">
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Xzspbldj" parameterType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Xzspbldj">
+		SELECT * FROM (
+		SELECT S.tyshxydm SHXYDM,s.hydm,k.hyml HYML,S.JYFW,S.qymc QYZWM,S.zs ZS,S.fddbrfzrxm FZR,'税务局' CLDW,'办理营业执照未进行税务登记' INFO
+		FROM t_db_xzspj_xbyyzzxx S left join dm_hy_kz k on substr(s.hydm,2)=k.hy_dm
+		WHERE 1=1
+		AND NOT EXISTS(SELECT 0 FROM T_DB_SWJ_SWDJXX D WHERE S.qymc = D.NSRMC)
+		)T
+		<where>
+	    <if test="qyzwm != null and qyzwm != ''"> AND QYZWM LIKE concat(concat('%',#{qyzwm}),'%')</if>
+		<if test="shxydm != null and shxydm != ''"> and shxydm = #{shxydm}</if>
+	    </where>
+	</select>
+	
+	<select id="selectById" resultType="com.syndo.project.zhzs.dbfxxt.domain.lzlgfx.Xzspbldj" parameterType="string">
+		SELECT * FROM t_db_xzspj_xbyyzzxx WHERE id = #{id}
+	</select>
+	
+</mapper>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+	<head>
+	    <th:block th:include="include :: header('新增承建单位信息')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+	            <div class="row">
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">工程项目名称：</label>
+	                        <div class="col-sm-8">
+	                            <input id="gcxmmc" name="gcxmmc"  class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">承建单位统一社会信用代码：</label>
+	                        <div class="col-sm-8">
+	                            <input id="cjdwtyshxydm" name="cjdwtyshxydm" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">承建单位名称：</label>
+	                        <div class="col-sm-8">
+	                            <input id="cjdwmc" name="cjdwmc" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label is-required">联系人：</label>
+	                        <div class="col-sm-8">
+	                            <input id="lxr" name="lxr" class="form-control" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label">联系方式：</label>
+	                        <div class="col-sm-8">
+	                            <input id="lxfs" name="lxfs" class="form-control" type="text">
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label">合同签订时间：</label>
+	                        <div class="col-sm-8">
+                                <input id="htqdsj" name="htqdsj" readonly="readonly" class="form-control" placeholder="yyyy-MM-dd" type="text" required>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label">合同签订额：</label>
+	                        <div class="col-sm-8">
+	                            <input id="htqde" name="htqde" class="form-control" type="text">
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-6">
+	                    <div class="form-group">
+	                        <label class="col-sm-4 control-label">付款方式：</label>
+	                        <div class="col-sm-8">
+	                            <input id="fkfs" name="fkfs" class="form-control" type="text">
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </form>
+	    </div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+	        <!--/* 前缀地址 */-->
+	        var prefix = ctx + "zhzs/cjdwxx";
+			
+	        <!--/* 表单验证 */-->
+	        $("#form-add").validate({
+	            focusCleanup: true,
+	            rules: {
+	                gcxmmc: { required: true },
+	                cjdwtyshxydm: { required: true },
+	                cjdwmc: { required: true },
+	                lxr: { required: true },
+	                htqdsj: { required: true },
+	            }
+	        });
+			
+	        <!--/* 表单提交 */-->
+	        function submitHandler() {
+	            if ($.validate.form()) {
+	                $.operate.save(prefix + "/add", $('#form-add').serialize());
+	            }
+	        }
+			
+	        <!--/* 渲染日期组件 */-->
+	        layui.use('laydate', function() {
+	            var laydate = layui.laydate;
+	            laydate.render({elem: '#htqdsj', type: 'date'});
+	        });
+	    </script>
+	</body>
+</html>

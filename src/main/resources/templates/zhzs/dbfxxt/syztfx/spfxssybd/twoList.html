@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看详情')" />
+</head>
+<body class="layui-body-table">
+     <input id="qymc" name="qymc" type="hidden" th:value="${qymc}"/>
+     <input id="skssqq" name="skssqq" type="hidden" th:value="${skssqq}"/>
+     <input id="skssqz" name="skssqz" type="hidden" th:value="${skssqz}"/>
+     <input id="sfqj" name="sfqj" type="hidden" th:value="${sfqj}"/>
+     <input id="cedy" name="cedy" type="hidden" th:value="${cedy}"/>
+     <input id="cexy" name="cexy" type="hidden" th:value="${cexy}"/>
+     <input id="zzcedy" name="zzcedy" type="hidden" th:value="${zzcedy}"/>
+     <input id="zzcexy" name="zzcexy" type="hidden" th:value="${zzcexy}"/>
+
+     <div class="layui-card-body">
+         <table id="layui-table" lay-filter="layui-table"></table>
+     </div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/syztfx/spfxssybd";
+
+        $(function() {
+            var options = {
+                url: prefix + "/getTwoList?qymc="+$("#qymc").val()+"&skssqq="+$("#skssqq").val()+"&skssqz="+$("#skssqz").val()+"&sfqj="+$("#sfqj").val()+"&cedy="+$("#cedy").val()+"&cexy="+$("#cexy").val()+"&zzcedy="+$("#zzcedy").val()+"&zzcexy="+$("#zzcexy").val(),
+                title: "查看详情",
+		        showExport: true,
+                cols:[ [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+                    hide : true
+				},
+				{
+					field : 'qymc', 
+					title : '纳税人名称',
+					width : '180',
+                    sort: true
+				},
+				{
+					field : 'qysj', 
+					title : '签约日期',
+					width : '100',
+                    sort: true
+				},
+				{
+					field : 'xmmc', 
+					title : '包含项目',
+					width : '150',
+					sortable: true
+				},
+				{
+					field : 'mj', 
+					title : '销售总面积（平方米）',
+					width : '170',
+                    sort: true
+				},
+				{
+					field : 'zje', 
+					title : '销售合同额(元)',
+					width : '130',
+                    sort: true
+				},
+				{
+					field : 'sl', 
+					title : '税率%',
+					width : '100',
+                    sort: true
+				},
+				{
+					field : 'yjje', 
+					title : '估算应纳税额(元)',
+					width : '150',
+                    sort: true
+				},
+				{
+					field : 'sjje', 
+					title : '实缴税额(元)',
+					width : '150',
+                    sort: true
+				},
+				{
+					field : 'yjce', 
+					title : '疑似差额(元)',
+					width : '120',
+                    sort: true
+				},
+				{
+					title : '查看详情',
+					align: 'center',
+					width : '100',
+                    templet: function(d) {
+		                var actions = [];
+		                if(d.qymc == '合计') {
+		                	return "";
+		                }
+		                actions.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\'' + d.qymc+'\',\'' + d.qysj+'\')"><i class="fa fa-edit"></i>销售明细</a> ');
+		                return actions.join('');
+		            }
+				}] ]
+            };
+            $.table.init(options);
+        });
+        
+        /*查看详情*/
+        function ckxq(qymc,qysj) {   
+        	var url = prefix + '/threeList?qymc=' + encodeURI(qymc)+'&qysj='+qysj;
+        	$.modal.openFull("查看详情", url, false);
+		}  
+    </script>
+</body>
+</html>

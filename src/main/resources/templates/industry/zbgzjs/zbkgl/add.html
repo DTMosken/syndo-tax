@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:include="include :: header('新增指标')" />
+<th:block th:include="include :: ztree-css-default" />
+<style type="text/css">		
+	ul.ztree {margin-top: 10px;border: 1px solid #617775;background: #f0f6e4;width:220px;height:360px;overflow-y:scroll;overflow-x:auto;}
+</style>
+</head>
+<body>
+	<div class="main-content">
+		<form id="form-zbkgl-add" class="form-horizontal">
+			<input name="deptId" type="hidden" id="treeId" />
+			<h4 class="form-header h4">新增指标</h4>
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">指标分类：</label>
+						<div class="col-sm-8">
+							<input type="hidden" name="FLMLID" id="FLMLID" th:value="${FLMLID}">
+							<input class="form-control" type="text" name="FLMC" id="FLMC" th:value="${FLMC}" onclick="showMenu();" readonly="readonly" required>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">指标名称：</label>
+						<div class="col-sm-8">
+							<input name="ZBMC" id="ZBMC" autocomplete="off"
+								class="form-control" type="text" maxlength="30" required>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="form-group">
+						<label class="col-xs-2 control-label">指标说明：</label>
+						<div class="col-xs-10">
+							<textarea name="ZBSM" id="ZBSM" autocomplete="off"
+								maxlength="900" class="form-control" rows="3"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">评分方式：</label>
+						<div class="col-sm-8">
+							<label class="radio-box"> <input type="radio" name="PFFS"
+								value="1" checked /> 计算公式
+							</label> <label class="radio-box"> <input type="radio"
+								name="PFFS" value="2" /> 直接打分
+							</label>
+
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">是否有效：</label>
+						<div class="col-sm-8">
+							<label class="radio-box"> <input type="radio" name="YXBZ"
+								value="Y" checked /> 有效
+							</label> <label class="radio-box"> <input type="radio"
+								name="YXBZ" value="N" /> 无效
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">分值上限：</label>
+						<div class="col-sm-8">
+							<input name="FZSX" id="FZSX"  autocomplete="off"
+								class="form-control" type="text" maxlength="30" required>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">分值下限：</label>
+						<div class="col-sm-8">
+							<input name="FZXX" id="FZXX" autocomplete="off" value="0"
+								class="form-control" type="text" maxlength="30" required>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="form-group">
+						<label class="col-xs-2 control-label is-required">计算公式：</label>
+						<div class="col-xs-10">
+							<textarea name="JSGS" id="JSGS" autocomplete="off"
+								maxlength="900" class="form-control" rows="8" required></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="form-group">
+						<label class="col-xs-2 control-label">评分说明：</label>
+						<div class="col-xs-10">
+							<textarea name="PFSM" id="PFSM" autocomplete="off"
+								maxlength="900" class="form-control" rows="3"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>			
+
+		</form>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-offset-5 col-sm-10">
+			<button type="button" class="btn btn-sm btn-primary"
+				onclick="submitHandler()">
+				<span class="fa fa-check"></span>保 存
+			</button>
+			&nbsp;
+			<button type="button" class="btn btn-sm btn-danger"
+				onclick="closeItem()">
+				<span class="fa fa-reply-all"></span>关 闭
+			</button>
+		</div>
+	</div>
+	<div id="menuContent" class="menuContent" style="display:none; position: absolute;background-color: white;border:1px solid gray">
+		<ul id="tree" class="ztree" style="margin-top:0; width:180px; height: 160px;"></ul>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: ztree-js" />
+
+	<script>
+		var prefix = ctx + "module/industry/zbkgl";
+		var prefix2 = ctx + "module/industry/zbGzk";
+		jQuery.validator.addMethod("gtOther", function(value) {
+			return value > $("#FZXX").val();
+		}, "请输入大于”分值下限“的数字");
+		$("#form-zbkgl-add").validate({
+			onkeyup : false,
+			rules : {
+				FZSX : {
+					required: true,
+					number : true,
+					gtOther: true
+				},
+				FZXX : {
+					required: true,
+					number : true
+				},
+			},
+			messages : {
+
+			},
+			focusCleanup : true
+		});
+		function submitHandler() {
+			if ($.validate.form()) {
+				var data = $("#form-zbkgl-add").serializeArray();
+				$.operate.saveTab(prefix + "/newaddZbk", data);
+			}
+		} 	
+		
+		// $("input[name='jsgscf']").click(function(){			 
+		// //	 $("#JSGS").val(this.value);
+		// 	 var ele = document.getElementById("JSGS");
+
+		// 	 ele.value = ele.value + this.value;
+		// 	});
+		
+		$(function() {
+			queryTree();
+			pffsChange();
+			$(window).resize(function() {
+				var cityObj = $("#FLMC");
+				var cityOffset = $("#FLMC").offset();
+				$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() + "px"});
+				$('#tree').width($('#FLMC').width());
+			});
+		});
+		function pffsChange() {
+			$("input[name='PFFS']").on("ifChecked",function(){
+				if($(this).val()=="1"){
+					$("textarea[name='JSGS']").attr("disabled",false).parents(".row").show()
+				} else {
+					$("textarea[name='JSGS']").attr("disabled",true).parents(".row").hide()
+				}
+			});
+		}
+		function queryTree() {
+			$('#tree').width($('#FLMC').width());
+			var url = prefix2 + "/treeData?lx=zbk";
+			var options = {
+		        url: url,
+		        expandLevel: 2,
+		        onClick : zOnClick,
+		        view: {
+					dblClickExpand: false
+				},
+				callback: {
+					beforeClick: beforeClick
+				}
+		    };
+			$.tree.init(options);
+			
+			function beforeClick(treeId, treeNode) {
+				var check = (treeNode && !(treeNode.pId==null));
+				return check;
+			}
+			function zOnClick(event, treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId),
+				    nodes = zTree.getSelectedNodes(),
+				    label = "",
+				    val="";
+				nodes.sort(function compare(a,b){return a.id-b.id;});
+				for (var i=0, l=nodes.length; i<l; i++) {
+					label += nodes[i].name + ",";
+					val += nodes[i].id + ",";
+				}
+				if (label.length > 0 ) label = label.substring(0, label.length-1);
+				if (val.length > 0 ) val = val.substring(0, val.length-1);
+				var cityObj = $("#FLMC");
+				cityObj.attr("value", label);
+				$('#FLMLID').val(val)
+				hideMenu();
+			}
+		}
+		function showMenu() {
+			var cityObj = $("#FLMC");
+			var cityOffset = $("#FLMC").offset();
+			$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() + "px"}).slideDown("fast");
+
+			$("body").bind("mousedown", onBodyDown);
+		}
+		function hideMenu() {
+			$("#menuContent").fadeOut("fast");
+			$("body").unbind("mousedown", onBodyDown);
+		}
+		function onBodyDown(event) {
+			if (!(event.target.id == "menuBtn" || event.target.id == "FLMC" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+				hideMenu();
+			}
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+	<th:block th:include="include :: header('修改财政专项资金拨付')" />
+	<th:block th:include="include :: select2-css" />
+</head>
+<body>
+<div class="main-content">
+	<form class="form-horizontal" id="form-czzxzjbf-edit" th:object="${czzxzjbf}">
+		<input name="id"  type="hidden"  th:field="*{id}" />
+		<h4 class="form-header h4">基本信息</h4>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">数据所属期：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="time-input form-control" id="sjssq" placeholder=""  name="sjssq" th:field="*{sjssq}" required/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">科室：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="form-control" id="ks" placeholder="" name="ks" th:field="*{ks}" required/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label">纳税人识别号：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input name="nsrsbh" class="form-control" type="text" th:field="*{nsrsbh}" required>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label">企业名称：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input name="qymc" class="form-control" type="text" th:field="*{qymc}" required>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">项目内容：</label>
+					<div class="col-sm-8">
+						<input class="form-control" type="text" name="xmnr" th:field="*{xmnr}" required/>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label">拨付金额(元)：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="form-control number" id="bfjey" placeholder="" name="bfjey" th:field="*{bfjey}" required number/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label is-required">支付用途：</label>
+						<div class="col-sm-8">
+							<input class="form-control " type="text" name="zfyt" th:field="*{zfyt}"/>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-6">
+					<div class="form-group">
+						<label class="col-sm-4 control-label">拨付时间：</label>
+						<div class="col-sm-8">
+							<div class="input-group">
+								<input type="text" class="time-input form-control" id="bfsj" placeholder="" name="bfsj" th:field="*{bfsj}" required/>
+							</div>
+						</div>
+					</div>
+				</div>
+		</div>
+
+	</form>
+</div>
+<div class="row">
+	<div class="col-sm-offset-5 col-sm-10">
+		<button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+		<button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+	</div>
+</div>
+<th:block th:include="include :: footer" />
+<th:block th:include="include :: select2-js" />
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/czjbmfg/czzxzjbf";
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            var data = $("#form-czzxzjbf-edit").serializeArray();
+            //$.operate.saveTab(prefix + "/edit", data);
+            $.operate.save(prefix + "/edit", data);
+        }
+    }
+
+    layui.use('laydate',function() {
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#sjssq',
+            format : 'yyyy-MM',
+            type : 'month'
+        });
+        laydate.render({
+            elem: '#bbsj',
+            format : 'yyyy-MM-dd',
+            type : 'date'
+        });
+    });
+
+
+
+</script>
+</body>
+</html>

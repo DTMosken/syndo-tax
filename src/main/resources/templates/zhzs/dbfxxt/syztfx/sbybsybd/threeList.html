@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看明细')" />
+</head>
+<body class="gray-white">
+    <input id="ydmc" name="ydmc" type="hidden" th:value="${ydmc}"/>
+    <input id="sj" name="sj" type="hidden" th:value="${sj}"/>
+	<div class="layui-body-table">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+	var prefix = ctx + "zhzs/dbfxxt/sybd/sbybsybd";
+        
+        $(function() {
+            var options = {
+                url: prefix + "/getThreeList?ydmc="+$("#ydmc").val()+"&sj="+$("#sj").val(),
+                title: "查看详情",
+		        showExport: true,
+                cols: [[{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+					field : 'bh', 
+					title : '药店编号',
+					sortable: true
+				},
+				{
+					field : 'ydmc', 
+					title : '药店名称',
+					sortable: true
+				},
+				{
+					field : 'jydz', 
+					title : '经营地址',
+					sortable: true
+				},
+				{
+					field : 'fzr', 
+					title : '负责人',
+					sortable: true
+				},
+				{
+					field : 'bgdh', 
+					title : '办公电话',
+					sortable: true
+				},
+				{
+					field : 'shh', 
+					title : '商户号',
+					sortable: true
+				},
+				{
+					field : 'skyf', 
+					title : '刷卡月份',
+					sortable: true
+				},
+				{
+					field : 'skje', 
+					title : '刷卡金额',
+					sortable: true
+				}] ]
+            }; 
+            $.table.init(options);
+            
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('新增工程项目进度情况')" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-add">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">工程项目名称：</label>
+                        <div class="col-sm-8">
+                            <input id="gcxmmc" name="gcxmmc" readonly="readonly" autocomplete="off" class="form-control" type="text" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">工程进度：</label>
+                        <div class="col-sm-8">
+                            <input id="gcjd" name="gcjd" class="form-control" type="text" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">累计完成投资额：</label>
+                        <div class="col-sm-8">
+                            <input id="ljwctze" name="ljwctze" class="form-control" type="number" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">工程款收款单位：</label>
+                        <div class="col-sm-8">
+                            <input id="gckskdw" name="gckskdw" class="form-control" type="text" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">本月拨付款：</label>
+                        <div class="col-sm-8">
+                            <input id="bybfk" name="bybfk" class="form-control" type="number" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">拨付款日期：</label>
+                        <div class="col-sm-8">
+                        	<input id="bfkrq" name="bfkrq" readonly="readonly" class="form-control" placeholder="yyyy-MM-dd" type="text" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">累计拨付款：</label>
+                        <div class="col-sm-8">
+                            <input id="ljbfk" name="ljbfk" class="form-control" type="number" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script type="text/javascript">
+        <!--/* 前缀地址 */-->
+        var prefix = ctx + "zhzs/sjcjxt/gcxmjdqk";
+
+        layui.extend({                         
+        	tableSelect: ctx + 'ajax/libs/layui/extend/tableSelect'
+		}).use(['tableSelect'], function() {
+			var tableSelect = layui.tableSelect;
+			tableSelect.render({
+				elem: '#gcxmmc',
+				checkedKey: 'gcxmmc',
+				searchKey: 'gcxmmc',
+				searchPlaceholder: '关键词搜索',
+				table: {
+					url: ctx + "zhzs/sjcjxt/gcxmjbxx/list",
+					method: 'post',
+					parseData: function(res) {
+						return {
+							"code": res.code,
+					      	"count": res.total,
+					      	"data": res.rows
+						}
+					},
+					request: {
+					    pageName: 'pageNum',
+					    limitName: 'pageSize'
+				  	},
+					cols: [
+						[
+							{type: 'radio'},
+							{title: '工程项目名称', field: 'gcxmmc', align: 'center', width: 150, style:'text-align: left'},
+							{title: '项目地址', field: 'xmdz', align: 'center', width: 200, style:'text-align: left'},
+							{title: '建设内容', field: 'jsnr', align: 'center', width: 200, style:'text-align: left'},
+							{title: '建设时间', field: 'jssj', align: 'center', width: 100},
+							{title: '建设单位', field: 'jsdw', align: 'center', width: 100, style:'text-align: left'},
+						]
+					]
+				},
+				done: function (elem, res) {
+					var value = res.data[0].gcxmmc;
+					$("#gcxmmc").val(value);
+				}
+			})
+		});
+        
+        <!--/* 表单验证 */-->
+        $("#form-add").validate({
+            focusCleanup: true,
+            rules: {
+                gcxmmc: { required: true },
+                gcjd: { required: true },
+                ljwctze: { required: true },
+                gckskdw: { required: true },
+                bybfk: { required: true },
+                bfkrq: { required: true },
+                ljbfk: { required: true },
+            }
+        });
+		
+        <!--/* 表单提交 */-->
+        function submitHandler() {
+            if ($.validate.form()) {
+                $.operate.save(prefix + "/add", $('#form-add').serialize());
+            }
+        }
+		
+        <!--/* 渲染日期组件 */-->
+        layui.use('laydate', function() {
+            var laydate = layui.laydate;
+            laydate.render({elem: '#bfkrq', type: 'date'});
+        });
+    </script>
+</body>
+</html>

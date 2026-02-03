@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('待办任务')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:60px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 66px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+		}
+		/* .layui-table-view .layui-table[lay-size="sm"] .layui-table-cell {
+			height: 24px;
+			line-height: 24px;
+		} */
+		.layui-btn-xs {
+			height: 19px;
+			line-height: 19px;
+			border-radius: 5px;
+		}
+		.layui-body-table .layui-table-view .layui-table-cell>.layui-btn-normal {
+			color: white;
+		}		
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-inline layui-col-sm3 layui-col-md3">
+						<label class="layui-form-label" for="lx">查询选项:</label>
+						<div class="layui-input-block">
+							<select id="lx" name="lx" class="form-control input-sm">
+								<option value="alldb">全部待办</option>
+								<option value="1">待反馈</option>
+								<option value="2">待审核</option>
+								<option value="3.1">已退回</option>
+								<option value="3">已完成</option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm3 layui-col-md3">
+						<label class="layui-form-label" for="zbdm">指标:</label>
+						<div class="layui-input-block">
+							<select id="zbdm" name="zbdm" class="form-control input-sm" th:with="type=${@zbxx.getALlZbxx()}" lay-verify="" lay-search>
+								<option value="">全部指标</option>
+								<option th:each="dict : ${type}" th:text="${dict.zbmc}" th:value="${dict.zbdm}"></option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm3 layui-col-md3">
+						<label class="layui-form-label">推送时间:</label>
+						<div class="layui-input-block" id="test-range">
+							<div class="layui-col-sm5">
+								<input type="text" id="qsrq" name="qsrq"
+									   readonly="readonly" autocomplete="off"
+									   data-type="month" data-format="yyyy-MM"
+									   class="layui-input time-input">
+							</div>
+							<span class="layui-form-mid" style="padding-left: 9px !important">-</span>
+							<div class="layui-col-sm5">
+								<input type="text" id="zzrq" name="zzrq"
+									   readonly="readonly" autocomplete="off"
+									   data-type="month" data-format="yyyy-MM"
+									   class="layui-input time-input">
+							</div>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm3 layui-col-md3">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search('query-form');afterSearch(); ">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+	<script type="text/html" id="lxTpl">
+		{{# if(d.lx=='1' || d.lx=='3.1'){ }}
+		<a th:if="${isFkry}" href="javascript:;" th:onclick="fkClick('{{d.id}}', '{{d.lx}}')" class="layui-btn layui-btn-xs layui-btn-normal">{{ d.lxmc }}</a>
+		{{# } else if(d.lx=='2' && d.fkrId == userId) { }}
+		<a th:if="${isFkry}" href="javascript:;" th:onclick="fkClick('{{d.id}}', '{{d.lx}}')" class="layui-btn layui-btn-xs layui-btn-normal">已反馈</a>
+		<a th:if="${isFkzz}" href="javascript:;" th:onclick="shClick('{{d.id}}', '{{d.lx}}')" class="layui-btn layui-btn-xs layui-btn-normal">审核</a>
+		{{# } else if(d.lx=='2' && d.fkrId != userId) { }}
+		<a th:if="${isFkzz}" href="javascript:;" th:onclick="shClick('{{d.id}}', '{{d.lx}}')" class="layui-btn layui-btn-xs layui-btn-normal">审核</a>
+		{{# } else { }}
+		<a href="javascript:;" th:onclick="ckfk('{{d.id}}')" class="layui-btn layui-btn-xs layui-btn-normal">{{ d.lxmc }}</a>
+		{{# } }}
+	</script>
+	 <script type="text/html" id="zbTpl">
+		 <a href="javascript:;" onclick="zbinfo('{{d.zbdm}}','{{d.zbmc}}')" class="layui-table-link">{{ d.zbmc }}</a>
+	 </script>
+	 <script type="text/html" id="nsrTpl">
+		 <a href="javascript:;" onclick="ckmx('{{d.id}}', '{{d.zbmc}}')" class="layui-table-link">{{ d.nsrmc }}</a>
+	 </script>
+	 <script type="text/html" id="tmpToolbar">
+		 <div class="layui-btn-container" id="toolbtn">
+			 <button th:if="${isFkry==true}" class="layui-btn layui-bg-blue layui-btn-sm plfk" onclick="plfk()">
+				批量反馈
+			 </button>
+			 <button th:if="${isFkzz==true && false}" class="layui-btn layui-bg-blue layui-btn-sm plsh" onclick="plsh()">
+				批量审核
+			</button>
+			 <div style="position: absolute; background-color: white;top:-1px; left:-1px; width: calc(100% + 2px); height: 100%; z-index: -1;"></div>
+		 </div>
+	 </script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/dbrw";
+		//var lxWidth = /*[[${isFkry && isFkzz}?130:90]]*/90;
+		var userId = /*[[${userId}]]*/ "";
+		var lxWidth = 130;
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				title: "待办任务",
+				limit: 200,
+				limits: [200],
+				toolbar: '#tmpToolbar',
+				ataType: "json",
+				even: true,
+				height: 'full-90',
+				where: $.table.where('query-form'),
+				bottomToolbar:[],
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+						{
+                        	field : 'lxmc',
+                            title : '类型',
+                            align: 'center',
+							width: lxWidth,
+							templet: '#lxTpl',
+							style: 'padding:0'
+                        },
+                        {
+                        	field : 'zbmc',
+                            title : '指标',
+                            align: 'center',
+							width: '250',
+							templet: '#zbTpl'
+                        },
+						{
+							field : 'nsrmc',
+							title : '纳税人名称',
+							align: 'center',
+							width: '250',
+							templet: '#nsrTpl'
+						},
+						{
+							field : 'tsr',
+							title : '推送人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'tssj',
+							title : '推送时间',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'fkr',
+							title : '反馈人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'fksx',
+							title : '反馈时限',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'fksj',
+							title : '反馈时间',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'shr',
+							title : '审核人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'shsj',
+							title : '审核时间',
+							align: 'center',
+							width: '150'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options, afterSearch);
+        });
+
+		layui.use('layer', function (){
+			let layer = layui.layer;
+			layer.config({
+				extend: 'moon/style.css',
+				skin: 'layer-ext-moon'
+			});
+		});
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+			laydate.render({elem: '#qsrq',type:'month',format:'yyyy-MM'});
+			laydate.render({elem: '#zzrq',type:'month',format:'yyyy-MM'});
+        });
+		layui.use(['form'], function(){
+			var form = layui.form;
+		});
+
+		function fkClick(id, lx) {
+			var url = prefix + '/rwfk/'+id+'/'+lx;
+			var title = '反馈';
+			if(lx === '2') {
+				openFullBtn(title, url, ['提交', '撤回', '关闭']);
+			}else{
+				openFullBtn(title, url, ['提交', '关闭']);
+			}		
+			return false;
+		}
+
+		function shClick(id, lx) {
+			var url = prefix + '/rwsh/'+id+'/'+lx;
+			var title = '审核';
+			if(lx === '2') {
+				openFullBtn(title, url, ['退回', '归档', '消除', '转稽查', '关闭']);
+			}
+			return false;
+		}
+
+		function plfk() {
+			var ids = $.table.selectColumns("id".toString());
+			if (ids.length === 0) {
+				$.modal.alertWarning("请至少选择一条任务");
+				return false;
+			}
+			var rows = $.table.getSelections();
+			var lx, zbdm, flag = true;
+			for(var i=0, len=rows.length; i<len; i++){
+				if(i==0) {
+					lx = rows[i]['lx'];
+					zbdm = rows[i]['zbdm'];
+				} else {
+					if(rows[i].lx !== lx || rows[i].zbdm !== zbdm) {
+						flag = false;
+						break;
+					}
+				}
+			}
+			if(lx != "1" && lx != "4") {
+				$.modal.alertWarning("批量反馈只能处理待反馈任务");
+				return false;
+			}
+			if(!flag) {
+				$.modal.alertWarning("批量处理只能选择类型相同且指标相同的任务");
+				return false;
+			}
+			// console.log(rows.join(), $.table.getSelections());
+			//$.modal.open("修改风控小组成员", prefix + '/edit/'+rows.join(), null, 500);
+			$.modal.openFull("批量反馈", prefix + '/rwfkpl/'+ids.join('a')+'/'+lx);
+			return false;
+		}
+		function plsh() {
+			var ids = $.table.selectColumns("id".toString());
+			if (ids.length === 0) {
+				$.modal.alertWarning("请至少选择一条任务");
+				return false;
+			}
+			var rows = $.table.getSelections();
+			var lx, zbdm, flag = true;
+			for(var i=0, len=rows.length; i<len; i++){
+				if(i===0) {
+					lx = rows[i]['lx'];
+					zbdm = rows[i]['zbdm'];
+				} else {
+					if(rows[i].lx !== lx || rows[i].zbdm !== zbdm) {
+						flag = false;
+						break;
+					}
+				}
+			}
+			if(lx !== "2") {
+				$.modal.alertWarning("批量审核只能处理待审核任务");
+				return false;
+			}
+			if(!flag) {
+				$.modal.alertWarning("批量处理只能选择类型相同且指标相同的任务");
+				return false;
+			}
+			$.modal.openFull("批量审核", prefix + '/rwshpl/'+ids.join('a')+'/'+lx);
+			return false;
+		}
+		function zbinfo(zbdm, zbmc) {
+			let prefix1 = ctx + "zhzs/dbfxxt/ts/zbxx/info/";
+			let width = 500, height = 400;
+			if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+				width = 'auto';
+			}
+			parent.layer.open({
+				area: [width + 'px', height + 'px'],
+				type: 2,
+				title: zbmc,
+				btn: ['关闭'],
+				shadeClose: true,
+				content: prefix1 + zbdm
+			});
+		}
+		function ckmx(id, zbmc){
+			$.modal.openTab(zbmc, prefix+"/ckmx/"+id);
+		}
+		function afterSearch(){
+			let lx = $('#lx').val();
+			if(lx === "1"){
+				$('.plfk').show();
+			} else {
+				$('.plfk').hide();
+			}
+			if(lx === "2"){
+				$('.plsh').show();
+			} else {
+				$('.plsh').hide();
+			}
+		}
+
+
+    </script>
+</body>
+</html>

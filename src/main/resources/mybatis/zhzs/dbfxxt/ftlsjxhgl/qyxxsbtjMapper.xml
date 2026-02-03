@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.QyxxsbtjMapper">
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="bszq != null and bszq != ''"> and bszq = #{bszq}</if>
+			</trim>
+		</where>
+	</sql>
+
+	<!-- 子句  -->
+	<sql id="withView">
+		WITH FF AS (SELECT * FROM (
+	        SELECT X.USER_CODE, X.USER_NAME, X.USER_TEL, X.USER_DEPT, COUNT(Y.USERID) AS TOTALS, Y.BSZQ
+			FROM (SELECT * FROM GIS_USERS WHERE USER_CODE NOT IN('DSADMIN','ZHANGZZ','ADMIN','GUANSY')) X 
+			LEFT JOIN (SELECT * FROM CS_CZJ_QYDWXX 
+			<include refid="whereClause" />
+			) Y ON X.USER_ID=Y.USERID 
+			GROUP BY X.USER_CODE , X.USER_NAME, X.USER_TEL, X.USER_DEPT,Y.BSZQ) ORDER BY TOTALS DESC),
+			HH AS (SELECT '' AS USER_CODE,'' AS USER_NAME,'' AS USER_TEL,'合计：' AS USER_DEPT,COUNT(*) AS TOTALS,'' 
+			FROM CS_CZJ_QYDWXX K 
+			<include refid="whereClause" />
+		)
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyxxsbtj"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Qyxxsbtj">
+		<include refid="withView"/>	
+		SELECT * FROM FF UNION ALL (SELECT * FROM HH)
+	</select>
+</mapper>

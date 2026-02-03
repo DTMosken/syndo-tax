@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('修改收入情况')"/>
+</head>
+<body>
+<div class="main-content">
+    <form id="form-user-edit" class="form-horizontal" th:object="${entity}">
+        <input name="id" type="hidden" th:field="*{id}" id="id"/>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label is-required">所属期：</label>
+                    <div class="col-sm-8">
+                        <input type="text" id="dateTime" th:field="*{dateTime}" name="dateTime"
+                               readonly="readonly" autocomplete="off"
+                               data-type="month" data-format="yyyy-MM"
+                               class="layui-input time-input">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <div class="col-sm-4" style="height: 38px">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="searchTq()">
+                            <i class="layui-icon">&#xe615;</i> 查询同期
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label is-required">本月总收入：</label>
+                    <div class="col-sm-8">
+                        <input id="zsr" name="zsr" th:field="*{zsr}" autocomplete="off" placeholder="单位：万元" class="layui-input" type="text"
+                               maxlength="50" required>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">本月同期总收入：</label>
+                    <div class="col-sm-8">
+                        <input id="zsrTq" name="zsrTq" th:field="*{zsrTq}" autocomplete="off" placeholder="单位：万元" class="layui-input" type="text"
+                               maxlength="50" required>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label is-required">本月地方收入：</label>
+                    <div class="col-sm-8">
+                        <input id="dfsr" name="dfsr" th:field="*{dfsr}" autocomplete="off" placeholder="单位：万元" class="layui-input" type="text"
+                               maxlength="50" required>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">本月同期地方收入：</label>
+                    <div class="col-sm-8">
+                        <input id="dfsrTq" name="dfsrTq" th:field="*{dfsrTq}" autocomplete="off" placeholder="单位：万元" class="layui-input" type="text"
+                               maxlength="50" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<th:block th:include="include :: footer"/>
+<script>
+    var prefix = ctx + "zhzs/srfxxt/xtwh/srqkwh";
+
+    $("#form-user-edit").validate({
+        onkeyup: false,
+        rules: {
+            dateTime: {
+                required: true,
+            },
+            zsr: {
+                required: true,number : true,
+            },
+            zsrTq: {
+                required: false,number : true,
+            },
+            dfsr: {
+                required: true,number : true,
+            },
+            dfsrTq: {
+                required: false,number : true,
+            },
+        },
+        messages: {
+        },
+        focusCleanup: true
+    });
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            var data = $("#form-user-edit").serializeArray();
+            $.operate.save(prefix + "/edit", data);
+        }
+    }
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        laydate.render({elem: '#dateTime',type:'month',format:'yyyy-MM'});
+    });
+
+    function searchTq() {
+        var dateTime = $('#dateTime').val();
+        if(dateTime == null || dateTime == '') {
+            $.modal.alertWarning('请选择所属期！')
+            return false;
+        }
+        let url = prefix + '/getBySsq';
+        $.post(url, {dateTime: dateTime}, function(res){
+            $.modal.closeLoading();
+            if(res.code=='0') {
+                $('#zsrTq').val(res.data.zsr);
+                $('#dfsrTq').val(res.data.dfsr);
+            }else{
+                $.modal.alertError(res.msg + '未改变已有的同期收入');
+            }
+        });
+    }
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+    <head>
+        <th:block th:include="include :: header(${meta.chdesc})"/>
+        <style>
+            .close-link {
+                line-height: 28px;
+                color: #ff0000;
+                font-size: 20px;
+            }
+
+            .close-link:hover {
+                color: #e53b3b;
+            }
+
+            #query-box div[class*="col-"] {
+                padding-right: 0;
+            }
+
+            .cus-input-group {display: flex}
+
+            .cus-input-group input {flex: 6}
+
+            .cus-input-group span {flex: 1;text-align: center;line-height: 28px;}
+        </style>
+    </head>
+    <body class="white-bg">
+        <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+            <form class="form-horizontal" id="form-query">
+                <div style="padding-bottom: 20px">
+                    <button class="btn btn-default" type="button" onclick="addQuery()">
+                        <i class="fa fa-plus"></i> 增加条件
+                    </button>
+                </div>
+                <div class="row" id="query-box">
+
+                </div>
+            </form>
+        </div>
+        <th:block th:include="include :: footer"/>
+        <script th:inline="javascript">
+            const prefix = ctx + "module/dataImp"
+            let itemsArray = []
+
+            $(function () {
+                // <!--/* 根据元数据字段，重新构建需要的参数 */-->
+                /*[#th:block th:each="item : ${meta.items}" th:with="htmlType=${item.htmlType}" th:if="${item.columnDisabled} eq 'off'"]*/
+                itemsArray.push({comment: '[(${item.fieldComment})]', name: '[(${item.fieldName})]', type: '[(${htmlType})]', format: '[(${item.dataFormat})]'})
+                /*[/th:block]*/
+
+                // <!--/* 获取父级自定义参数 */-->
+                const customParams = parent.getCustomParams()
+                if (customParams) {
+                    const paramsArrays = $.parseJSON(customParams)
+                    $.each(paramsArrays, function (i, item) {
+                        const name = item.name
+                        const value = item.value
+                        const queryType = item.queryType
+                        let value_start = ''
+                        let value_end = ''
+                        if (queryType === 'bt') {
+                            value_start = item.value_start
+                            value_end = item.value_end
+                        }
+                        const uniqueId = addQuery(name)
+                        onQueryType(uniqueId, queryType)
+                        onQueryContent(uniqueId, value, value_start, value_end)
+                    })
+                }
+
+            })
+
+            // <!--/* 增加条件 */-->
+            function addQuery(_default) {
+                // <!--/* 唯一ID */-->
+                const uniqueId = Date.now() + Math.floor(Math.random() * 9999999999)
+
+                let htmls = []
+                htmls.push('<div class="col-sm-12 col-xs-12" id="' + uniqueId + '">')
+                htmls.push('<div class="form-group">')
+                htmls.push('<div class="query-field col-sm-3 col-xs-3">')
+                htmls.push('<select class="form-control" onchange="onQueryType(' + uniqueId + ')">')
+                htmls.push('<option value=""></option>')
+                $.each(itemsArray, function (i, item) {
+                    if (_default && _default === item.name) {
+                        htmls.push('<option value="' + item.name + '" selected="selected">' + item.comment + '</option>')
+                    } else {
+                        htmls.push('<option value="' + item.name + '">' + item.comment + '</option>')
+                    }
+                })
+                htmls.push('</select>')
+                htmls.push('</div>')
+                htmls.push('<div class="query-type col-sm-2 col-xs-2">')
+                htmls.push('</div>')
+                htmls.push('<div class="query-content col-sm-6 col-xs-6">')
+                htmls.push('</div>')
+                htmls.push('<div class="query-remove col-sm-1 col-xs-1">')
+                htmls.push('<a class="close-link" onclick="removeQuery(' + uniqueId + ')">')
+                htmls.push('<i class="fa fa-times"></i>')
+                htmls.push('</a>')
+                htmls.push('</div>')
+                htmls.push('</div>')
+                htmls.push('</div>')
+
+                $('#query-box').append(htmls.join(''))
+                return uniqueId
+            }
+            // <!--/* 查询方式 */-->
+            const queryTypes = [
+                {name: '等于', value: 'eq'},
+                {name: '不等于', value: 'ne'},
+                {name: '相似', value: 'like'},
+                {name: '范围', value: 'bt'},
+                {name: '不为空', value: 'ntu'},
+                {name: '为空', value: 'nu'},
+                {name: '大于', value: 'gt'},
+                {name: '小于', value: 'lt'}
+            ]
+
+            // <!--/* 条件类型 */-->
+            function onQueryType(uniqueId, _default) {
+                const queryBox = $('#' + uniqueId)
+
+                let htmls = []
+                htmls.push('<select class="form-control" onchange="onQueryContent(' + uniqueId + ',\'\',\'\',\'\')">')
+                htmls.push('<option value=""></option>')
+                $.each(queryTypes, function (i, item) {
+                    if (_default && _default === item.value) {
+                        htmls.push('<option value="' + item.value + '" selected="selected">' + item.name + '</option>')
+                    } else {
+                        htmls.push('<option value="' + item.value + '">' + item.name + '</option>')
+                    }
+                })
+                htmls.push('</select>')
+
+                queryBox.find('.query-type').html(htmls.join(''))
+                queryBox.find('.query-content').html('')
+            }
+
+            // <!--/* 条件内容 */-->
+            function onQueryContent(uniqueId, _default, _defaultStart, _defaultEnd) {
+                let htmls = []
+                const queryBox = $('#' + uniqueId)
+
+                // <!--/* 查询方式 */-->
+                const queryType = queryBox.find('.query-type select').val()
+                // <!--/* 字段名称 */-->
+                const fieldName = queryBox.find('.query-field select').val()
+                // <!--/* 根据字段名称获取所选中的完整信息 */-->
+                const items = itemsArray.find(item => {
+                    return item.name === fieldName
+                })
+                // <!--/* 字段注释 */-->
+                const fieldComment = items.comment
+                // <!--/* 输入框名称 */-->
+                let inputName = fieldName + '.value'
+                // <!--/* 组件类型 */-->
+                const type = items.type
+                // <!--/* 字段格式 */-->
+                const format = items.format
+
+                // <!--/* 输入提示内容 */-->
+                const _placeholder1 = '请填写' + fieldComment
+                const _placeholder2 = '请选择' + fieldComment
+
+                // <!--/* 根据不同的查询方式渲染不同组件，非空或为空的不需要输入框 */-->
+                switch (queryType) {
+                    case 'bt':
+                        htmls.push('<div class="cus-input-group">')
+                        if (type === 'calendar') {
+                            htmls.push('<input name="' + inputName + '_start" value="' + _defaultStart + '" data-format="' + format + '" placeholder="' + _placeholder2 + '起" class="form-control query-time" readonly="readonly" />')
+                            htmls.push('<span>-</span>')
+                            htmls.push('<input name="' + inputName + '_end" value="' + _defaultEnd + '" data-format="' + format + '" placeholder="' + _placeholder2 + '止" class="form-control query-time" readonly="readonly" />')
+                        } else {
+                            htmls.push('<input name="' + inputName + '_start" value="' + _defaultStart + '" placeholder="' + _placeholder1 + '起" class="form-control" autocomplete="off" />')
+                            htmls.push('<span>-</span>')
+                            htmls.push('<input name="' + inputName + '_end" value="' + _defaultEnd + '" placeholder="' + _placeholder1 + '止" class="form-control" autocomplete="off" />')
+                        }
+                        htmls.push('</div>')
+                        break
+                    case 'ntu':
+                        htmls.push('<input name="' + inputName + '" type="hidden" />')
+                        break
+                    case 'nu':
+                        htmls.push('<input name="' + inputName + '" type="hidden" />')
+                        break
+                    default:
+                        if (type === 'calendar') {
+                            htmls.push('<input name="' + inputName + '" value="' + _default + '" placeholder="' + _placeholder2 + '" data-format="' + format + '" class="form-control query-time" readonly="readonly" />')
+                        } else {
+                            htmls.push('<input name="' + inputName + '" value="' + _default + '" placeholder="' + _placeholder1 + '" class="form-control" autocomplete="off" />')
+                        }
+                        break
+                }
+                // <!--/* 创建条件查询方式，用于后台区分 */-->
+                htmls.push('<input name="' + fieldName + '.queryType" type="hidden" value="' + queryType + '"/>')
+
+                queryBox.find('.query-content').html(htmls.join(''))
+                // <!--/* 渲染日期控件 */-->
+                renderDate()
+            }
+
+            // <!--/* 渲染日期 */-->
+            function renderDate() {
+                if ($(".query-time").length > 0) {
+                    layui.use('laydate', function () {
+                        const laydate = layui.laydate
+                        $(".query-time").each(function (index, item) {
+                            const time = $(item)
+                            const type = time.attr("data-type") || 'date'
+                            const format = time.attr("data-format") || 'yyyy-MM-dd'
+                            laydate.render({elem: item, type: type, format: format})
+                        })
+                    })
+                }
+            }
+
+            // <!--/* 删除条件 */-->
+            function removeQuery(uniqueId) {
+                $('#' + uniqueId).remove()
+            }
+
+            // <!--/* 提交表单信息 */-->
+            function submitHandler() {
+                let formData = $('#form-query').serializeArray()
+
+                let params = []
+                let rowData = {}
+                let tmp_name
+                $.each(formData, function (i, item) {
+                    const array = item.name.split('.')
+                    // <!--/* 字段名称 */-->
+                    const _fieldName = array[0]
+                    // <!--/* 组件名称 */-->
+                    const _name = array[1]
+                    // <!--/* 组件参数 */-->
+                    const _value = item.value
+                    // <!--/* 初始进入或者字段名称不匹配，重新构建集合 */-->
+                    if (!tmp_name) {
+                        tmp_name = _fieldName
+                        rowData['name'] = _fieldName
+                    }
+                    if (tmp_name === _fieldName) {
+                        rowData[_name] = _value
+                    } else {
+                        params.push(rowData)
+                        rowData = {}
+                        tmp_name = null
+                        rowData[_name] = _value
+                    }
+                })
+                // <!--/* 校验空值，空值不进行赋值 */-->
+                if (!$.isEmptyObject(rowData)) {
+                    params.push(rowData)
+                }
+                // <!--/* 向父级窗口传参 */-->
+                parent.setCustomParams(JSON.stringify(params))
+                $.modal.close()
+                parent.$.table.search()
+            }
+        </script>
+    </body>
+</html>

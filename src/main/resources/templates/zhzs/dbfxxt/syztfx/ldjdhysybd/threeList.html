@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看明细')" />
+</head>
+<body class="layui-body-table">
+
+<div class="layui-card-body">
+	<table id="layui-table" lay-filter="layui-table"></table>
+</div>
+
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+		var prefix = ctx + "zhzs/dbfxxt/syztfx/ldjdhysybd";
+		var entity = [[${entity}]];
+        
+        $(function() {
+            var options = {
+                url: prefix + "/getThreeList?qymc="+entity.qymc+"&sj="+entity.sj,
+                title: "查看详情",
+
+                cols:[ [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					 hide:true
+				},
+				{
+					field : 'qymc', 
+					title : '企业名称',
+					sortable: true
+				},
+				{
+					field : 'lgdz', 
+					title : '旅馆地址',
+					sortable: true
+				},
+				{
+					field : 'dj', 
+					title : '单价',
+					sortable: true
+				},
+				{
+					field : 'rzrc', 
+					title : '入住人次',
+					sortable: true
+				},
+				{
+					field : 'bszq', 
+					title : '数据所属期',
+					sortable: true
+				}] ]
+            }; 
+            $.table.init(options);
+            
+        });
+    </script>
+</body>
+</html>

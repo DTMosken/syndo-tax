@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.xtwh.CzsrncjhwhMapper">
+	<!-- 财政收入计划维护 -->
+	
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<where>
+			<trim prefixOverrides="and">
+				<if test="zsxm != null and zsxm != ''"> and zsxm = #{zsxm}</if>
+				<if test="ssnd != null and ssnd != ''"> and ssnd = #{ssnd}</if>
+			</trim>
+		</where>
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Czsrncjhwh" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Czsrncjhwh">
+		select t.*, IFNULL(d.dict_label,t.zsxm) as zsxmmc from t_srfxxt_czsrncjhwh t left join sys_dict_data d on t.zsxm=d.dict_value and d.dict_type='dm_yskm'
+		<where>
+			<if test="zsxm != null and zsxm != ''"> and zsxm = #{zsxm}</if>
+			<if test="ssnd != null and ssnd != ''"> and ssnd = #{ssnd}</if>
+		</where>
+		order by d.dict_sort
+	</select>
+	
+	<!-- 查询一行 -->
+	<select id="selectById" resultType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Czsrncjhwh" parameterType="string">
+		select * from t_srfxxt_czsrncjhwh where jhwh_id = #{jhwhId}
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Czsrncjhwh">
+	INSERT INTO t_srfxxt_czsrncjhwh ( 
+		ZSXM,QKJ, YBYS, SSND, CREATE_BY, CREATE_TIME
+    ) VALUES ( 
+        #{zsxm},#{qkj}, #{ybys}, #{ssnd}, #{createBy}, #{createTime}
+    )
+   </insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.srfxxt.domain.xtwh.Czsrncjhwh">
+		UPDATE t_srfxxt_czsrncjhwh
+		SET ZSXM = #{zsxm},
+			QKJ = #{qkj},
+			YBYS = #{ybys},
+			SSND = #{ssnd},
+			UPDATE_BY = #{updateBy},
+			UPDATE_TIME = #{updateTime}
+		WHERE JHWH_ID = #{jhwhId}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteById" parameterType="String">
+        DELETE FROM t_srfxxt_czsrncjhwh WHERE JHWH_ID = #{jhwhId}
+    </delete>
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		DELETE FROM t_srfxxt_czsrncjhwh WHERE JHWH_ID IN 
+		<foreach item="item" index="index" collection="array"
+            open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+</mapper>

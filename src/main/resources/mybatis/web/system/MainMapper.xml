@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 首页数据 -->
+<mapper namespace="com.syndo.web.system.main.mapper.MainMapper">
+	
+	<select id="getMainInfo" parameterType="com.syndo.web.system.main.domain.MainEntity" resultType="com.syndo.web.system.main.domain.MainEntity">
+		select * from t_tmp_index
+		where create_time = (
+      		select max(create_time) from t_tmp_index
+		)
+	</select>
+
+	<select id="getUserLocal" parameterType="String" resultType="int">
+		select count(1) from sys_user where login_name = #{username}
+	</select>
+
+	<insert id="insertIntoUser" parameterType="String">
+		INSERT INTO `syndo-tax-yx`.`sys_user`( `dept_id`, `login_name`, `user_name`, `user_type`, `email`, `phonenumber`, `sex`, `avatar`, `password`, `salt`, `status`, `del_flag`, `login_ip`, `login_date`, `create_by`, `create_time`, `update_by`, `update_time`, `remark`)
+		VALUES
+		( null , #{username},'' , '00', '', '', '0', '',#{password}, #{salt}, '0', '0', '0:0:0:0:0:0:0:1', now() , '',now(), '', now() , '接口创建' );
+
+	</insert>
+
+	<select id="selectZdqynsfx" resultType="com.syndo.web.domain.system.Zdqynsfx">
+		select * from t_tmp_daping_zdqynsfx where createtime =(SELECT max(createtime) mct FROM `t_tmp_daping_zdqynsfx`)
+	</select>
+
+	<update id="updateZdqynsfx" parameterType="com.syndo.web.domain.system.Zdqynsfx">
+		update t_tmp_daping_zdqynsfx set zjl = #{zjl},zb = #{zb} where id = #{id}
+	</update>
+
+	<select id="selectNsqs" resultType="com.syndo.web.domain.system.Nsqs">
+		select * from t_tmp_daping_nsqs where createtime = (SELECT max(createtime) FROM t_tmp_daping_nsqs)
+	</select>
+
+	<select id="selectSzmap" resultType="com.syndo.web.domain.system.Szmap">
+		select id,bntotalsjje,qntotalsjje,zsxm,jdxz,createtime from t_tmp_daping_sz where createtime = (SELECT max(createtime) FROM t_tmp_daping_sz) order by jdxz
+	</select>
+
+	<select id="selectHymap" resultType="com.syndo.web.domain.system.Hymap">
+		select id,bntotalsjje,qntotalsjje,hy,jdxz,createtime from t_tmp_daping_hy where createtime = (SELECT max(createtime) FROM t_tmp_daping_hy) order by jdxz
+	</select>
+
+	<update id="updateNsqs" parameterType="com.syndo.web.domain.system.Nsqs">
+		update t_tmp_daping_nsqs set zjl = #{zjl} where id = #{id}
+	</update>
+
+	<select id="getSysUser" parameterType="String" resultType="com.syndo.common.core.domain.entity.User">
+		select * from sys_user where login_name = #{principal}
+	</select>
+
+	<select id="getZysyqyjcxx" resultType="com.syndo.web.domain.system.Zysyqyjcxx">
+		select qymc, hy, nsrsbh, zczb, zs, frdb,id,lng,lat from t_tmp_daping_dtzysyxxjcxx where createtime in (SELECT max(createtime) FROM t_tmp_daping_dtzysyxxjcxx)
+	</select>
+
+	<update id="updateLngLat" parameterType="String">
+		update t_tmp_daping_dtzysyxxjcxx set lng = #{lng},lat = #{lat} where id = #{id}
+	</update>
+
+	<select id="getNsdhqsqyjcxx" resultType="com.syndo.web.domain.system.Nsdhqsqyjcxx">
+		select qymc, hy, nsrsbh, zczb, zs, frdb,id,lng,lat from t_tmp_daping_dtnsdhxxjcxx where createtime in (SELECT max(createtime) FROM t_tmp_daping_dtnsdhxxjcxx)
+	</select>
+
+	<update id="updateLngLatNsdh" parameterType="String">
+		update t_tmp_daping_dtnsdhxxjcxx set lng = #{lng},lat = #{lat} where id = #{id}
+	</update>
+
+	<select id="getNsdhqsqynsxxyd" parameterType="String" resultType="com.syndo.web.domain.system.Nsdhqsqynsxxyd">
+		select id,qymc, nsrsbh,yf, ynse, tbynse from t_tmp_daping_dtsyxxnsxxyd where createtime in (SELECT max(createtime) FROM t_tmp_daping_dtsyxxnsxxyd where type="nsdh") and qymc= #{qymc} and nsrsbh = #{nsrsbh}
+	</select>
+
+	<select id="getZysyqynsxxyd" parameterType="String" resultType="com.syndo.web.domain.system.Nsdhqsqynsxxyd">
+		select id,qymc, nsrsbh,yf, ynse, tbynse from t_tmp_daping_dtsyxxnsxxyd where createtime in (SELECT max(createtime) FROM t_tmp_daping_dtsyxxnsxxyd where type="zysy") and qymc= #{qymc} and nsrsbh = #{nsrsbh}
+	</select>
+
+</mapper> 

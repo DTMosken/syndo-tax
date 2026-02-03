@@ -1,0 +1,364 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('任务统计')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:60px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 66px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row layui-col-space12">
+					<div class="layui-inline layui-col-sm3 layui-col-md3">
+						<label class="layui-form-label">推送时间:</label>
+						<div class="layui-input-block" id="test-range">
+							<div class="layui-col-sm5">
+								<input type="text" id="qsrq" name="qsrq"
+									   readonly="readonly" autocomplete="off"
+									   data-type="month" data-format="yyyy-MM"
+									   class="layui-input time-input">
+							</div>
+							<span class="layui-form-mid" style="padding-left: 9px !important">-</span>
+							<div class="layui-col-sm5">
+								<input type="text" id="zzrq" name="zzrq"
+									   readonly="readonly" autocomplete="off"
+									   data-type="month" data-format="yyyy-MM"
+									   class="layui-input time-input">
+							</div>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm3 layui-col-md3">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search('query-form')">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+	 <script type="text/html" id="rwsTpl">
+		 <a href="javascript:;" onclick="rws('{{d.fkr}}')" class="layui-table-link">{{ d.rws }}</a>
+	 </script>
+	 <script type="text/html" id="dfkWcqTpl">
+		 <a href="javascript:;" onclick="dfk2('{{d.fkr}}','wcq')" class="layui-table-link">{{ d.dfkWcq }}</a>
+	 </script>
+	 <script type="text/html" id="dfkCqTpl">
+		 <a href="javascript:;" onclick="dfk2('{{d.fkr}}','cq')" class="layui-table-link">{{ d.dfkCq }}</a>
+	 </script>
+	 <script type="text/html" id="yfkZqTpl">
+		 <a href="javascript:;" onclick="yfk2('{{d.fkr}}','zq')" class="layui-table-link">{{ d.yfkZq }}</a>
+	 </script>
+	 <script type="text/html" id="yfkCqTpl">
+		 <a href="javascript:;" onclick="yfk2('{{d.fkr}}','cq')" class="layui-table-link">{{ d.yfkCq }}</a>
+	 </script>
+	 <script type="text/html" id="yzgTpl">
+		 <a href="javascript:;" onclick="yfk('{{d.fkr}}', '1', '已整改')" class="layui-table-link">{{ d.fklxYzg }}</a>
+	 </script>
+	 <script type="text/html" id="wfzgTpl">
+		 <a href="javascript:;" onclick="yfk('{{d.fkr}}', '2', '无法整改')" class="layui-table-link">{{ d.fklxWfzg }}</a>
+	 </script>
+	 <script type="text/html" id="jbzgTpl">
+		 <a href="javascript:;" onclick="yfk('{{d.fkr}}', '3', '拒不整改')" class="layui-table-link">{{ d.fklxJbzg }}</a>
+	 </script>
+	 <script type="text/html" id="wwtTpl">
+		 <a href="javascript:;" onclick="yfk('{{d.fkr}}', '9', '无问题')" class="layui-table-link">{{ d.fklxWwt }}</a>
+	 </script>
+	 <script type="text/html" id="gdTpl">
+		 <a href="javascript:;" onclick="splx('{{d.fkr}}', '3', '归档')" class="layui-table-link">{{ d.splxGd }}</a>
+	 </script>
+	 <script type="text/html" id="zdxcTpl">
+		 <a href="javascript:;" onclick="splx('{{d.fkr}}', '3.0', '自动消除')" class="layui-table-link">{{ d.splxZdxc }}</a>
+	 </script>
+	 <script type="text/html" id="ythTpl">
+		 <a href="javascript:;" onclick="splx('{{d.fkr}}', '3.1', '已退回')" class="layui-table-link">{{ d.splxYth }}</a>
+	 </script>
+	 <script type="text/html" id="xcTpl">
+		 <a href="javascript:;" onclick="splx('{{d.fkr}}', '3.2', '消除')" class="layui-table-link">{{ d.splxXc }}</a>
+	 </script>
+	 <script type="text/html" id="zjcTpl">
+		 <a href="javascript:;" onclick="splx('{{d.fkr}}', '3.3', '转稽查')" class="layui-table-link">{{ d.splxZjc }}</a>
+	 </script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/rwtj";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				exportUrl: prefix + "/expExcel",
+				title: "任务统计",
+				limit: 1000,
+				limits: [1000],
+				even: true,
+				ataType: "json",
+				height: 'full-90',
+				where: $.table.where('query-form'),
+				// bottomToolbar:[],
+				cols: [
+					[
+						{
+							rowspan: 2,
+							field : 'fkrmc',
+							title : '风控小组',
+							align: 'center',
+							width: '100'
+						},
+						{
+							rowspan: 2,
+							field : 'rws',
+							title : '任务数',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#rwsTpl'
+						},
+						{
+							colspan: 2,
+							title : '待反馈',
+							align: 'center'
+						},
+						{
+							colspan: 2,
+							title : '已反馈',
+							align: 'center'
+						},
+						{
+							rowspan: 2,
+							field : 'fkl',
+							title : '反馈率(%)',
+							align: 'center',
+							style: "text-align: right",
+							width: '100'
+						},
+						{
+							colspan: 4,
+							title : '反馈类型',
+							align: 'center'
+						},
+						{
+							colspan: 5,
+							title : '审核类型',
+							align: 'center'
+						}
+					],
+                	[
+						{
+							field : 'dfkWcq',
+							title : '未超期',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#dfkWcqTpl'
+						},
+						{
+							field : 'dfkCq',
+							title : '超期',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#dfkCqTpl'
+						},
+						{
+                        	field : 'yfkZq',
+                            title : '准期',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#yfkZqTpl'
+                        },
+                        {
+                        	field : 'yfkCq',
+                            title : '超期',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#yfkCqTpl'
+                        },
+						{
+							field : 'fklxYzg',
+							title : '已整改',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#yzgTpl'
+						},
+						{
+							field : 'fklxWfzg',
+							title : '无法整改',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#wfzgTpl'
+						},
+						{
+							field : 'fklxJbzg',
+							title : '拒不整改',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#jbzgTpl'
+						},
+						{
+							field : 'fklxWwt',
+							title : '无问题',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#wwtTpl'
+						},
+						{
+							field : 'splxGd',
+							title : '归档',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#gdTpl'
+						},
+						{
+							field : 'splxZdxc',
+							title : '自动消除',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#zdxcTpl'
+						},
+						{
+							field : 'splxYth',
+							title : '已退回',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#ythTpl'
+						},
+						{
+							field : 'splxXc',
+							title : '消除',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#xcTpl'
+						},
+						{
+							field : 'splxZjc',
+							title : '转稽查',
+							align: 'center',
+							style: "text-align: right",
+							width: '100',
+							templet: '#zjcTpl'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+			laydate.render({elem: '#qsrq',type:'month',format:'yyyy-MM'});
+			laydate.render({elem: '#zzrq',type:'month',format:'yyyy-MM'});
+        });
+		layui.use(['form'], function(){
+			var form = layui.form;
+		});
+
+		function rws(fkr) {
+			var url = prefix + "/rws/"+fkr;
+			layer.open({
+				area: ['100%', '100%'],
+				type: 2,
+				title: '任务数',
+				btn: ['关闭'],
+				shadeClose: true,
+				content: url
+			});
+			return false;
+		}
+		function dfk2(fkr, lx) {
+			var url = prefix + "/dfk2/"+lx+"/"+fkr;
+			layer.open({
+				area: ['100%', '100%'],
+				type: 2,
+				title: '待反馈（'+ (lx=='cq'?'超期':'未超期') +'）',
+				btn: ['关闭'],
+				shadeClose: true,
+				content: url
+			});
+			return false;
+		}
+		function yfk2(fkr, lx) {
+			var url = prefix + "/yfk2/"+lx+"/"+fkr;
+			layer.open({
+				area: ['100%', '100%'],
+				type: 2,
+				title: '已反馈（'+ (lx=='cq'?'超期':'准期') +'）',
+				btn: ['关闭'],
+				shadeClose: true,
+				content: url
+			});
+			return false;
+		}
+		function yfk(fkr, lx, lxmc) {
+			var url = prefix + "/yfk/"+lx+"/"+fkr;
+			layer.open({
+				area: ['100%', '100%'],
+				type: 2,
+				title: '已反馈（'+ lxmc +'）',
+				btn: ['关闭'],
+				shadeClose: true,
+				content: url
+			});
+			return false;
+		}
+		function splx(fkr, lx, lxmc) {
+			var url = prefix + "/splx/"+lx+"/"+fkr;
+			layer.open({
+				area: ['100%', '100%'],
+				type: 2,
+				title: '审核类型（'+ lxmc +'）',
+				btn: ['关闭'],
+				shadeClose: true,
+				content: url
+			});
+			return false;
+		}
+
+
+    </script>
+</body>
+</html>

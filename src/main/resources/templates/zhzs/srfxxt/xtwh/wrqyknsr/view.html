@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('未入企业库纳税人')" />
+	<style type="text/css">
+		.select-list li label {width: 100px;text-align: right;white-space: nowrap;text-overflow: ellipsis;}
+	</style>
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+			<div class="col-sm-12 search-collapse">
+				<form id="query-form">
+					<input id="gucode" name="gucode" value="qyk" type="hidden" />
+					<div class="select-list">
+						<ul>
+							<li class="select-time">
+								<label>入库日期：</label>
+								<input id="dateTimeStart" name="dateTimeStart" th:value="${dateTimeStart}" class="form-control" type="text" readonly="readonly" />
+								<span>-</span>
+								<input id="dateTimeEnd" name="dateTimeEnd" th:value="${dateTimeEnd}" class="form-control" type="text" readonly="readonly" />
+							</li>
+							<li>
+								<label>纳税人名称：</label>
+								<input id="nsrmc" name="nsrmc" type="text"/>
+							</li>
+							<li shiro:hasPermission="module:xck:jdxz">
+								<label>街道乡镇：</label>
+								<select id="jdxz" name="jdxz" th:with="type=${@dict.getType('dm_jdxz')}">
+									<option value=""></option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+								</select>
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							    <a class="btn btn btn-info btn-rounded btn-sm" onclick="expExcel()"><i class="fa fa-download"></i>&nbsp;导出</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+			<div class="col-sm-12 full-table table-bordered">
+				<table id="bootstrap-table" data-resizable="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/wrqyknsr";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                modalName: "未入企业库纳税人",
+                pageSize: 50,
+    		    pageList: [20, 50, 100],
+    		    height: $(window).height() - 125,
+		        showExport: false,
+		        showSearch: false,
+		        showToggle: false,
+		        showRefresh:false,
+		        showPageGo: true,
+		        showColumns:false,
+                columns: [{
+		            checkbox: true,
+		            width: 50,
+		        },
+				{
+					field : 'id', 
+					visible: false
+				},
+				{
+					field : 'tyshxydm', 
+					title : '统一社会信用代码',
+					align: 'center',
+					width: 150
+				},
+				{
+					field : 'nsrmc', 
+					title : '纳税人名称',
+					align: 'center',
+					width: 200,
+					formatter: function(value, row, index) {
+						var val = $.common.nullToStr(value);
+	        			return "<span title='" + val + "'>" + val + "</span>";
+                    }
+				},
+				{
+					field : 'sjje', 
+					title : '实缴金额',
+					align: 'right',
+					width: 100
+				},
+				{
+					field : 'jdxz', 
+					title : '街道乡镇',
+					align: 'center',
+					width: 200
+				}
+				]
+            };
+            $.table.init(options);
+            
+         	// 自适应高度-待测试
+            $(window).resize(function() {
+            	$("#bootstrap-table").bootstrapTable('resetView', {
+                    height: $(window).height() - 125
+                });
+            });
+        });
+        
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#dateTimeStart',type:'day',format: 'yyyy-MM-dd',trigger: 'click'});
+        });
+        
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#dateTimeEnd',type:'day',format: 'yyyy-MM-dd',trigger: 'click'});
+        });
+        
+        // 导出
+		function expExcel() {
+			var params = $.common.formToJSON('query-form');
+            var loading = layer.msg('正在导出数据，请稍后...', {
+                icon: 16,
+                shade: 0.3,
+                time: 0
+            });
+            $.post(prefix + '/expExcel', params, function(result) {
+                if (result.code == web_status.SUCCESS) {
+                    window.location.href = ctx + "common/download?fileName=" + encodeURI(result.msg) + "&delete=" + true;
+                } else if (result.code == web_status.WARNING) {
+                    $.modal.alertWarning(result.msg)
+                } else {
+                    $.modal.alertError(result.msg);
+                }
+                layer.close(loading);
+            });
+		}
+		
+    </script>
+</body>
+</html>

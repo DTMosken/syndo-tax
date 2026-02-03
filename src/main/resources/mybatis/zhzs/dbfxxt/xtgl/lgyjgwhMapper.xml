@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 对比分析系统-系统维护-旅馆业价格维护 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.xtgl.LgyjgwhMapper">
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<where>
+			<if test="qymc != null and qymc != ''"> and t.qymc like concat('%',#{qymc},'%')</if>
+			<if test="nd != null and nd != '' ">			
+					and substr(t.kssj,1,4) = #{nd}
+			</if>		
+			<if test="flag!=null and flag !='' and flag == 0 ">	
+					and substr(t.kssj,6,7) = '01' 
+			</if>
+			<if test="flag!=null and flag !='' and flag == 1 ">	
+					and substr(t.kssj,6,7) = '07' 
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 查询 -->
+	<select id="selectList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Lgyjgwh" 
+							resultType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Lgyjgwh">
+			SELECT ID OBJ_ID,QYMC,JG,KSSJ,JSSJ
+			FROM T_TMP_LGYJGWH T 
+		<include refid="whereClause" />
+	</select>
+	
+	<!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Lgyjgwh" useGeneratedKeys="false">
+		INSERT INTO T_TMP_LGYJGWH (QYMC,JG,KSSJ,JSSJ) ( 
+			SELECT DISTINCT Z.QYMC,'120' JG,
+			    CONCAT(#{nd},CASE #{flag} WHEN '0' THEN '-01' WHEN '1' THEN '-07' END) KSSJ,
+			    CONCAT(#{nd},CASE #{flag} WHEN '0' THEN '-06' WHEN '1' THEN '-12' END) JSSJ
+			FROM t_db_gaj_lgrzxx Z 
+			WHERE Z.QYMC NOT IN(
+			  	SELECT DISTINCT(T.QYMC) FROM T_TMP_LGYJGWH T 
+			  	WHERE T.KSSJ=CONCAT(#{nd},CASE #{flag} WHEN '0' THEN '-01' WHEN '1' THEN '-07' END)
+			)
+		)
+	</insert>
+	
+	<!-- 修改价格 -->
+	<update id="update" parameterType="com.syndo.project.zhzs.dbfxxt.domain.xtgl.Lgyjgwh">
+		update T_TMP_LGYJGWH
+		<set>
+			JG=#{jg}
+		</set>
+		where ID = #{objid}
+	</update>
+
+</mapper>

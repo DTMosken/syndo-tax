@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('分行业税种分析')" />
+    <style type="text/css">
+        .layui-card-header{
+            height: auto;
+            padding:7px;
+        }
+    </style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row layui-col-space12">
+                <div class="layui-inline layui-col-sm4 layui-col-md3">
+					<label class="layui-form-label">入库日期:</label>
+					<div class="layui-input-block" id="test-range">
+						<div class="layui-col-sm5">
+							<input type="text" id="qsrq" name="qsrq" th:value="${qsrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+						<span class="layui-form-mid">-</span>
+						<div class="layui-col-sm5">
+							<input type="text" id="zzrq" name="zzrq" th:value="${zzrq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+					</div>
+				</div>
+                <div class="layui-inline layui-col-sm4 layui-col-md3">
+                    <label class="layui-form-label">行业：</label>
+                    <div class="layui-input-block">
+                        <select id="hy" name="hy" th:with="type=${@dict.getType('dm_ml')}"
+                                class="form-control input-sm">
+                            <option value=""></option>
+                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictLabel}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm4 layui-col-md2">
+                    <label class="layui-form-label">查询类型：</label>
+                    <div class="layui-input-block">
+                        <select id="tjkj" name="tjkj"
+                                class="form-control input-sm">
+                            <option value="qkj">全口径</option>
+                            <option value="ybys">一般预算</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm2 layui-col-md2">
+					<label class="layui-form-label">单位：</label>
+					<div class="layui-input-block">
+						<select  type="text" id="dw" name="dw" th:value="${dw}" class="form-control input-sm">
+							<option value="1">元</option>
+							<option value="10000">万元</option>
+						</select>
+					</div>
+				</div>
+                <div class="layui-inline layui-col-sm4 layui-col-md2">
+                    <div class="layui-form-btn" style="text-align: left" >
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                            <i class="layui-icon">&#xe615;</i> 查询
+                        </a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                            <i class="layui-icon">&#xe669;</i> 重置
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/hysrfx/fhyszfx";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                title: "分行业税种分析",
+		        showExport: true,
+                exportUrl: prefix + "/expExcel",
+                height: 'full-135',
+                cols: [[
+                    {
+                        field : 'hy',
+                        title : '行业名称',
+                        width : '300',
+                        align: 'center',    //水平居中
+                    },
+                    {
+                        field : 'hjje',
+                        title : '合计',
+                        width : '150',
+                        templet:'#hjje',
+                        align: 'right',
+                    },
+                    {
+                        field : 'zzs',
+                        title : '增值税',
+                        width : '150',
+                        templet:'#zzs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'xfs',
+                        title : '消费税',
+                        width : '150',
+                        atemplet:'#xfs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'yys',
+                        title : '营业税',
+                        width : '150',
+                        templet:'#yys',
+                        align: 'right',
+                    },
+                    {
+                        field : 'qysds',
+                        title : '企业所得税',
+                        width : '150',
+                        templet:'#qysds',
+                        align: 'right',
+                    },
+                    {
+                        field : 'grsds',
+                        title : '个人所得税',
+                        width : '150',
+                        templet:'#grsds',
+                        align: 'right',
+                    },
+                    {
+                        field : 'zys',
+                        title : '资源税',
+                        width : '150',
+                        templet:'#zys',
+                        align: 'right',
+                    },
+                    {
+                        field : 'cswhjss',
+                        title : '城市维护建设税',
+                        width : '150',
+                        templet:'#cswhjss',
+                        align: 'right',
+                    },
+                    {
+                        field : 'fcs',
+                        title : '房产税',
+                        width : '150',
+                        templet:'#fcs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'yhs',
+                        title : '印花税',
+                        width : '150',
+                        templet:'#yhs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'cztdsys',
+                        title : '城镇土地使用税',
+                        width : '150',
+                        templet:'#cztdsys',
+                        align: 'right',
+                    },
+                    {
+                        field : 'tdzzs',
+                        title : '土地增值税',
+                        width : '150',
+                        templet:'#tdzzs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'ccs',
+                        title : '车船税',
+                        width : '150',
+                        templet:'#ccs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'gdzys',
+                        title : '耕地占用税',
+                        width : '150',
+                        templet:'#gdzys',
+                        align: 'right',
+                    },
+                    {
+                        field : 'qs',
+                        title : '契税',
+                        width : '150',
+                        templet:'#qs',
+                        align: 'right',
+                    },
+                    {
+                        field : 'hjbhs',
+                        title : '环境保护税',
+                        width : '150',
+                        templet:'#hjbhs',
+                        align: 'right',
+                    },
+
+                ]]
+            };
+            $.table.init(options);
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#qsrq',type:'month',format:'yyyy-MM'});
+            laydate.render({elem: '#zzrq',type:'month',format:'yyyy-MM'});
+        });
+        function fixed(str){
+            if (str !== '' && str != null){
+                if(str === 0){  //当为0时，不用处理
+                    return 0 ;
+                }else {
+                    return str.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+                }
+            } else {
+                return '';
+            }
+        }
+    </script>
+<script type="text/html" id="hjje">{{fixed(d.hjje)}}</script>
+<script type="text/html" id="zzs">{{fixed(d.zzs)}}</script>
+<script type="text/html" id="xfs">{{fixed(d.xfs)}}</script>
+<script type="text/html" id="yys">{{fixed(d.yys)}}</script>
+<script type="text/html" id="qysds">{{fixed(d.qysds)}}</script>
+<script type="text/html" id="grsds">{{fixed(d.grsds)}}</script>
+<script type="text/html" id="zys">{{fixed(d.zys)}}</script>
+<script type="text/html" id="cswhjss">{{fixed(d.cswhjss)}}</script>
+<script type="text/html" id="fcs">{{fixed(d.fcs)}}</script>
+<script type="text/html" id="yhs">{{fixed(d.yhs)}}</script>
+<script type="text/html" id="cztdsys">{{fixed(d.cztdsys)}}</script>
+<script type="text/html" id="tdzzs">{{fixed(d.tdzzs)}}</script>
+<script type="text/html" id="ccs">{{fixed(d.ccs)}}</script>
+<script type="text/html" id="gdzys">{{fixed(d.gdzys)}}</script>
+<script type="text/html" id="qs">{{fixed(d.qs)}}</script>
+<script type="text/html" id="hjbhs">{{fixed(d.hjbhs)}}</script>
+</body>
+</html>

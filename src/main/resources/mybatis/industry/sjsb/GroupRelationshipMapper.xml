@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 集团关系 -->
+<mapper namespace="com.syndo.project.industry.sjsb.mapper.GroupRelationshipMapper">
+	
+	<!-- 查询 -->
+	<select id="selectList" parameterType="com.syndo.project.industry.sjsb.domain.GroupRelationship" resultType="com.syndo.project.industry.sjsb.domain.GroupRelationship">
+		SELECT * FROM T_QY_JTGX
+	</select>
+	
+	<!-- 主键查询 -->
+	<select id="selectById" parameterType="String" resultType="com.syndo.project.industry.sjsb.domain.GroupRelationship">
+		SELECT * FROM T_QY_JTGX
+		WHERE ID = #{id}
+	</select>
+
+    <!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.industry.sjsb.domain.GroupRelationship">
+		INSERT INTO T_QY_JTGX (
+			TYSHXYDM, QYMC, ZQYTYSHXYDM, ZQYMC
+		) VALUES (
+			#{tyshxydm}, #{qymc}, #{zqytyshxydm}, #{zqymc}
+		)
+	</insert>
+	
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		DELETE FROM T_QY_JTGX 
+        WHERE ID IN 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

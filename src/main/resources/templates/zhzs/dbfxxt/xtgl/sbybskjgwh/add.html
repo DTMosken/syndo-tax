@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('新增社保医保刷卡中间表')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">	
+					<label class="col-sm-2 control-label">药店名称：</label>
+					<div class="col-sm-4">
+						<input id="ydmc" name="ydmc" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label">纳税人名称：</label>
+					<div class="col-sm-4">
+						<input id="nsrmc" name="nsrmc" class="form-control" type="text">
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+        var prefix = ctx + "zhzs/dbfxxt/xtgl/sbybskjgwh";
+			$("#form-add").validate({
+				// 表单验证，参考notes文件
+				rules:{
+					ydmc:{
+						required:true
+					}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+		</script>
+	</body>
+</html>

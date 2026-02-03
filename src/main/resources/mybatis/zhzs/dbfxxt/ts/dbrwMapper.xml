@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 待办任务 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.DbrwMapper">
+
+    <select id="selectList" parameterType="Dbrw" resultType="Dbrw">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+               tsr.user_name tsr, date_format(t.tssj,'%Y-%m-%d %T') tssj, t.fkr fkr_id, fkr.user_name fkr, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx,
+               shr.user_name shr, date_format(t.shsj,'%Y-%m-%d %T') shsj
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        left join sys_user shr on t.shr=shr.user_id
+        LEFT JOIN t_dbfxxt_fkxz xz ON fkr.`login_name`=xz.user_name
+        <where>
+            <if test='lx!=null and lx!=""'>
+                <choose>
+                    <when test='lx=="alldb"'> and ((t.zt in('1','3.1') and t.fkr=#{fkr})
+                                                    or (t.zt = '2'
+                                                            AND EXISTS(
+                                                                SELECT 1 FROM sys_role r
+                                                                JOIN sys_user_role ur ON r.`role_id`=ur.`role_id`
+                                                                JOIN sys_user su ON ur.user_id=su.user_id
+                                                                JOIN t_dbfxxt_fkxz xz2 ON su.login_name=xz2.user_name
+                                                                WHERE xz2.fzid=xz.FZID AND ur.user_id=#{fkr} AND r.`role_key`='fkxz1'
+                                                            )
+                                                        )
+                                                ) </when>
+                    <when test='lx=="1" or lx=="3.1"'> and (t.fkr=#{fkr} or t.shr=#{fkr}) and t.zt = #{lx} </when>
+                    <when test='lx=="2"'> and t.zt = #{lx} AND (t.fkr=#{fkr} OR EXISTS(
+                         SELECT 1 FROM sys_role r
+                            JOIN sys_user_role ur ON r.`role_id`=ur.`role_id`
+                            JOIN sys_user su ON ur.user_id=su.user_id
+                            JOIN t_dbfxxt_fkxz xz2 ON su.login_name=xz2.user_name
+                         WHERE xz2.fzid=xz.FZID AND ur.user_id=#{fkr} AND r.`role_key`='fkxz1'
+                         ))</when>
+                    <when test='lx=="3"'> and t.zt in ('3','3.0','3.2','3.3') and (t.fkr=#{fkr} or t.shr=#{fkr}) </when>
+                    <otherwise>  and t.zt = #{lx} </otherwise>
+                </choose>
+            </if>
+            <if test="zbdm!=null and zbdm!=''">
+                and t.zbdm = #{zbdm}
+            </if>
+            <if test="qsrq!=null and qsrq!=''">
+                and DATE_FORMAT(t.tssj, '%Y-%m')&gt;=#{qsrq}
+            </if>
+            <if test="zzrq!=null and zzrq!=''">
+                and DATE_FORMAT(t.tssj, '%Y-%m')&lt;=#{zzrq}
+            </if>
+        </where>
+        order by t.fksj desc, t.tssj desc, zt, zbdm
+    </select>
+
+    <select id="checkIsFkxz" resultType="int">
+        select count(1) from sys_user_role ur join sys_role r on ur.role_id=r.role_id
+        where TRIM(r.role_key) in('fkxz0','fkxz1') and ur.user_id=#{userId}
+    </select>
+	
+    <select id="selectFkbById" parameterType="string" resultType="Rwsh">
+        select f.id, f.ywid, f.nsrmc, f.zbdm, f.zt, f.tsr, date_format(f.tssj,'%Y-%m-%d %T') tssj, 
+        	   f.fkr, date_format(f.fksj,'%Y-%m-%d %T') fksj, f.xgfkr, xgfkr.user_name xgfkrmc, date_format(f.xgfksj,'%Y-%m-%d %T') xgfksj, f.fklx, f.fknr, f.fktp, f.fkfj,
+               f.shr, date_format(f.shsj,'%Y-%m-%d %T') shsj, f.shxx,
+               tsr.user_name tsrmc, fkr.user_name fkrmc, shr.user_name shrmc
+        from t_dbfxxt_fkb f
+        left join sys_user tsr on f.tsr=tsr.user_id
+        left join sys_user fkr on f.fkr=fkr.user_id
+        left join sys_user xgfkr on f.xgfkr = xgfkr.user_id
+        left join sys_user shr on f.shr=shr.user_id
+        where f.id=#{id}
+    </select>    
+
+	<select id="checkFkIsNeeded" parameterType="string" resultType="int">
+		select count(1) from t_dbfxxt_fkb where id=#{id} and zt in('1','2','3.1')
+	</select>
+    <update id="rwfk" parameterType="Rwfk">
+        update t_dbfxxt_fkb
+        set
+            <if test="fkr!=null and fkr!=''">fkr=#{fkr}, fksj=CURRENT_TIMESTAMP(6),</if>
+            <if test="xgfkr!=null and xgfkr!=''">xgfkr=#{xgfkr}, xgfksj=current_timestamp(6),</if>
+            fklx=#{fklx}, fknr=#{fknr}, fktp=#{fktp},
+            zt = 2
+        where id=#{id}
+    </update>
+
+    <select id="selectFkmxByFkid" parameterType="string" resultType="Rwfk">
+        select * from t_dbfxxt_fkmx where fkid=#{id}
+    </select>
+    
+    <select id="getRoles" parameterType="string" resultType="string" >
+    	SELECT r.`role_key` FROM sys_role r JOIN sys_user_role ur ON r.role_id=ur.role_id
+		WHERE ur.`user_id`=#{userId}
+    </select>
+    
+    <select id="checkShIsNeeded" parameterType="string" resultType="int">
+		select count(1) from t_dbfxxt_fkb where id=#{id} and zt = '2'
+	</select>
+	<update id="rwsh" parameterType="Rwsh">
+        update t_dbfxxt_fkb
+        set
+            shr=#{shr}, shsj=CURRENT_TIMESTAMP(6),
+            shxx=#{shxx},
+            zt = #{zt}
+        where id=#{id}
+    </update>
+	
+	<update id="rwshGoback" parameterType="Rwsh">
+		update t_dbfxxt_fkb
+        set
+            shr=#{shr}, shsj=CURRENT_TIMESTAMP(6),
+            shxx=#{shxx},
+            zt = '3.1'
+        where id=#{id}
+	</update>
+	<!-- 
+	<insert id="saveFkbThxx" parameterType="Rwsh">
+		insert into t_dbfxxt_fkb_thxx(fkbid,fkr,fksx,fksj,xgfkr,xgfksj,fklx,fknr,fktp,fkfj,shxx,shr,shsj)
+		select id fkbid,fkr,fksx,fksj,xgfkr,xgfksj,fklx,fknr,fktp,fkfj,shxx,shr,shsj from t_dbfxxt_fkb
+		where id=#{id}
+	</insert>
+     -->
+    <select id="checkCancelfkIsNeeded" parameterType="string" resultType="int">
+		select count(1) from t_dbfxxt_fkb where id=#{id} and zt = '2'
+	</select>
+	<update id="cancelfk" parameterType="Rwfk">
+		update t_dbfxxt_fkb
+        set zt = '1'
+        where id=#{id}
+	</update>
+		
+	<insert id="saveLzxx" parameterType="Lzxx" databaseId="mysql">
+		insert into t_dbfxxt_fkb_lzxx(fkbid, lcjd, zx, yj, lrry, lrsj) values(#{fkbid}, #{lcjd}, #{zx}, #{yj}, #{lrry}, CURRENT_TIMESTAMP(6))
+	</insert>
+	
+	<select id="selectRwlzList" parameterType="string" resultType="Lzxx">
+	SELECT t.lcjd, t.zx, t.yj, DATE_FORMAT(t.lrsj,'%Y-%m-%d %T') lrsj, t.lrry, u.`user_name` lrrymc FROM(
+		SELECT '1' xh, id, '0' lcjd, '1' zx, '-' yj, tsr lrry, tssj lrsj FROM t_dbfxxt_fkb WHERE id=#{id}
+		UNION ALL
+		SELECT '2' xh, id, lcjd, zx, yj, lrry, lrsj FROM t_dbfxxt_fkb_lzxx WHERE fkbid=#{id}
+        UNION ALL
+        SELECT '3' xh, id, '3.0' lcjd, '-' zx, '-' yj, fkr lrry, fksj lrsj FROM t_dbfxxt_fkb WHERE id=#{id} AND zt='3.0'
+	) t LEFT JOIN sys_user u ON t.lrry=u.`user_id`
+	ORDER BY xh, id
+	</select>
+
+</mapper>

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<th:block th:include="include :: header('修改用户')" />
+	<th:block th:include="include :: summernote-css" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-notice-edit" th:object="${notice}">
+            <input id="userId" name="userId" th:field="*{userId}"  type="hidden">
+            <div class="form-group">	
+                <label class="col-sm-2 control-label is-required">用户名：</label>
+                <div class="col-sm-10">
+                    <input id="username" name="username" th:field="*{username}" class="form-control" type="text" required>
+                </div>
+            </div>
+			<div class="form-group">	
+                <label class="col-sm-2 control-label is-required">用户全称：</label>
+                <div class="col-sm-10">
+                    <input id="fullname" name="fullname" th:field="*{fullname}" class="form-control" type="text" required>
+                </div>
+            </div>
+			<div class="form-group">	
+                <label class="col-sm-2 control-label is-required">电话：</label>
+                <div class="col-sm-10">
+                    <input id="phone" name="phone" th:field="*{phone}" class="form-control" type="text" required>
+                </div>
+            </div>
+			<div class="form-group">	
+                <label class="col-sm-2 control-label is-required">部门：</label>
+                <div class="col-sm-10">
+					<select id="deptname" name="deptname" class="form-control" th:field="*{deptname}" required>
+						<option value=""></option>
+						<option value="财政局">财政局</option>
+						<option value="税务局">税务局</option>
+						<option value="其它">其它</option>
+					</select>
+                </div>
+            </div>
+			<div class="form-group">	
+                <label class="col-sm-2 control-label is-required">状态：</label>
+                <div class="col-sm-10">
+					<select id="status" name="status" class="form-control" th:field="*{status}" required>
+						<option value="0">未授权</option>
+						<option value="1">已授权</option>
+					</select>
+                </div>
+            </div>
+		</form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script type="text/javascript">
+        var prefix = ctx + "app/appuser";
+	    
+		$("#form-notice-edit").validate({
+			focusCleanup: true
+		});
+		
+		function submitHandler() {
+	        if ($.validate.form()) {
+				$.operate.save(prefix + "/edit", $('#form-notice-edit').serialize());
+	        }
+	    }
+	</script>
+</body>
+</html>

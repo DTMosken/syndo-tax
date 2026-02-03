@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.SpfxssybdMapper">
+
+	<!-- 商品房销售税源比对 -->
+	
+	<!-- mysql查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" databaseId="mysql">
+		WITH recursive sj(dt, num) as (
+			select date_format(CONCAT(#{skssqz},'-01'), '%Y-%m'), @num := 1
+			union all
+			select date_format(DATE_SUB(CONCAT(#{skssqz},'-01'), interval num month), '%Y-%m'), @num := @num + 1 from sj where num &lt; 
+			TIMESTAMPDIFF(MONTH,CONCAT(#{skssqq},'-01'),CONCAT(#{skssqz},'-01'))+1
+		),
+		ts AS(
+		SELECT id, ywid, nsrmc, zt, fklx FROM(
+		SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='spfxssybd'
+		) ts WHERE rn=1
+		),
+		bt as(
+		    select dt sj,aa.nsrmc,aa.qymc from sj
+		    left join (
+		    	select distinct qymc,nsrmc from t_tmp_spfxs f
+		    	where 1=1 
+		    	<if test="qymc != null and qymc != ''">
+		    		and qymc like concat('%',#{qymc},'%')
+		    	</if>
+		    )aa on 1=1
+		),
+		ss as(
+			select nsrmc,sum(replace(sjje,',','')) sjje,DATE_FORMAT(DATE_SUB(skssqq,INTERVAL 1 MONTH),'%Y-%m') skssqq 
+			from t_db_swj_jrkxx
+			where zsxm='增值税' 
+			and zspm in ('建筑物（11%、10%、9%、5%）-增量房','建筑物（11%、10%、9%、3%）-增量房')
+			and sksx='分期预缴税款'
+			and tzlx in('未被调账的税款','调账后产生的新税款')
+			and substr(skssqq,1,7) >= #{skssqq}
+			and substr(skssqq,1,7) &lt;= DATE_FORMAT(date_add(CONCAT(#{skssqz},'-01'), interval 1 MONTH),'%Y-%m')
+			group by nsrmc,substr(skssqq,1,7)
+		),
+		sr as(
+		   select bt.sj,bt.qymc,ifnull(ss.sjje,0) sjje 
+		   from bt left join ss 
+		   on bt.nsrmc = ss.nsrmc
+		   and bt.sj = ss.skssqq
+		   where bt.qymc in 
+					(select xmkfqymc from (
+						select fdckfdw xmkfqymc from t_db_zjj_spfwsqyjbaxx group by fdckfdw
+					)t)
+		),
+		fc as(
+			select qymc, group_concat(distinct xmmc)bhxm, ifnull(sum(jzmj),0) mj, ifnull(sum(zj),0) zje, sum(ifnull(zj,0) * sl)yjje, sl, 
+			substr(qysj,1,7) qysj
+			from( 
+				select fdckfdw qymc,xmmc,jzmj,cjzjy zj,DATE_FORMAT(qysj,'%Y-%m')qysj,
+				case when DATE_FORMAT(qysj,'%Y-%m')  &lt;= '2016-04' then 0.05/1.05 
+				when DATE_FORMAT(qysj,'%Y-%m') >= '2016-05' and DATE_FORMAT(qysj,'%Y-%m') &lt; '2018-05' then 0.03/1.11 
+				when DATE_FORMAT(qysj,'%Y-%m') >= '2018-05' and DATE_FORMAT(qysj,'%Y-%m') &lt; '2019-04' then 0.03/1.1 
+				else 0.03/1.09 end sl from t_db_zjj_spfwsqyjbaxx
+				where fdckfdw in
+					(select xmkfqymc from (
+						select fdckfdw xmkfqymc from t_db_zjj_spfwsqyjbaxx group by fdckfdw
+					)t)
+			) t
+			where 1=1
+			and substr(qysj,1,7) >= #{skssqq}
+			and substr(qysj,1,7)  &lt;= #{skssqz}
+			group by qymc,substr(qysj,1,7)
+		),
+		hj as(
+			select g.qymc,g.sj qysj,ifnull(f.mj,0) mj,ifnull(f.zje,0) zje,
+				ifnull(g.sjje,0) sjje,ifnull(round(f.yjje,2),0) yjje,ifnull(round(ifnull(g.sjje,0) - ifnull(yjje,0),2),0) yjce,f.bhxm
+			from sr g left join fc f
+			on g.qymc = f.qymc
+			and g.sj = f.qysj
+		),
+		hjs as(
+			select t.*, ifnull(ts.zt,'0') zt, ts.id fkid from (
+				select qymc,#{skssqq} skssqq,#{skssqz} skssqz,sum(mj) mj,sum(zje) zje,sum(sjje) sjje,sum(yjje) yjje,sum(yjce) yjce,
+				group_concat(distinct bhxm) bhxm
+				from hj
+				group by qymc
+			)t  LEFT JOIN ts ON t.qymc=ts.nsrmc AND MD5(concat(t.qymc, t.bhxm))=ts.ywid
+			WHERE 1=1
+			<if test='zt == "0"'>
+				and ts.id is null
+			</if>
+			<if test='zt == "1"'>
+				and ts.zt in ('1', '3.1')
+			</if>
+			<if test='zt == "2"'>
+				and ts.zt = #{zt}
+			</if>
+			<if test='zt == "3"'>
+				and ts.zt in ('3', '3.0','3.2','3.3')
+			</if>
+			<if test="sfqj !=null and sfqj != ''">
+				<if test="sfqj == 1">
+				    AND YJCE &lt; 0
+					<if test="cedy != null and cedy != ''">
+						AND YJCE*-1 &gt;= #{cedy}	
+					</if>
+					<if test="cexy != null and cexy != ''">
+						AND YJCE*-1 &lt;= #{cexy}
+					</if>
+				</if>
+				
+				<if test="sfqj == 2">
+				    AND YJCE &gt; 0
+					<if test="cedy != null and cedy != ''">
+						AND YJCE &gt;= #{cedy}	
+					</if>
+					<if test="cexy != null and cexy != ''">
+						AND YJCE &lt;= #{cexy}
+					</if>
+				</if>
+			</if>
+			order by CAST(yjce as decimal(10,2))
+		)
+		<if test="qymc==null or qymc==''">
+		select '合计'qymc, '' xmmc, #{skssqq} skssqq,#{skssqz} skssqz,format(sum(mj),2) mj,format(sum(zje),2) zje,format(sum(sjje),2) sjje,format(sum(yjje),2) yjje,format(sum(yjce),2) yjce, '' zt, null fkid from hjs
+		union all
+		</if>
+		select qymc,bhxm xmmc,skssqq,skssqz,format(mj,2) mj,format(zje,2) zje,format(sjje,2) sjje,format(yjje,2) yjje,format(yjce,2) yjce, zt, fkid from hjs a
+
+	</select>
+	
+	<!-- mysql二级页面查询 -->
+	<select id="getTwoList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" databaseId="mysql">
+		WITH recursive sj(dt, num) as (
+			select date_format(CONCAT(#{skssqz},'-01'), '%Y-%m'), @num := 1
+			union all
+			select date_format(DATE_SUB(CONCAT(#{skssqz},'-01'), interval num month), '%Y-%m'), @num := @num + 1 from sj where num &lt; 
+			TIMESTAMPDIFF(MONTH,CONCAT(#{skssqq},'-01'),CONCAT(#{skssqz},'-01'))+1
+		),
+		bt as(
+		    select dt sj,aa.nsrmc,aa.qymc from sj
+		    left join (
+		    	select distinct qymc,nsrmc from t_tmp_spfxs f
+		    	where 1=1 
+		    	<if test="qymc != null and qymc != ''">
+		    		and qymc = #{qymc}
+		    	</if>
+		    )aa on 1=1
+		),
+		ss as(
+			select nsrmc,sum(replace(sjje,',','')) sjje,DATE_FORMAT(DATE_SUB(skssqq,INTERVAL 1 MONTH),'%Y-%m') skssqq 
+			from t_db_swj_jrkxx
+			where zsxm='增值税' 
+			and zspm in ('建筑物（11%、10%、9%、5%）-增量房','建筑物（11%、10%、9%、3%）-增量房')
+			and sksx='分期预缴税款'
+			and substr(skssqq,1,7) >= #{skssqq}
+			and substr(skssqq,1,7) &lt;= DATE_FORMAT(date_add(CONCAT(#{skssqz},'-01'), interval 1 MONTH),'%Y-%m')
+			group by nsrmc,substr(skssqq,1,7)
+		),
+		sr as(
+		   select bt.sj,bt.qymc,ifnull(ss.sjje,0) sjje 
+		   from bt left join ss 
+		   on bt.nsrmc = ss.nsrmc
+		   and bt.sj = ss.skssqq
+		   where bt.qymc in 
+					(select fdckfdw from (
+						select fdckfdw from t_db_zjj_spfwsqyjbaxx group by fdckfdw
+					)t )
+		),
+		fc as(
+			select qymc, group_concat(distinct xmmc)bhxm, ifnull(sum(jzmj),0) mj, ifnull(sum(zj),0) zje, sum(ifnull(zj,0) * sl)yjje, sl, 
+			substr(qysj,1,7) qysj
+			from( 
+				select fdckfdw qymc,xmmc,jzmj,cjzjy zj,DATE_FORMAT(qysj,'%Y-%m')qysj,
+				case when DATE_FORMAT(qysj,'%Y-%m')  &lt;= '2016-04' then 0.05/1.05 
+				when DATE_FORMAT(qysj,'%Y-%m') >= '2016-05' and DATE_FORMAT(qysj,'%Y-%m') &lt; '2018-05' then 0.03/1.11 
+				when DATE_FORMAT(qysj,'%Y-%m') >= '2018-05' and DATE_FORMAT(qysj,'%Y-%m') &lt; '2019-04' then 0.03/1.1 
+				else 0.03/1.09 end sl from t_db_zjj_spfwsqyjbaxx
+				where fdckfdw in
+					(select fdckfdw from (
+						select fdckfdw from t_db_zjj_spfwsqyjbaxx group by fdckfdw
+					)t)
+			) t
+			where 1=1
+			and substr(qysj,1,7) >= #{skssqq}
+			and substr(qysj,1,7)  &lt;= #{skssqz}
+			group by qymc,substr(qysj,1,7)
+		),
+		hj as(
+			select g.qymc,g.sj qysj,ifnull(f.mj,0) mj,ifnull(f.zje,0) zje,
+				ifnull(g.sjje,0) sjje,ifnull(round(f.yjje,2),0) yjje,ifnull(round(ifnull(g.sjje,0) - ifnull(yjje,0),2),0) yjce,f.sl,f.bhxm
+			from sr g left join fc f
+			on g.qymc = f.qymc
+			and g.sj = f.qysj
+		)
+		select '合计' qymc, '' xmmc, '' qysj,format(sum(mj),2) mj,format(sum(zje),2) zje,format(sum(sjje),2) sjje,format(sum(yjje),2) yjje,format(sum(yjce),2) yjce,'' sl from hj where 1=1
+		union all
+		select * from (
+			select qymc,bhxm xmmc, qysj,format(mj,2) mj,format(zje,2) zje,format(sjje,2) sjje,format(yjje,2) yjje,format(yjce,2) yjce,sl from hj
+			where 1=1
+			order by qysj 
+		)t
+	</select>
+	
+	<!-- 三级页面查询 -->
+	<select id="getThreeList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd">
+		SELECT fdckfdw QYMC,QYSJ,XMMC,ZRZMC ZRMC,JZMJ SPFMJ,cjzjy SPFZJE,
+			case when DATE_FORMAT(qysj,'%Y-%m') &lt;= '2016-04' then 0.05
+			else 0.03 end sl
+    	FROM t_db_zjj_spfwsqyjbaxx
+		WHERE 1=1
+		AND DATE_FORMAT(qysj,'%Y-%m') = #{qysj}
+		AND fdckfdw = #{qymc}
+		ORDER BY DATE_FORMAT(qysj,'%Y-%m')
+	</select>
+	
+	
+	<!-- oracle查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" databaseId="oracle">		
+		WITH T AS(
+		    SELECT BB.MONTHSTR SJ,AA.NSRMC,AA.QYMC FROM (SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(#{skssqq},'YYYY-MM'),LEVEL-1),'YYYY-MM') MONTHSTR 
+		    FROM DUAL 
+		    CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{skssqz},'YYYY-MM'),TO_DATE(#{skssqq},'YYYY-MM')),0)+2 ORDER BY MONTHSTR ) BB
+		    LEFT JOIN (
+		    	SELECT DISTINCT QYMC,NSRMC FROM T_TMP_SPFXS F
+		    	WHERE 1=1 
+		    	<!-- AND NOT EXISTS (SELECT 0 FROM TMP_DB_SWSPFXSSYBD B WHERE F.QYMC = B.QYMC AND STATE = '1') -->
+		    	<if test="qymc != null and qymc != ''">
+		    		AND QYMC like '%'||#{qymc}||'%'
+		    	</if>
+		    ) AA ON 1=1
+		),
+		G AS(
+			SELECT NSRMC,SUM(REPLACE(SJJE,',','')) SJJE,SUBSTR(SKSSQQ,0,7) SKSSQQ 
+			FROM T_DB_SWJ_JRKXX
+			WHERE ZSXM='增值税' 
+			AND ZSPM IN ('建筑物（11%、10%、9%、5%）-增量房','建筑物（11%、10%、9%、3%）-增量房')
+			AND SKSX='分期预缴税款'
+			AND SUBSTR(SKSSQQ,0,7) &gt;= #{skssqq}
+			AND SUBSTR(SKSSQQ,0,7) &lt;= #{skssqz}
+			GROUP BY NSRMC,SUBSTR(SKSSQQ,0,7)
+		),
+		GS AS(
+		   SELECT T.SJ,T.QYMC,NVL(G.SJJE,0) SJJE 
+		   FROM T,G 
+		   WHERE T.NSRMC = G.NSRMC(+)
+		   AND T.SJ = G.SKSSQQ(+)
+		),
+		FC AS(
+			SELECT FDCKFS QYMC, NVL(SUM(JZMJ),0) MJ, NVL(SUM(ZJ),0) ZJE, SUM(NVL(ZJ,0) * sl)YJJE,'0.03' sl , SUBSTR(QYSJ,0,7) QYSJ
+			FROM( 
+				SELECT FDCKFS,JZMJ,CJZJY ZJ,QYSJ,(SFKBL/100)SFKBL,CASE WHEN SUBSTR(HTKGRQ,0,7) >= '2016-05' THEN 0.03/1.09 ELSE 0.03/1.05 END SL FROM T_DB_ZJJ_SPFWQBAXX
+			)
+			WHERE 1=1
+			AND SUBSTR(QYSJ,0,7) >= #{skssqq}
+			AND SUBSTR(QYSJ,0,7) &lt;= #{skssqz}
+			GROUP BY FDCKFS, SUBSTR(QYSJ,0,7)
+	    ),
+	    HJ AS(
+			SELECT G.QYMC,G.SJ QYSJ,NVL(F.MJ,0) MJ,NVL(F.ZJE,0) ZJE,
+				NVL(G.SJJE,0) SJJE,NVL(ROUND(F.YJJE,2),0) YJJE,NVL(ROUND(NVL(G.SJJE,0) - NVL(YJJE,0),2),0) YJCE
+			FROM GS G,FC F
+			WHERE F.QYMC(+) = G.QYMC
+			AND F.QYSJ(+) = G.SJ
+		),
+		HJS AS(
+			SELECT * FROM (
+				SELECT SYS_GUID() OBJ_ID,QYMC,#{skssqq} SKSSQQ,#{skssqz} SKSSQZ,SUM(MJ) MJ,SUM(ZJE) ZJE,
+					SUM(SJJE) SJJE,SUM(YJJE) YJJE,SUM(YJCE) YJCE
+				FROM HJ 
+				GROUP BY QYMC
+			)
+			WHERE 1=1
+			<if test="sfqj !=null and sfqj != ''">
+				<if test="sfqj == 1">
+				    AND YJCE &lt; 0
+					<if test="cedy != null and cedy != ''">
+						AND YJCE*-1 &gt;= #{cedy}	
+					</if>
+					<if test="cexy != null and cexy != ''">
+						AND YJCE*-1 &lt;= #{cexy}
+					</if>
+				</if>
+				
+				<if test="sfqj == 2">
+				    AND YJCE &gt; 0
+					<if test="cedy != null and cedy != ''">
+						AND YJCE &gt;= #{cedy}	
+					</if>
+					<if test="cexy != null and cexy != ''">
+						AND YJCE &lt;= #{cexy}
+					</if>
+				</if>
+			</if>
+			ORDER BY TO_NUMBER(YJCE)
+		)
+		SELECT SYS_GUID() OBJ_ID, '合计'QYMC, #{skssqq} SKSSQQ,#{skssqz} SKSSQZ,SUM(MJ) MJ,SUM(ZJE) ZJE,
+			SUM(SJJE) SJJE,SUM(YJJE) YJJE,SUM(YJCE) YJCE FROM HJS
+		UNION ALL
+		SELECT * FROM HJS
+	</select>
+	
+	<!-- oracle二级页面查询 -->
+	<select id="getTwoList" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Spfxssybd" databaseId="oracle">
+		WITH T AS(
+		    SELECT BB.MONTHSTR SJ,AA.NSRMC,AA.QYMC FROM (SELECT DISTINCT TO_CHAR(ADD_MONTHS(TO_DATE(#{skssqq},'YYYY-MM'),LEVEL-1),'YYYY-MM') MONTHSTR 
+		    FROM DUAL 
+		    CONNECT BY LEVEL &lt; TRUNC(MONTHS_BETWEEN(TO_DATE(#{skssqz},'YYYY-MM'),TO_DATE(#{skssqq},'YYYY-MM')),0)+2 ORDER BY MONTHSTR ) BB
+		    LEFT JOIN (
+		    	SELECT DISTINCT QYMC,NSRMC FROM T_TMP_SPFXS F
+		    	WHERE 1=1
+		    	<if test="qymc != null and qymc != ''">
+		    		AND QYMC = #{qymc}
+		    	</if>
+		    ) AA ON 1=1
+		),
+		G AS
+		(
+			SELECT FKSHJ(NSRMC)NSRMC,SUM(REPLACE(SJJE,',','')) SJJE,SUBSTR(SKSSQQ,0,7) SKSSQQ 
+			FROM T_DB_SWJ_JRKXX
+			WHERE ZSXM='增值税' 
+       		AND ZSPM IN ('建筑物（11%、10%、9%、5%）-增量房','建筑物（11%、10%、9%、3%）-增量房')
+       		AND SKSX='分期预缴税款'
+			AND SUBSTR(SKSSQQ,0,7) &gt;= #{skssqq}
+			AND SUBSTR(SKSSQQ,0,7) &lt;= #{skssqz}
+			GROUP BY FKSHJ(NSRMC),SUBSTR(SKSSQQ,0,7)
+		),
+		GS AS(
+		   	SELECT T.SJ,T.QYMC,NVL(G.SJJE,0) SJJE 
+		  	FROM T,G 
+		   	WHERE T.NSRMC = G.NSRMC(+)
+		   	AND T.SJ = G.SKSSQQ(+)
+		),
+		FC AS(
+			SELECT FDCKFS QYMC, NVL(SUM(JZMJ),0) MJ, NVL(SUM(ZJ),0) ZJE, SUM(NVL(ZJ,0) * sl)YJJE,'0.03' sl , SUBSTR(QYSJ,0,7) QYSJ
+			FROM( 
+				SELECT FDCKFS,JZMJ,CJZJY ZJ,QYSJ,(SFKBL/100)SFKBL,CASE WHEN SUBSTR(HTKGRQ,0,7) >= '2016-05' THEN 0.03/1.09 ELSE 0.03/1.05 END SL FROM T_DB_ZJJ_SPFWQBAXX
+			)
+			WHERE 1=1
+			AND SUBSTR(QYSJ,0,7) >= #{skssqq}
+			AND SUBSTR(QYSJ,0,7) &lt;= #{skssqz}
+			GROUP BY FDCKFS, SUBSTR(QYSJ,0,7)
+	    ),
+	    HJ AS(
+		 	SELECT G.QYMC,G.SJ QYSJ,NVL(F.MJ,0) MJ,NVL(F.ZJE,0) ZJE,
+		  		NVL(G.SJJE,0) SJJE,NVL(ROUND(F.YJJE,2),0) YJJE, NVL(ROUND(NVL(G.SJJE,0) - NVL(YJJE,0),2),0) YJCE,TO_CHAR(F.SL) SL
+		  	FROM GS G,FC F
+		  	WHERE F.QYMC(+) = G.QYMC
+		  	AND F.QYSJ(+) = G.SJ
+		)
+		SELECT '合计' QYMC,'' QYSJ,SUM(MJ) MJ,SUM(ZJE) ZJE,
+			SUM(SJJE) SJJE,SUM(YJJE) YJJE,SUM(YJCE) YJCE,'' SL
+		FROM HJ
+		WHERE 1=1
+		UNION ALL
+		SELECT * FROM (
+			SELECT * FROM HJ
+			WHERE 1=1
+			ORDER BY QYSJ 
+		)
+	</select>
+	
+</mapper>

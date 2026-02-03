@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <meta charset="utf-8" />
+    <head>
+        <th:block th:include="include :: layui-header('土地出让契税分析')" />
+        <style type="text/css">
+            .layui-card-header {
+                height: auto;
+            }
+        </style>
+    </head>
+    <body class="layui-body-table">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <form id="query-form" class="layui-form">
+                    <div class="layui-form-item layui-row">
+                        <div class="layui-inline layui-col-sm6 layui-col-md2">
+                            <label class="layui-form-label">纳税人名称：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="nsrmc" name="nsrmc" th:value="${param.nsrmc}" autocomplete="off" class="layui-input" />
+                            </div>
+                        </div>
+                        <div class="layui-inline layui-col-sm6 layui-col-md2">
+                            <label class="layui-form-label">所属年度： </label>
+                            <div class="layui-input-block">
+                                <input
+                                    type="text"
+                                    id="qdrq"
+                                    name="qdrq"
+                                    readonly="readonly"
+                                    autocomplete="off"
+                                    data-type="year"
+                                    data-format="yyyy"
+                                    class="layui-input time-input"
+                                />
+                            </div>
+                        </div>
+                        <div class="layui-inline layui-col-sm2 layui-col-md2">
+                            <label class="layui-form-label">是否欠缴：</label>
+                            <div class="layui-input-block">
+                                <select id="sfqj" name="sfqj" th:with="type=${@dict.getType('dm_dbfxxt_syztfx_sfqj')}" class="form-control input-sm">
+                                    <option value=""></option>
+                                    <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline layui-col-sm2 layui-col-md2">
+                            <label class="layui-form-label">反馈状态:</label>
+                            <div class="layui-input-block">
+                                <select id="zt" name="zt" class="form-control input-sm">
+                                    <option value=""></option>
+                                    <option value="1">待反馈</option>
+                                    <option value="2">已反馈</option>
+                                    <option value="3">已完成</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline layui-col-sm2 layui-col-md2">
+                            <div class="layui-form-btn" style="text-align: right">
+                                <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                                    <i class="layui-icon">&#xe615;</i> 查询
+                                </a>
+                                <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                                    <i class="layui-icon">&#xe669;</i> 重置
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="layui-card-body">
+                <table id="layui-table" lay-filter="layui-table"></table>
+            </div>
+        </div>
+        <script type="text/html" id="ztTpl">
+            {{# if(d.zt > '0'){ }}
+            <a href="javascript:;" onclick="ckfk('{{d.fkid}}')" class="layui-table-link">{{ d.ztmc }}</a>
+            {{# } else { }}
+            {{ d.ztmc }}
+            {{# } }}
+        </script>
+        <th:block th:include="include :: layui-footer" />
+        <script type="text/javascript">
+            var prefix = ctx + 'zhzs/dbfxxt/syztfx/tdcrnsfx'
+
+            $(function () {
+                var options = {
+                    url: prefix + '/list',
+                    exportUrl: prefix + '/expExcel',
+                    title: '土地出让契税分析',
+                    height: 'full-70',
+                    showExport: true,
+                    clickToSelect: true, // 点击选中行
+                    cols: [
+                        [
+                            {
+                                checkbox: true
+                            },
+                            {
+                                field: 'objId',
+                                hide: true
+                            },
+                            {
+                                field: 'nsrmc',
+                                title: '受让人名称',
+                                sort: true,
+                                width: 260,
+                                align: 'center'
+                            },
+                            {
+                                field: 'crmj',
+                                title: '出让面积（公顷）',
+                                sort: true,
+                                width: 160,
+                                align: 'right',
+                                templet:
+                                    '<div><a class="btn btn-info btn-xs" href="#" onclick="ck1(\'{{d.nsrmc}}\',\'{{d.qdrq}}\')", class="fa fa-edit">{{d.crmj||""}}</a></div>'
+                            },
+                            {
+                                field: 'crzje',
+                                title: '出让总金额(元)',
+                                sort: true,
+                                width: 150,
+                                align: 'right',
+                                templet:
+                                    '<div><a class="btn btn-info btn-xs" href="#" onclick="ck1(\'{{d.nsrmc}}\',\'{{d.qdrq}}\')", class="fa fa-edit">{{d.crzje||""}}</a></div>'
+                            },
+                            {
+                                field: 'ptf',
+                                title: '配套费(元)',
+                                sort: true,
+                                width: 120,
+                                align: 'right',
+                                templet:
+                                    '<div><a class="btn btn-info btn-xs" href="#" onclick="ck2(\'{{d.nsrmc}}\',\'{{d.qdrq}}\')", class="fa fa-edit">{{d.ptf||""}}</a></div>'
+                            },
+                            {
+                                field: 'ynqs',
+                                title: '应纳契税',
+                                sort: true,
+                                width: 120,
+                                align: 'right'
+                            },
+                            {
+                                field: 'sjqs',
+                                title: '实缴契税',
+                                sort: true,
+                                width: 120,
+                                align: 'right',
+                                templet:
+                                    '<div><a class="btn btn-info btn-xs" href="#" onclick="ck4(\'{{d.nsrmc}}\',\'{{d.qdrq}}\')", class="fa fa-edit">{{d.sjqs||""}}</a></div>'
+                            },
+                            {
+                                field: 'qsce',
+                                title: '契税差额',
+                                sort: true,
+                                width: 120,
+                                align: 'right'
+                            },{ field: "ztmc", title: "反馈状态", width: 100, align: "center", templet: '#ztTpl' },
+                        ]
+                    ]
+                }
+                $.table.init(options)
+            })
+            layui.use('laydate', function () {
+                var laydate = layui.laydate
+                laydate.render({ elem: '#qdrq', type: 'year' })
+            })
+            /* 查看 */
+            function ck1(nsrmc, qdrq) {
+                var url = prefix + '/tdxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq
+                $.modal.openFull('查看详情', url, false)
+            }
+            function ck2(nsrmc, qdrq) {
+                var url = prefix + '/ptfxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq
+                $.modal.openFull('查看详情', url, false)
+            }
+            function ck4(nsrmc, qdrq) {
+                var url = prefix + '/rkxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq
+                $.modal.openFull('查看详情', url, false)
+            }
+        </script>
+    </body>
+</html>

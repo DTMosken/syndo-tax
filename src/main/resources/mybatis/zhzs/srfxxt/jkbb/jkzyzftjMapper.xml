@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.jkbb.JkzyzftjMapper">
+	<!-- 查询条件 -->
+	<sql id="whereClause">
+		<if test="bszq!=null and bszq!=''">
+			AND BSZQ= #{bszq}
+        </if>
+	</sql>	
+	<!-- 子句  -->
+	<sql id="withView">
+		WITH JKZYZFTJ AS (
+			SELECT KMDM, KMMC,ROUND(BYFSE,2) BYFSE,
+			 ROUND(SUM(BYFSE) OVER(PARTITION BY KMDM),2) BNLJ
+			 FROM CS_CZTB
+			 WHERE KMMC != '合计数'
+			 <include refid="whereClause" />
+			 ORDER BY KMDM,ROUND(BYFSE,2)
+		 )
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkzyzftj"
+		parameterType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkzyzftj">
+		<include refid="withView"/>	
+		SELECT T.KMDM,T.KMMC,T.BYFSE,T.BNLJ FROM JKZYZFTJ T
+	</select>
+</mapper>

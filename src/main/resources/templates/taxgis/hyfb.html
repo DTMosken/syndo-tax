@@ -1,0 +1,257 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 行业分布 -->
+<div th:fragment="hyfb">
+    <style>
+        .hyfbTreeContainer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        .hyfbTreeContainer .treeNode {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            padding-right: 8px;
+        }
+        .hyfbTreeContainer .linkTreeNode {
+            /* color:#2440B3;  */
+            padding-bottom: 2px;
+            /* border-bottom: 1px solid ; */
+        }
+        .hyfbTreeContainer .linkTreeNode::after {
+            content: "";
+            display: block;
+            margin-left: 18px;
+            padding-top: 2px;
+            border-bottom: 1px solid ;
+        }
+    </style>
+    <template id="hyfbTemplate">
+        <my-panel ref="panel" :width.sync="leftWidth" :height="leftHeight" :collapsed="false">
+            <div class="hyfbTreeContainer" v-loading="hy.loading">
+                <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{hy.selected.label}}</i></div>
+                <el-tree
+                        :data="hy.data"
+                        node-key="id"
+                        :expand-on-click-node="false"
+                        :props="hy.defaultProps"
+                        @node-click="handleNodeClickHy"
+                >
+                    <span class="treeNode" slot-scope="{ node, data }">
+                        <span :title="data.name"> {{ data.label }}</span>
+                    </span>
+                </el-tree>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component('hyfbComponent', {
+            template: '#hyfbTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                }
+            },
+            data() {
+                let defaultSelected = { label: "全部", id: "", lx: "" };
+                return {
+                    layerType: 'hyfb',
+                    leftWidth: 355,
+                    leftHeight: '100%',
+                    markerContentCmp: hyfbMarkerContentCmp,
+                    hy: {
+                        loading: true,
+                        queryUrl: "/module/taxgis/hyTreeData",
+                        hyAnalyzeUrl: "/module/taxgis/hyAnalyze",
+                        data: [],
+                        selected: $.extend({}, defaultSelected)
+                    }
+                };
+            },
+            destroyed: function () {
+                // this.removeMarkers()
+            },
+            mounted: function () {
+                this.loadHyTree()
+                this.showHeatMap('');
+            },
+            methods: {
+                loadHyTree() {
+                    let params = new URLSearchParams();
+                    this.axios
+                        .post(this.hy.queryUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.hy.loading = false
+                            let data = response.data;
+                            this.hy.data = data;
+                            if (data.length > 0) this.expandedKeys = [data[0].id];
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            this.hy.loading = false
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                initHeatmap() {
+                    var cfg = {
+                        // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+                        "radius": 11,
+                        "maxOpacity": .6,
+                        // scales the radius based on map zoom
+                        "scaleRadius": false,
+                        // if set to false the heatmap uses the global maximum for colorization
+                        // if activated: uses the data maximum within the current map boundaries
+                        //   (there will always be a red spot with useLocalExtremas true)
+                        "useLocalExtrema": true,
+                        // which field name in your data represents the latitude - default "lat"
+                        latField: 'lat',
+                        // which field name in your data represents the longitude - default "lng"
+                        lngField: 'lng',
+                        // which field name in your data represents the data value - default "value"
+                        valueField: 'count'
+                    };
+                    this.heatmapLayer = new HeatmapOverlay(cfg);
+                    let that = this.$parent.$refs.leafletMap
+                    that.drawGroup.addLayer(this.heatmapLayer)
+                },
+                showHeatMap(hyDm) {
+                    const loading = this.$loading({
+                        lock: true,
+                        text: '加载中',
+                        // spinner: 'el-icon-loading',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    });
+                    var testData = {
+                        max: 2,
+                        data: []
+                    };
+                    // let obj = {};
+                    // $.extend(obj, data);
+                    let params = new URLSearchParams();
+                    params.append("hyDm", hyDm)
+                    this.axios
+                        .post(this.hy.hyAnalyzeUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            let resdata = response.data;
+
+                            // 地图显示
+                            let that = this.$parent.$refs.leafletMap
+                            let rows = resdata
+                            let layerType = this.layerType
+                            let markerCmp = this.markerContentCmp
+                            //this.pubVue.$emit("removeMarkers", { layerType: layerType });
+                            that.drawGroup.clearLayers();
+                            this.initHeatmap()
+
+                            // {lat: 37.411555289229554, lng:116.69677734375001, count: 1}, {lat: 37.451555289229554, lng:116.79677734375001, count: 1}
+                            rows.forEach((row) => {
+                                testData.data.push({lat: row.lat, lng: row.lon, count: 1});
+                                // let marker = L.circleMarker([row.lat, row.lon], { radius: 3, color: '#DD0000', fillColor: '#DD0000', fillOpacity: 0.5 })
+                                // marker.id = that.genLayerId(row.id, layerType)
+                                // marker.bindPopup(
+                                //     that.getMarkerContent(
+                                //         {
+                                //             markerData: $.extend(row, { lat: row.lat, lon: row.lon })
+                                //         },
+                                //         markerCmp
+                                //     )
+                                // )
+                                // that.drawGroup.addLayer(marker)
+                            })
+                            this.heatmapLayer.setData(testData);
+                            loading.close();
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            loading.close();
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                handleNodeClickHy(data) {
+                    this.hy.selected = $.extend({}, data);
+                    this.showHeatMap(data.id);
+                }
+            }
+        })
+    </script>
+
+    <!-- 地图信息框 -->
+    <style>
+        /* marker样式 */
+        .hyfb_popup_content {
+            padding: 0;
+        }
+
+        .hyfb_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 310px;
+        }
+
+        .hyfb_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .hyfb_info_container .title:after {
+            clear: both;
+            content: '';
+            display: table;
+        }
+
+        .hyfb_info_container .props p {
+            margin: 10px 0;
+        }
+
+        .hyfb_info_container p {
+            font-size: 12px;
+        }
+    </style>
+    <template id="hyfbMarkerTemplate">
+        <div class="hyfb_popup_content">
+            <div class="hyfb_info_container">
+                <div class="title">
+                    <span><a href="#" @click="showYhs">{{markerData.nsrmc}}</a></span>
+                </div>
+                <div class="props">
+                    <p><span>注册地址：</span> <span>{{markerData.zcdz}}</span></p>
+                    <p><span>经营地址：</span> <span>{{markerData.jydz}}</span></p>
+                    <p><span>登记注册类型：</span> <span>{{markerData.djzclx}}</span></p>
+                    <p><span>社会信用代码：</span> <span>{{markerData.shxydm}}</span></p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let hyfbMarkerContentCmp = Vue.extend({
+            template: '#hyfbMarkerTemplate',
+            props: {
+                pubVue: {
+                    type: Object
+                },
+                markerData: {
+                    type: Object
+                }
+            },
+            data: function () {
+                return {}
+            },
+            methods: {
+                showYhs() {
+                    this.pubVue.$emit('showYhs', { shxydm: this.markerData.shxydm, nsrmc: this.markerData.nsrmc })
+                }
+            }
+        })
+    </script>
+</div>

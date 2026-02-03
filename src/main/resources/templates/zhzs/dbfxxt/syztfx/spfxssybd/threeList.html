@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看详情')" />
+</head>
+<body class="layui-body-table">
+    <style>
+    	.select-list label{
+    		text-align:right;
+    		width:100px;
+    	}
+    </style>
+    
+     <input id="qymc" name="qymc" type="hidden" th:value="${qymc}"/>
+     <input id="qysj" name="qysj" type="hidden" th:value="${qysj}"/>
+
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/syztfx/spfxssybd";
+
+        $(function() {
+            var options = {
+                url: prefix + "/getThreeList?qymc="+$("#qymc").val()+"&qysj="+$("#qysj").val(),
+                title: "查看详情",
+		        showExport: true,
+                cols:[ [{
+		            checkbox: true
+		        },
+				{
+		        	field : 'objId', 
+					hide : true
+				},
+				{
+					field : 'qymc', 
+					title : '企业名称',
+				},
+				{
+					field : 'qysj', 
+					title : '签约时间',
+					sort: true
+				},
+				{
+					field : 'xmmc', 
+					title : '项目名称',
+					sort: true
+				},
+				{
+					field : 'zrmc', 
+					title : '自然幢名称',
+					sort: true
+				},
+				{
+					field : 'spfmj', 
+					title : '建筑面积',
+					sort: true
+				},
+				{
+					field : 'spfzje', 
+					title : '房屋总价',
+					sortable: true
+				}] ]
+            };
+            $.table.init(options);
+        });
+        
+    </script>
+</body>
+</html>

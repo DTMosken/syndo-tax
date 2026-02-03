@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 指标信息 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.ZbxxMapper">
+
+    <select id="selectByZbdm" resultType="Zbxx" parameterType="string" databaseId="mysql">
+        select * from t_dbfxxt_zbxx 
+		where zbdm=#{zbdm}
+    </select>
+
+    <select id="selectAllZbxx" resultType="Zbxx">
+        select * from t_dbfxxt_zbxx
+        where sffk='1'
+        order by px
+    </select>
+    
+    <select id="selectList" parameterType="Zbxx" resultType="Zbxx">
+    	select * 
+    	from t_dbfxxt_zbxx 
+    	<where>
+    		<if test="zbmc!=null and zbmc!=''"> zbmc like concat('%', #{zbmc}, '%') </if>
+    		<if test='sffk!=null and sffk!=""'> and sffk=#{sffk} </if>
+    	</where>
+    	order by px
+    </select>
+    
+    <update id="update" parameterType="Zbxx">
+    	update t_dbfxxt_zbxx
+    	<set>
+    		<if test="zbmc!=null and zbmc!=''">zbmc=#{zbmc},</if>
+    		<if test='zblx!=null and zblx!=""'>zblx=#{zblx},</if>
+    		<if test="sffk!=null and sffk!=''">sffk=#{sffk},</if>
+    		<if test="zbms!=null and zbms!=''">zbms=#{zbms},</if>
+    	</set>
+    	where zbdm=#{zbdm}
+    </update>
+
+</mapper>

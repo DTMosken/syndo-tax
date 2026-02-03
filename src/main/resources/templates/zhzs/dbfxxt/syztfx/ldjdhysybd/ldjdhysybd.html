@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('旅店酒店行业税源比对')" />
+	<style type="text/css">
+		.layui-card-header{
+			height: auto;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+	<div class="layui-card-header">
+		<form id="query-form" class="layui-form">
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">税款所属期起： </label>
+					<div class="layui-input-block">
+
+							<input type="text" id="skssqq" name="skssqq" th:value="${skssqq}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm4 layui-col-md2">
+					<label class="layui-form-label">税款所属期止： </label>
+					<div class="layui-input-block">
+
+							<input type="text" id="skssqz" name="skssqz" th:value="${skssqz}"
+								   readonly="readonly" autocomplete="off"
+								   data-type="month" data-format="yyyy-MM"
+								   class="layui-input time-input">
+						</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">企业名称：</label>
+					<div class="layui-input-block">
+
+							<input type="text" id="qymc" name="qymc" autocomplete="off" class="layui-input">
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">是否欠缴：</label>
+					<div class="layui-input-block">
+
+						<select id="type" name="type" th:with="type=${@dict.getType('dm_dbfxxt_sybd_sfqj')}"  class="form-control input-sm">
+							<option value=""></option>
+							<option value="1">欠缴</option>
+							<option value="2">不欠缴</option>
+						</select>
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">差额大于：</label>
+					<div class="layui-input-block">
+
+						<input type="text" id="cedy" name="cedy" autocomplete="off" class="layui-input">
+
+					</div>
+				</div>
+				<div class="layui-inline layui-col-sm6 layui-col-md2">
+					<label class="layui-form-label">差额小于：</label>
+					<div class="layui-input-block">
+
+						<input type="text" id="cexy" name="cexy" autocomplete="off" class="layui-input">
+
+					</div>
+				</div>
+			</div>
+
+			<div class="layui-form-item layui-row">
+				<div class="layui-inline layui-col-sm12 layui-col-md12">
+					<div class="layui-form-btn" style="text-align: right">
+						<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="query()">
+							<i class="layui-icon">&#xe615;</i> 查询
+						</a>
+						<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+							<i class="layui-icon">&#xe669;</i> 重置
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="layui-card-body">
+		<table id="layui-table" lay-filter="layui-table"></table>
+	</div>
+</div>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/syztfx/ldjdhysybd";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+				exportUrl: prefix + "/expExcel",
+				height:"full-110",
+                title: "酒店旅店行业税源比对",
+		        showExport: true,
+		        clickToSelect: true,
+
+                cols: [[{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+					field : 'qymc', 
+					title : '企业名称',
+					sortable: true,
+
+				},
+				{
+					field : 'skssqq', 
+					title : '税款所属期起',
+					sortable: true
+				},
+				{
+					field : 'skssqz', 
+					title : '税款所属期止',
+					sortable: true
+				},
+
+				{
+					field : 'yye', 
+					title : '营业额',
+					sortable: true
+				},
+				{
+					field : 'yjje', 
+					title : '应缴金额',
+					sortable: true
+				},
+				{
+					field : 'sjje', 
+					title : '实缴金额',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					sortable: true
+				}/*,
+				{
+					field : 'ck', 
+					title : '查看详情',
+					align : 'center',
+					templet : function(row) {
+						var action = [];
+						action.push('<a class="btn btn-info btn-xs" href="#" onclick="ckxq(\'' + row.qymc + '\',\'' + row.skssqq + '\',\'' + row.skssqz +'\')"><i class="fa fa-edit"></i>查看详情</a>');
+						return action.join('');
+					}
+				}*/] ]
+            };
+            $.table.init(options);
+        });
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#skssqq',type: 'month', format: 'yyyy-MM'});
+    	  	laydate.render({elem: '#skssqz',type: 'month', format: 'yyyy-MM'});
+        });
+        
+        /* 条件查询 */
+        function query() {
+        	var cexy = $('#cexy').val();
+        	var cedy = $('#cedy').val();
+        	var type = $('#type').val();
+        	if('' != cexy || '' != cedy) {
+        		if(null == type || ''== type) {
+        			layer.msg('请选择是否欠缴类型!', {icon: 6});
+        			return;
+        		}
+        	}
+        	$.table.search();
+        }
+        
+        /* 查看详情 */
+        function ckxq(qymc, skssqq, skssqz) {
+        	var url = prefix + '/twoList?qymc='+qymc+'&skssqq='+skssqq+'&skssqz='+skssqz;
+        	$.modal.openFull("查看详情", url, false);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 风控小组 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.FkxzMapper">
+
+    <select id="selectList" resultType="Fkxz" parameterType="Fkxz" databaseId="mysql">
+        SELECT t.*, d.`dept_name`, tdff.fzmc FROM t_dbfxxt_fkxz t
+            LEFT JOIN sys_dept d ON t.`dept` = d.`dept_id`
+            left join t_dbfxxt_fkxz_fz tdff on t.fzid = tdff.fzid
+		<where>
+		    <if test="userName!=null and userName!=''">
+                t.user_name like concat('%',#{userName},'%')
+            </if>
+            <if test="name!=null and name!=''">
+                and t.name like concat('%',#{name},'%')
+            </if>
+            <if test="dept!=null and dept!=''">
+                and d.dept_name like concat('%',#{dept},'%')
+            </if>
+            <if test='status!=null and status!=""'>
+                and t.status = #{status}
+            </if>
+            <if test="fzmc!=null and fzmc!=''">
+                and tdff.fzmc like concat('%',#{fzmc},'%')
+            </if>
+        </where>
+        order by id
+    </select>
+
+    <select id="selectFkxzById" parameterType="string" resultType="Fkxz">
+        SELECT t.*, d.`dept_name`, u.user_id, tdff.fzmc FROM t_dbfxxt_fkxz t
+        left join sys_user u on t.user_name = u.login_name
+        LEFT JOIN sys_dept d ON t.`dept` = d.`dept_id`
+        left join t_dbfxxt_fkxz_fz tdff on t.fzid = tdff.fzid
+        where t.id=#{id}
+    </select>
+
+    <select id="selectFkxzByUsername" parameterType="string" resultType="Fkxz">
+        SELECT t.*, d.`dept_name`, u.user_id FROM t_dbfxxt_fkxz t
+        left join sys_user u on t.user_name = u.login_name
+        LEFT JOIN sys_dept d ON t.`dept` = d.`dept_id`
+        where t.user_name=#{userName}
+    </select>
+
+    <select id="selectFkxzWithoutId" resultType="Fkxz">
+        select t.*, u.user_id from t_dbfxxt_fkxz t
+        join sys_user  u on t.user_name = u.login_name
+        where t.status='0'
+          and u.user_id != #{id}
+        <if test='isRand=="0"'>
+            order by t.name
+        </if>
+        <if test='isRand=="1"'>
+            order by rand()
+        </if>
+    </select>
+
+    <select id="checkFkxzByUserName" parameterType="string" resultType="int">
+        select count(1) from t_dbfxxt_fkxz where user_name=#{userName}
+    </select>
+    <select id="checkSysuserByLoginName" parameterType="string" resultType="int">
+        select count(1) from sys_user where login_name=#{userName}
+    </select>
+    <select id="selectSysuserByLoginName" parameterType="string" resultType="Fkxz">
+        SELECT user_id, dept_id dept, login_name user_name, user_name NAME, phonenumber phone, sex FROM sys_user
+        where login_name=#{userName}
+    </select>
+
+    <insert id="insertFkxz" parameterType="Fkxz">
+        insert into t_dbfxxt_fkxz(user_name, `name`, sex, age, phone, dept, speciality, status, `role`, fzid, create_time, creator)
+        values(#{userName}, #{name}, #{sex}, #{age}, #{phone}, #{dept}, #{speciality}, #{status}, #{role}, #{fzid}, current_timestamp(6), #{creator})
+    </insert>
+    <update id="updateFkxz" parameterType="Fkxz">
+        update t_dbfxxt_fkxz set
+        `name`=#{name}, sex=#{sex}, age=#{age}, phone=#{phone}, dept=#{dept}, speciality=#{speciality}, status=#{status}, `role`=#{role}, fzid=#{fzid}, update_time=current_timestamp(6), modifier=#{modifier}
+        where id=#{id}
+    </update>
+    <update id="updateSysuser" parameterType="Fkxz">
+        update sys_user set
+        user_name=#{name}, dept_id=#{dept}, phonenumber=#{phone}, sex=#{sex}, update_by=#{modifier}, update_time=current_timestamp()
+        where user_id=#{userId}
+    </update>
+
+    <insert id="insertSysuser" parameterType="Fkxz" useGeneratedKeys="true" keyColumn="user_id" keyProperty="userId">
+        insert into sys_user(dept_id, login_name, user_name, user_type, phonenumber, sex, password, salt, status, del_flag, create_by, create_time)
+        values(#{dept}, #{userName}, #{name}, '00', #{phone}, #{sex}, md5(concat(#{userName},'123456','1111')),'1111','0','0',#{creator},current_timestamp())
+    </insert>
+
+    <insert id="insertRole">
+        insert into sys_user_role(user_id, role_id)
+        values(#{userId},#{roleId})
+    </insert>
+    <delete id="removeRole">
+        delete from sys_user_role where user_id=#{userId} and role_id=#{roleId}
+    </delete>
+
+    <select id="selectRoleIdByKey" parameterType="string" resultType="string">
+        select role_id from sys_role where role_key=#{key}
+    </select>
+
+    <select id="hasRole" resultType="int">
+        select count(1) from sys_user_role where user_id=#{userId} and role_id=#{roleId}
+    </select>
+
+    <delete id="deleteByIds" parameterType="String">
+        DELETE FROM t_dbfxxt_fkxz WHERE id IN
+        <foreach item="objId" collection="array" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteUserRoleByIds" parameterType="String">
+        delete from sys_user_role
+        where user_id in (SELECT u.user_id FROM t_dbfxxt_fkxz t JOIN sys_user u ON t.user_name = u.login_name WHERE t.id in
+        <foreach item="objId" collection="array" open="(" separator="," close=")">
+            #{objId}
+        </foreach>)
+         and role_id=(select role_id from sys_role where role_key='fkxz1')
+    </delete>
+
+    <select id="selectFkxzFzList" resultType="FkxzFz">
+        select fzid, fzmc from t_dbfxxt_fkxz_fz
+    </select>
+
+    <select id="selectFkxzFzByFzid" parameterType="string" resultType="FkxzFz">
+        select fzid, fzmc from t_dbfxxt_fkxz_fz where fzid=#{fzid}
+    </select>
+
+    <select id="selectFkxzFzByFzmc" parameterType="string" resultType="FkxzFz">
+        select fzid, fzmc from t_dbfxxt_fkxz_fz where fzmc=#{fzmc}
+    </select>
+
+    <select id="selectFkxzFzByUserid" parameterType="string" resultType="FkxzFz">
+        select f.fzid, f.fzmc
+        from t_dbfxxt_fkxz_fz f
+        join t_dbfxxt_fkxz x on f.fzid=x.fzid
+        join sys_user u on x.user_name = u.login_name
+        where u.user_id = #{userId}
+    </select>
+
+    <insert id="insertFkxzFz" parameterType="FkxzFz">
+        insert into t_dbfxxt_fkxz_fz(fzmc) value (#{fzmc})
+    </insert>
+
+    <update id="updateFkxzFz" parameterType="FkxzFz">
+        update t_dbfxxt_fkxz_fz set fzmc=#{fzmc} where fzid=#{fzid}
+    </update>
+
+    <select id="checkDeleteFz" parameterType="string" resultType="int">
+        select count(1) from t_dbfxxt_fkxz t where t.fzid=#{fzid}
+    </select>
+
+    <delete id="deleteFzByFzid" parameterType="string">
+        delete from t_dbfxxt_fkxz_fz where fzid=#{fzid}
+    </delete>
+
+</mapper>

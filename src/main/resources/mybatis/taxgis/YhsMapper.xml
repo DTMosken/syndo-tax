@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.syndo.project.taxgis.mapper.YhsMapper">
+
+    <select id="getSwdjxxIds" resultType="string">
+        SELECT id FROM t_db_swj_swdjxx t where t.nsrsbh=#{shxydm}
+    </select>
+    
+    <select id="getGsdjxxIds" resultType="string">
+        SELECT id FROM t_db_xzspj_xbqyxxlb t WHERE t.tyshxydm=#{shxydm}
+    </select>
+
+    <resultMap id="TableColsMap" type="map">
+        <result property="field_name" column="field_name"/>
+        <result property="field_comment" column="field_comment"/>
+        <result property="col_width" column="col_width"/>
+    </resultMap>
+    <select id="getTableCols" resultMap="TableColsMap">
+        SELECT 
+            mx.field_name, mx.field_comment, mx.col_width
+        FROM
+            pub_meta_data_item mx,
+            pub_meta_data t
+        WHERE
+            mx.m_id = t.id 
+            AND t.gucode = #{gucode}
+            AND mx.is_vis = 'on'
+        ORDER BY mx.ordnum
+    </select>
+
+    <resultMap id="GcxmxxMap" type="map">
+        <result property="id" column="id"/>
+        <result property="gcxmmc" column="gcxmmc"/>
+        <result property="xmdz" column="xmdz"/>
+        <result property="jsnr" column="jsnr"/>
+        <result property="kgsj" column="kgsj"/>
+        <result property="jgsj" column="jgsj"/>
+        <result property="jsdw" column="jsdw"/>
+        <result property="jsdwlxr" column="jsdwlxr"/>
+        <result property="lxfs" column="lxfs"/>
+        <result property="jsqx" column="jsqx"/>
+        <result property="tze" column="tze"/>
+        <result property="njhtz" column="njhtz"/>
+        <result property="jsgm" column="jsgm"/>
+        <result property="lxsj" column="lxsj"/>
+        <result property="zjly" column="zjly"/>
+    </resultMap>
+    <select id="getGcxmxx" resultMap="GcxmxxMap">
+        SELECT 
+        id,
+        gcxmmc,
+        xmdz,
+        jsnr,
+        kgsj,
+        jgsj,
+        jsdw,
+        jsdwlxr,
+        lxfs,
+        jsqx,
+        tze,
+        njhtz,
+        jsgm,
+        lxsj,
+        zjly 
+      FROM
+        t_db_zd_gcxmjbxx t
+      where t.jsdw=#{dwmc}
+    </select>
+    
+    
+</mapper>

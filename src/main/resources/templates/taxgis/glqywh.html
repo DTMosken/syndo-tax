@@ -1,0 +1,503 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 管理区域维护 -->
+<div th:fragment="glqywh">
+    <style>
+        .glqywhTreeContainer {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 86px);
+            overflow: auto;
+        }
+        /* .glqywhTreeContainer .jgTreeNode { */
+        /* background: url("../../icons/class.png") center no-repeat; */
+        /* color: red; */
+        /* padding: 1px 8px !important; */
+        /* } */
+        /* .glqywhTreeContainer .glqyTreeNode { */
+        /* background: url("../../icons/category.png") center no-repeat; */
+        /* color: blue; */
+        /* padding: 1px 8px !important; */
+        /* } */
+        .glqywhTreeContainer .treeNode {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            padding-right: 8px;
+        }
+    </style>
+    <template id="glqywhTemplate">
+        <my-panel :width.sync="width">
+            <glqywh-add-dialog ref="dialog" :pid="selected.id" @do-save="doSave" @do-draw="handleDoDraw"></glqywh-add-dialog>
+            <div>
+                <h3 style="padding-left: 20px">管理区域维护</h3>
+                <el-button
+                    :disabled="selected.lx!=='2'"
+                    @click="onAdd"
+                    icon="fa fa-plus"
+                    style="position: absolute; top: 10px; right: 145px"
+                    circle
+                    title="增加下级节点"
+                ></el-button>
+                <el-button
+                    :disabled="selected.id===''"
+                    @click="onEdit"
+                    icon="fa fa-edit"
+                    style="position: absolute; top: 10px; right: 100px"
+                    circle
+                    title="编辑节点"
+                ></el-button>
+                <el-button
+                    :disabled="selected.id===''"
+                    @click="onDel"
+                    icon="fa fa-remove"
+                    style="position: absolute; top: 10px; right: 55px"
+                    circle
+                    title="删除节点"
+                ></el-button>
+                <el-button @click="refresh" icon="fa fa-refresh" style="position: absolute; top: 10px; right: 10px" circle title="刷新"></el-button>
+                <div style="padding-left: 5px; font-size: 14px">当前选中：<i style="color: blue">{{selected.label}}</i></div>
+                <div class="glqywhTreeContainer">
+                    <el-tree
+                        :data="data"
+                        node-key="id"
+                        :expand-on-click-node="false"
+                        default-expand-all
+                        :props="defaultProps"
+                        @node-click="handleNodeClick"
+                    >
+                        <span class="treeNode" slot-scope="{ node, data }">
+                            <span v-if="data.lx==='2'" class="fa fa-university" :title="data.name"> {{ data.label }}</span>
+                            <span v-if="data.lx==='3'" class="fa fa-map" :title="data.name"> {{ data.label }}</span>
+                            <span>
+                                <span v-if="!data.geo" class="fa fa-map-o" title="未标注"></span>
+                                <span v-if="data.geo&&data.geo.length>0" class="fa fa-map" size="mini" title="已标注"></span>
+                            </span>
+                        </span>
+                    </el-tree>
+                </div>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component("glqywhComponent", {
+            template: "#glqywhTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+            },
+            data() {
+                let defaultSelected = { label: "", id: "", lx: "" };
+                return {
+                    width: 330,
+                    layerType: "glqywh",
+                    saveUrl: "/module/taxgis/SaveGlqywh",
+                    delUrl: "/module/taxgis/DelGlqywh",
+                    queryUrl: "/module/taxgis/GlqywhTreeData",
+                    data: [],
+                    expandedKeys: [],
+                    defaultSelected: defaultSelected,
+                    selected: $.extend({}, defaultSelected),
+                    defaultProps: {
+                        children: "children",
+                        label: "label",
+                    },
+                    // icons: {
+                    //     2: "jgTreeNode",
+                    //     3: "glqyTreeNode",
+                    // },
+                };
+            },
+            mounted() {
+                this.refresh();
+
+                this.pubVue.$on("delGlqywh", (data) => {
+                    this.doDel(data);
+                });
+                this.pubVue.$on("saveGlqywh", (data) => {
+                    this.doSaveAfterDraw(data);
+                });
+            },
+            destroyed: function () {
+                this.pubVue.$emit("removeMarkers", { layerType: this.layerType });
+            },
+            methods: {
+                handleNodeClick(data) {
+                    this.selected = $.extend({}, data);
+                    let obj = {};
+                    $.extend(obj, data);
+                    this.pubVue.$emit("drawPolygon", { data: obj, marker: glqywhMarkerContentCmp, layerType: this.layerType });
+                },
+                onAdd() {
+                    // if (this.selected.id === "") {
+                    //     this.$alert("请从左侧树中选中添加到节点！", "提醒", {
+                    //         confirmButtonText: "确定",
+                    //     });
+                    // } else {
+                    this.$refs.dialog.showAddDialog();
+                    // }
+                },
+                onEdit() {
+                    this.$refs.dialog.showEditDialog(this.selected);
+                },
+                onDel() {
+                    // if (this.selected.id === "") {
+                    //     this.$alert("请从左侧树中选中节点！", "提醒", {
+                    //         confirmButtonText: "确定",
+                    //     });
+                    // } else {
+                    this.$confirm("此操作将删除该节点, 是否继续?", "提示", {
+                        confirmButtonText: "确定",
+                        cancelButtonText: "取消",
+                        type: "warning",
+                    })
+                        .then(() => {
+                            this.doDel({ id: this.selected.id });
+                        })
+                        .catch(() => {});
+                    // }
+                },
+                doDel(data) {
+                    let params = new URLSearchParams();
+                    params.append("id", data.id);
+                    this.axios
+                        .post(this.delUrl, params)
+                        .then((response) => {
+                            if (response.data.code === 0) {
+                                // 请求成功
+                                this.$notify({
+                                    type: "success",
+                                    message: "删除成功",
+                                    position: "top-right",
+                                    offset: 50,
+                                });
+                                this.pubVue.$emit("deleteLayer", { id: data.id, layerType: this.layerType });
+                                this.selected = $.extend({}, this.defaultSelected);
+                                this.refresh();
+                            } else {
+                                this.$alert(response.data.msg, "提醒", {
+                                    confirmButtonText: "确定",
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                doSaveAfterDraw(data) {
+                    let params = new URLSearchParams();
+                    params.append("id", data.id);
+                    params.append("pid", data.pid);
+                    params.append("qymc", data.label);
+                    params.append("lx", data.lx);
+                    params.append("geo", data.newGeo || data.geo);
+                    this.axios
+                        .post(this.saveUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            if (data.id.slice(0, 4) === "tmp_") {
+                                let newId = response.data.data;
+                                this.pubVue.$emit("afterSavePolygon", {
+                                    flag: "1",
+                                    id: data.id,
+                                    data: data,
+                                    newId: newId,
+                                    marker: glqywhMarkerContentCmp,
+                                    layerType: this.layerType,
+                                });
+                            } else {
+                                this.pubVue.$emit("afterSavePolygon", { flag: "0", id: data.id, data: data, layerType: this.layerType });
+                            }
+                            this.$notify({
+                                type: "success",
+                                message: "保存成功",
+                                position: "top-right",
+                                offset: 50,
+                            });
+                            this.refresh();
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                doSave(data) {
+                    let params = new URLSearchParams();
+                    params.append("id", data.id);
+                    params.append("pid", data.pid);
+                    params.append("qymc", data.label);
+                    params.append("lx", data.lx);
+                    this.axios
+                        .post(this.saveUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            this.$notify({
+                                type: "success",
+                                message: "保存成功",
+                                position: "top-right",
+                                offset: 50,
+                            });
+                            this.pubVue.$emit("afterSavePolygon", {
+                                flag: "2",
+                                id: data.id,
+                                data: data,
+                                marker: glqywhMarkerContentCmp,
+                                layerType: this.layerType,
+                            });
+                            this.refresh();
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                handleDoDraw(form) {
+                    let obj = {};
+                    $.extend(obj, form, { id: "tmp_" + new Date().getTime(), wbz: "1" });
+                    this.pubVue.$emit("drawPolygon", { data: obj, marker: glqywhMarkerContentCmp, layerType: this.layerType });
+                },
+                refresh() {
+                    // this.$nextTick().then(() => {
+                    let params = new URLSearchParams();
+                    this.axios
+                        .post(this.queryUrl, params)
+                        .then((response) => {
+                            // 请求成功
+                            let data = response.data;
+                            this.data = data;
+                            if (data.length > 0) this.expandedKeys = [data[0].id];
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                    // });
+                },
+            },
+        });
+    </script>
+    <style>
+        /*dialog*/
+        .glqywhAddDialogClass {
+            width: 500px;
+        }
+        /*dialog>form*/
+        .glqywhAddDialogClass .el-form {
+            width: 460px;
+        }
+        .glqywhAddDialogClass .el-select .el-input {
+            width: 340px;
+        }
+    </style>
+    <!-- 新增窗口 -->
+    <template id="glqywhAddDialogTemplate">
+        <el-dialog
+            title="新增"
+            custom-class="glqywhAddDialogClass"
+            :append-to-body="false"
+            :fullscreen="false"
+            :modal="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogTableVisible"
+            :before-close="handleDialogClose"
+        >
+            <el-form :model="form" size="medium" :label-width="formLabelWidth">
+                <el-form-item label="类型">
+                    <el-radio-group v-model="form.lx">
+                        <el-radio label="2">机关/部门</el-radio>
+                        <el-radio label="3">管理区域</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item :label="qymcLabel">
+                    <el-input v-model="form.label" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="handleDialogClose">取 消</el-button>
+                <el-button v-if="form.lx=='2'||showSaveBtn" type="primary" @click="handleSave">保 存</el-button>
+                <el-button v-if="showDrawBtn" type="primary" @click="handleSumbit">开始绘制</el-button>
+            </div>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component("glqywhAddDialog", {
+            template: "#glqywhAddDialogTemplate",
+            data() {
+                let defaultForm = { id: "", lx: "3", label: "" };
+                return {
+                    dialogTableVisible: false,
+                    defaultForm: defaultForm,
+                    form: $.extend({}, defaultForm),
+                    formLabelWidth: "120px",
+                    qymcLabel: "管理区域名称",
+                    showDrawBtn: true,
+                    showSaveBtn: false,
+                };
+            },
+            props: {
+                pid: {
+                    type: String,
+                },
+            },
+            watch: {
+                "form.lx": function (val, old) {
+                    if (val === "2") {
+                        this.qymcLabel = "机关/部门名称";
+                    } else {
+                        this.qymcLabel = "管理区域名称";
+                    }
+                },
+            },
+            methods: {
+                showAddDialog() {
+                    this.form = $.extend({}, this.defaultForm);
+                    this.showDrawBtn = true;
+                    this.showSaveBtn = false;
+                    this.dialogTableVisible = true;
+                },
+                showEditDialog(data) {
+                    $.extend(this.form, data);
+                    this.showDrawBtn = false;
+                    this.showSaveBtn = true;
+                    this.dialogTableVisible = true;
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false;
+                },
+                handleSave() {
+                    this.dialogTableVisible = false;
+                    let params = { pid: this.pid };
+                    $.extend(params, this.form);
+                    this.$emit("do-save", params);
+                },
+                handleSumbit() {
+                    this.dialogTableVisible = false;
+                    let params = { pid: this.pid };
+                    $.extend(params, this.form);
+                    this.$emit("do-draw", params);
+                },
+            },
+        });
+    </script>
+    <style>
+        /* marker样式 */
+        .glqywh_popup_content {
+            padding: 0;
+        }
+        .glqywh_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 230px;
+        }
+        .glqywh_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .glqywh_info_container .title:after {
+            clear: both;
+            content: "";
+            display: table;
+        }
+
+        .glqywh_collect_box {
+            position: relative;
+            /*width: 14px;*/
+            /*height: 14px;*/
+            display: inline-block;
+        }
+    </style>
+    <!-- 地图信息框 -->
+    <template id="glqywhMarkerTemplate">
+        <div class="glqywh_popup_content">
+            <div class="glqywh_info_container">
+                <div class="title">
+                    <span><a href="#">{{markerData.label}}</a></span>
+                    <div class="glqywh_collect_box" style="float: right; text-align: right">
+                        <span v-if="editable"><button class="fa fa-edit" @click="doClick">{{btnTxt}}</button></span>
+                        <span v-if="editable&&btnStatus==1"><button class="fa fa-cancel" @click="doCancel">取消</button></span>
+                        <span v-if="delable"><button class="fa fa-remove" @click="delClick">删除</button></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let glqywhMarkerContentCmp = Vue.extend({
+            template: "#glqywhMarkerTemplate",
+            props: {
+                // 可编辑
+                editable: {
+                    type: Boolean,
+                    default: false,
+                },
+                // 可删除
+                delable: {
+                    type: Boolean,
+                    default: false,
+                },
+                // 按钮状态
+                btnStatus: {
+                    type: Number,
+                    default: 0,
+                },
+                pubVue: {
+                    type: Object,
+                },
+                markerData: {
+                    type: Object,
+                },
+            },
+            data: function () {
+                let btnTxts = ["修改", "保存"];
+                return {
+                    btnTxts: btnTxts,
+                    btnTxt: btnTxts[this.btnStatus],
+                };
+            },
+            watch: {
+                btnStatus: function (val, oldVal) {
+                    this.btnTxt = this.btnTxts[val];
+                    this.delable = !val;
+                },
+            },
+            methods: {
+                doClick() {
+                    if (this.btnTxt === this.btnTxts[0]) {
+                        this.btnStatus = 1;
+                        this.pubVue.$emit("editGeo", { data: this.markerData, marker: glqywhMarkerContentCmp, layerType: "glqywh" });
+                    } else {
+                        this.btnStatus = 0;
+                        this.pubVue.$emit("saveGlqywh", this.markerData);
+                    }
+                },
+                doCancel() {
+                    this.btnStatus = 0;
+                    this.pubVue.$emit("cancelGeo", { data: this.markerData, layerType: "glqywh" });
+                },
+                delClick() {
+                    this.$confirm("此操作将删除该区域, 是否继续?", "提示", {
+                        confirmButtonText: "确定",
+                        cancelButtonText: "取消",
+                        type: "warning",
+                    })
+                        .then(() => {
+                            this.pubVue.$emit("delGlqywh", this.markerData);
+                        })
+                        .catch(() => {});
+                },
+            },
+        });
+    </script>
+</div>

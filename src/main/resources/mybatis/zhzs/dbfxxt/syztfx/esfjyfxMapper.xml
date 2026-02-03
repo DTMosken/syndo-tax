@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.EsfjyfxMapper">
+
+	<!-- 子句  -->
+	<sql id="withView">
+		WITH A AS(SELECT NSRMC,ZSXM,ZSPM,SJJE SHUIE,SUBSTR(SKSSQQ,0,7) SSQQ,NSRSBH NSRSBH,ZGSWSKFJ ZGSWS FROM MD_SWJ_RKXX 
+				   WHERE NSRMC IN (SELECT YCQR FROM MD_ZRZYJ_ESFJYXX)  AND ZSXM= '个人所得税' AND ZSPM='房屋转让所得'),
+			 B AS(SELECT NSRMC,ZSXM,ZSPM,SJJE SHUIE,SUBSTR(SKSSQQ,0,7) SSQQ FROM MD_SWJ_RKXX
+				   WHERE (NSRMC IN (SELECT XCQR FROM MD_ZRZYJ_ESFJYXX) AND ZSXM='契税') OR (NSRMC IN(SELECT GYR FROM MD_ZRZYJ_ESFJYXX)
+				    AND ZSXM='契税')),
+			 C AS(SELECT FWZL,YT,MJ,FWPGJZ,YCQR,XCQR,TO_CHAR(TO_DATE(DATE_TIME,'YYYY-MM')-1,'YYYY-MM') BSZQ FROM MD_ZRZYJ_ESFJYXX
+				WHERE FWZL NOT IN (
+				  	SELECT FWZL FROM TMP_DB_ESFJYXX WHERE STATE=1 
+					UNION ALL
+					SELECT FWZL FROM TMP_DB_ESFJYXX WHERE STATE=3
+				)
+			 )
+	</sql>
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Esfjyfx"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Esfjyfx">
+		<include refid="withView"/>	
+		     SELECT NVL(BD.OBJ_ID,SYS_GUID()) OBJ_ID,I.* ,
+		     CASE WHEN BD.STATE='2' THEN '回退' WHEN BD.STATE='4' THEN '终止'  ELSE '新建' END SFHT,BD.HTYY FROM 
+		     (SELECT CC.*,B.SHUIE QS FROM 
+	      		(SELECT C.FWZL,C.BSZQ,C.YT,C.MJ,C.FWPGJZ,ROUND(C.FWPGJZ/C.MJ,2) GZ,C.YCQR,A.SHUIE SDS,C.XCQR,A.NSRSBH,A.ZGSWS
+	        	   FROM C LEFT JOIN A ON C.YCQR=A.NSRMC AND C.BSZQ=A.SSQQ)CC 
+               	LEFT JOIN B  ON CC.XCQR=B.NSRMC  AND CC.BSZQ=B.SSQQ
+              WHERE 1=1
+			<if test="fwzl!=null and fwzl !=''">and cc.fwzl like '%'||#{fwzl}||'%'
+				<!-- <foreach item="item" index="index" collection="fwzlList" open="(" separator="," close=")">
+					#{item}
+				</foreach> -->
+		    </if>
+ 		 	<if test="yt!=null and yt !=''">and cc.yt like '%'||#{yt}||'%'</if>
+			<if test="bszq!=null and bszq !=''">and cc.bszq =#{bszq}</if>
+     		ORDER BY CC.FWZL) I LEFT JOIN TMP_DB_ESFJYXX BD
+        	ON I.FWZL=BD.FWZL
+        	AND I.BSZQ=BD.BSZQ
+	</select>
+</mapper>

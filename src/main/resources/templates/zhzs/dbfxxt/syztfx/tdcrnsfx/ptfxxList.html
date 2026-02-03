@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <meta charset="utf-8" />
+    <head>
+        <th:block th:include="include :: layui-header('查看详情')" />
+    </head>
+    <body class="layui-body-table">
+        <div class="layui-card-body">
+            <table id="layui-table" lay-filter="layui-table"></table>
+        </div>
+
+        <th:block th:include="include :: layui-footer" />
+        <script th:inline="javascript">
+            var prefix = ctx + 'zhzs/dbfxxt/syztfx/tdcrnsfx'
+            var nsrmc = /*[[${param.nsrmc}]]*/ ''
+            var qdrq = /*[[${param.qdrq}]]*/ ''
+
+            $(function () {
+                var options = {
+                    url: prefix + '/getPtfxxList?nsrmc=' + nsrmc + '&qdrq=' + qdrq,
+                    modalName: '查看详情',
+                    bottomToolbar: [],
+                    cols: [
+                        [
+                            {
+                                checkbox: true
+                            },
+                            {
+                                field: 'id',
+                                hide: true
+                            },
+                            {
+                                field: 'jkdw',
+                                title: '缴款单位',
+                                align: 'center',
+                                sortable: true
+                            },
+                            {
+                                field: 'xmmc',
+                                title: '项目名称',
+                                align: 'center',
+                                sortable: true
+                            },
+                            {
+                                field: 'jzmj',
+                                title: '建筑面积（㎡）',
+                                align: 'right',
+                                sortable: true
+                            },
+                            {
+                                field: 'zhptfjkjey',
+                                title: '综合配套费缴款金额（元）',
+                                align: 'right',
+                                sortable: true
+                            },
+                            {
+                                field: 'pjdh',
+                                title: '票据单号',
+                                align: 'center',
+                                sortable: true
+                            },
+                            {
+                                field: 'jksj',
+                                title: '缴款时间',
+                                align: 'center',
+                                sortable: true
+                            },
+                            {
+                                field: 'ynse',
+                                title: '应纳契税',
+								align: 'right',
+                                sortable: true
+                            }
+                        ]
+                    ]
+                }
+                $.table.init(options)
+            })
+        </script>
+    </body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('指标信息')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:60px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 66px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0 10px 0px 10px;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+			padding-bottom: 10px;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row" style="padding-left:10px;">
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">指标名称：</label>
+						<div class="layui-input-block">
+							<input type="text" id="zbmc" name="zbmc" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">是否反馈：</label>
+						<div class="layui-input-block">
+							<select id="sffk" name="sffk" class="form-control input-sm">
+								<option value="">请选择</option>
+								<option value="1">是</option>
+								<option value="0">否</option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md3">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+	<script type="text/html" id="tmpToolbar">
+	 <div class="layui-btn-container" id="toolbtn">
+		 <button class="layui-btn layui-btn-sm" style="background-color: #1dc5a3" onclick="edit()">
+			 <i class="layui-icon">&#xe642;</i>修改
+		 </button>
+		 <div style="position: absolute; background-color: white;top:-1px; left:-1px; width: calc(100% + 2px); height: 100%; z-index: -1;"></div>
+	 </div>
+	</script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/zbxx";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				title: "指标信息",
+				toolbar: '#tmpToolbar',
+				defaultToolbar:['filter', 'print'],
+				limit: 200,
+				limits: [200],
+				even: true,
+				ataType: "json",
+				height: 'full-95',
+
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+                        {
+                            title : '序号',
+                            align: 'center',
+							width: '60',
+							type: 'numbers'
+                        },
+						{
+							field : 'zbdm',
+							title : '指标代码',
+							align: 'left',
+							hide: true
+						},
+						{
+                        	field : 'zbmc',
+                            title : '指标名称',
+                            align: 'left', 
+							width: '200'
+                        },
+                        {
+                        	field : 'zblxmc',
+                            title : '指标类型',
+                            align: 'center',
+							width: '160'
+                        },
+						{
+							field : 'sffkmc',
+							title : '是否反馈',
+							align: 'center',
+							width: '100'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        function edit() {
+			var rows = $.table.selectColumns("zbdm".toString());
+			if (rows.length != 1) {
+				$.modal.alertWarning("请选择一条记录");
+				return;
+			}
+			$.modal.open("修改指标信息", prefix + '/edit/'+rows.join(), null, 500);
+		}
+    </script>
+</body>
+</html>

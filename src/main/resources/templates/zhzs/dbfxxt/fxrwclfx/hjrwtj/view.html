@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('户籍任务统计')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse in">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">处理部门： </label>
+									<div class="col-sm-9">
+										<select id="clbm" name="clbm" th:with="type=${@dict.getType('dm_dbfxpt_fxrwclfx_clbm')}"  class="form-control input-sm">
+											<option value=""></option>
+											<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+										</select>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">指标名称： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="zbmc" name="zbmc"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">任务内容： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" id="rwnr" name="rwnr"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">创建时间起： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" readonly="readonly" id="startTime" name="startTime"/>
+									</div>
+								</div>
+							</div>
+			        		<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">创建时间止： </label>
+									<div class="col-sm-9">
+										<input class="form-control input-sm" type="text" readonly="readonly" id="endTime" name="endTime"/>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-default btn-sm" onclick="onReset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+	        <div class="btn-group-sm" id="toolbar" role="group">
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/fxrwclfx/hjrwtj";
+
+        $(function() {
+            var options = {
+                //url: prefix + "/list",
+                modalName: "户籍任务统计",
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'id', 
+					visible: false
+				},
+				{
+					field : 'zbmc', 
+					title : '指标名称',
+					sortable: true
+				},
+				{
+					field : 'cldw', 
+					title : '处理单位',
+					sortable: true
+				},
+				{
+					field : 'rwbt', 
+					title : '任务标题',
+					sortable: true
+				},
+				{
+					field : 'xfr', 
+					title : '下发人',
+					sortable: true
+				},
+				{
+					field : 'xfsj', 
+					title : '下发时间',
+					sortable: true
+				},
+				{
+					field : 'cljd', 
+					title : '处理阶段',
+					sortable: true
+				},
+				{
+					field : 'cljg', 
+					title : '处理结果',
+					sortable: true
+				},
+				{
+					field : 'clr', 
+					title : '处理人',
+					sortable: true
+				},
+				{
+					field : 'gdsj', 
+					title : '规定时间',
+					sortable: true
+				},
+				{
+					field : 'wcsj', 
+					title : '完成时间',
+					sortable: true
+				},
+				{
+					field : 'wcqk', 
+					title : '完成情况',
+					sortable: true
+				},
+				{
+					field : 'fkyj', 
+					title : '反馈意见',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+        });
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+      	  //执行一个laydate实例
+      	  laydate.render({
+      	    elem: '#startTime', //指定元素
+      	    format:'yyyy-MM-dd'
+      	  });
+      	  //执行一个laydate实例
+      	  laydate.render({
+      	    elem: '#endTime', //指定元素
+      	    format:'yyyy-MM-dd'
+      	  });
+      });
+    </script>
+</body>
+</html>

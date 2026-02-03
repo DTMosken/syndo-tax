@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('已反馈')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:60px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 66px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+	<form id="query-form">
+		<input type="hidden" name="fkr" th:value="${fkr}">
+		<input type="hidden" name="lx" th:value="${lx}">
+	</form>
+	<table id="layui-table" lay-filter="layui-table"></table>
+	<script type="text/html" id="lxTpl">
+		<a href="javascript:;" onclick="parent.ckfk('{{d.id}}')" class="layui-table-link">{{ d.lxmc }}</a>
+	</script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/rwtj";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/yfk",
+				title: "已反馈",
+				limit: 200,
+				limits: [200],
+				even: true,
+				ataType: "json",
+				height: 'full-0',
+				where: $.table.where('query-form'),
+				bottomToolbar:[],
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+						{
+							field : 'lxmc',
+							title : '类型',
+							align: 'center',
+							width: '100',
+							templet: '#lxTpl'
+						},
+						{
+							field : 'zbmc',
+							title : '指标',
+							align: 'center',
+							width: '250',
+							templet: '#zbTpl'
+						},
+						{
+							field : 'nsrmc',
+							title : '纳税人名称',
+							align: 'center',
+							width: '250',
+							templet: '#nsrTpl'
+						},
+						{
+							field : 'tsr',
+							title : '推送人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'tssj',
+							title : '推送时间',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'fkr',
+							title : '反馈人',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'fksx',
+							title : '反馈时限',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'fksj',
+							title : '反馈时间',
+							align: 'center',
+							width: '150'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--城镇土地使用税比对分析 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.CztdsysfxMapper">
+
+    <!-- 查询 -->
+    <select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Cztdsysfx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.syztfx.Cztdsysfx" databaseId="mysql">
+        with recursive sj(dt, num) as (
+			select date_format(concat(#{skssqz},'-01'), '%y-%m'), @num := 1
+			union all
+			select date_format(date_sub(concat(#{skssqz},'-01'), interval num month), '%y-%m'), @num := @num + 1 
+			from sj where num &lt; timestampdiff(month,concat(#{skssqq}, '-01'),concat(#{skssqz}, '-01'))+1
+		),
+		ts AS(
+		SELECT id, ywid, nsrmc, zt, fklx FROM(
+		SELECT id, ywid, nsrmc, zt, fklx, ROW_NUMBER() OVER(PARTITION BY nsrmc, ywid ORDER BY tssj DESC) rn FROM t_dbfxxt_fkb WHERE zbdm='cztdsysfx'
+		) ts WHERE rn=1
+		)
+		,sy as(
+			select nsrmc, sum(jmstdmj) msmj, sum(yjmsje) jmje 
+			from (
+				select row_number() over(partition by nsrmc, tdbh order by yxqq desc) as rownum,
+					nsrmc, tdbh,
+		            zytdmj, yxqq, yxqz, tddj, jmstdmj, yjmsje
+				from t_db_swj_tdsyxx td
+				where yjmsje > 0
+			) t
+			where rownum = 1
+			group by nsrmc
+		)
+		, td as(
+		select qymc,mj,ynse,djrq,bdcyt from(
+		select qymc,mj,ynse, concat(
+		substring_index(SUBSTRING_INDEX(t.cqzh,')',1),'(',-1),'-','01','-','31') djrq,bdcyt
+		from (
+			select  qlrmc qymc, sum(bdcmj) mj, sum(bdcmj * 8) ynse,
+		substring_index(substring_index(cqzh,'）',1),'（',-1) cqzh,bdcyt
+			from t_db_zrghj_bdcdjxx) t)n
+
+			where 1=1
+			  <if test="nsrmc!=null and nsrmc!=''">
+				  and qymc like concat('%',#{nsrmc},'%')
+			  </if>
+			and substr(n.djrq, 1,7) &lt;= #{skssqq}
+			and bdcyt not in('科教用地','公共设施用地','农村宅基地','政府用地','殡葬用地','殡葬用地','农村住宅用地','教育用地','公用设施用地','科研用地','医卫慈善用地', '公路用地')
+			and qymc in(select nsrmc from t_db_swj_ybnsrdjxx)
+			group by qymc
+		)
+		, rk as(
+			select rk.nsrmc, sum(rk.sjje) sjje 
+			from t_db_swj_jrkxx rk
+			where 1=1
+			and substr(rk.skssqq, 1, 7) >=  #{skssqq}
+			and substr(rk.skssqz, 1, 7) &lt;= #{skssqz}
+			and rk.zsxm = '城镇土地使用税'
+			and rk.zspm not in ('滞纳金', '罚款')
+			group by rk.nsrmc
+		)
+		, mx as(
+			select td.qymc, td.mj, sy.msmj, sy.jmje,
+				ifnull(td.ynse / 12 * ifnull(timestampdiff(month, concat(#{skssqq}, '-01'), concat(#{skssqz}, '-01')) + 1, 0), 0) 
+				-
+				ifnull(sy.jmje * ifnull(timestampdiff(month, concat(#{skssqq}, '-01'), concat(#{skssqz}, '-01')) + 1, 0), 0) ynse
+			from td
+			left join sy on td.qymc = sy.nsrmc
+		)
+		,t as(
+			select qymc nsrmc, ifnull(mj, 0) mj, ifnull(msmj, 0) msmj, ifnull(ynse, 0) ynse, ifnull(sjje, 0) sjje, ce, ifnull(ts.zt,'0') zt, ts.id fkid from (
+				select mx.qymc, mx.mj, mx.msmj, mx.ynse, rk.sjje, ifnull(ifnull(rk.sjje, 0) - ifnull(mx.ynse, 0), 0) ce 
+				from mx
+				left join rk on mx.qymc = rk.nsrmc
+			) t LEFT JOIN ts ON t.qymc=ts.nsrmc AND MD5(t.qymc)=ts.ywid
+			where 1=1
+			<if test='zt == "0"'>
+				and ts.id is null
+			</if>
+			<if test='zt == "1"'>
+				and ts.zt in ('1', '3.1')
+			</if>
+			<if test='zt == "2"'>
+				and ts.zt = #{zt}
+			</if>
+			<if test='zt == "3"'>
+				and ts.zt in ('3', '3.0','3.2','3.3')
+			</if>
+			<if test="sfqj !=null and sfqj != ''">
+				<if test="sfqj == 1">
+					and ce &lt; 0
+				</if>
+				<if test="sfqj == 2">
+					and ce &gt;= 0
+				</if>
+			</if>
+		)
+		select nsrmc, #{skssqq} skssqq, #{skssqz} skssqz, format(mj,2) mj, format(msmj,2) msmj, 
+			format(ynse,2) ynse,format(sjje,2) sjje, format(ce,2) ce , zt, fkid
+		from (
+			select '合计' nsrmc, sum(mj) mj, sum(msmj) msmj, sum(ynse) ynse, sum(sjje) sjje, sum(ce) ce, '1' xh , '' zt, null fkid
+			from t
+			union all
+			select nsrmc, mj, msmj, ynse, sjje, ce, '99' xh , zt, fkid
+			from t
+		) t
+		order by xh, cast(ce as decimal(16,2))
+    </select>
+
+</mapper>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('新增')" />
+	<th:block th:include="include :: select2-css" />
+</head>
+<body>
+<div class="main-content">
+	<style>
+		.row{
+			padding-bottom:20px;
+		}
+
+	</style>
+	<form id="form-add" class="form-horizontal">
+		<input name="id" type="hidden" id="cur_id"/>
+		<input name="loginName" type="hidden" id="loginNameid" th:value="${loginName}"/>
+		<h4 class="form-header h4">基本信息</h4>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">数据所属期：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="time-input form-control" id="sjssq" placeholder="" name="sjssq" required/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">科室：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="form-control" id="ks" placeholder="" name="ks" required/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label">纳税人识别号：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input id="nsrsbh" name="nsrsbh" placeholder="" class="form-control" type="text" required>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">企业名称：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input id="qymc" name="qymc" class="form-control" type="text"placeholder="" required>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">项目内容：</label>
+					<div class="col-sm-8">
+						<input id="xmnr" name="xmnr" style="width: 78%" placeholder="" autocomplete="off" class="form-control" type="text" maxlength="30" required>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label">拨付金额(元)：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="form-control number" id="bfjey" placeholder="" name="bfjey" required number/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label is-required">支付用途：</label>
+					<div class="col-sm-8">
+						<input id="zfyt" name="zfyt" style="width: 78%" placeholder="" autocomplete="off" class="form-control" type="text" maxlength="30">
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-group">
+					<label class="col-sm-4 control-label">拨付时间：</label>
+					<div class="col-sm-8">
+						<div class="input-group">
+							<input type="text" class="time-input form-control" id="bfsj" placeholder="" name="bfsj" required/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+
+<div class="row">
+	<div class="col-sm-offset-5 col-sm-10">
+		<button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+		<button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+	</div>
+</div>
+<th:block th:include="include :: footer" />
+<th:block th:include="include :: select2-js" />
+<script>
+    var prefix = ctx + "zhzs/czjbmfg/czzxzjbf";
+
+    function submitHandler() {
+        var password = $("#password").val();
+        if ($.validate.form()) {
+            var data = $("#form-add").serializeArray();
+            $.operate.save(prefix + "/addSave", data);
+        }
+    }
+
+    layui.use('laydate',function() {
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#sjssq',
+            format : 'yyyy-MM',
+            type : 'month'
+        });
+        laydate.render({
+            elem: '#bfsj',
+            format : 'yyyy-MM-dd',
+            type : 'date'
+        });
+    });
+
+
+</script>
+</body>
+</html>

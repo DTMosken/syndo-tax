@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head th:include="include :: header('导入Excel')"></head>
+	<head>
+		<style>
+			.control-label {
+				padding-top: 7px;
+				text-align: right;
+			}
+			.form-control {height: 34px}
+		</style>
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form id="form-excel-imp" class="form-horizontal m" enctype="multipart/form-data" target="distFrame">
+	        	<input type="hidden" id="gucode" name="gucode" th:value="${gucode}"/>
+				<div class="form-group">
+					<label class="col-sm-2 col-xs-2 control-label is-required">数据所属期：</label>
+					<div class="col-sm-10 col-xs-10">
+				        <div class="input-group"> 
+				        	<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+				            <input id="dateTime" name="dateTime" type="text" th:value="${gatherCycle == '0'} ? ${dateTime} : ''" readonly="readonly" class="form-control"/>
+				        </div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 col-xs-2 control-label is-required">选择Excel：</label>
+					<div class="col-sm-10 col-xs-10">
+						<div class="input-group">
+		                    <label class="input-group-btn">
+		                        <span class="btn btn-white">
+		                            <i class="fa fa-folder-open"></i>
+                               		<input id="file" name="file" type="file" multiple="multiple" 
+                               			accept="application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display: none;">
+		                        </span>
+		                    </label>
+		                    <input type="text" id="file_label" name="file_label" readonly="readonly" 
+		                    	onclick="fileLabelClick()" class="form-control" placeholder="选择Excel文件...">
+		                </div>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 可导入后缀为xls、xlsx的文件。可选择多个文件批量导入，但总文件大小不得大于60M；
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 col-xs-2 control-label is-required">导入方式：</label>
+					<div class="col-sm-10 col-xs-10">
+						<select id="impMode" name="impMode" class="form-control" onchange="onImpMode()">
+							<option value="0">增量导入</option>
+							<option value="1">覆盖导入</option>
+						</select>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 增量导入：在原有数据基础上新增（无特定要求下，选择此选项即可）；
+						</span>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 覆盖导入：覆盖原有数据；
+						</span>
+					</div>
+				</div>
+				
+				<!-- 隐藏属性 -->
+				<div id="div_coverMode" class="form-group" style="display: none">
+					<label class="col-sm-2 col-xs-2 control-label">覆盖方式：</label>
+					<div class="col-sm-10 col-xs-10">
+						<select id="coverMode" name="coverMode" class="form-control">
+							<option value="0">本期覆盖</option>
+							<option value="1">全量覆盖</option>
+						</select>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 本期覆盖：覆盖【数据所属期】所选日期的数据；
+						</span>
+						<span class="help-block m-b-none">
+							<i class="fa fa-info-circle"></i> 全量覆盖：覆盖所有数据（相当于清除所有原有数据，谨慎操作）；
+						</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	    <div th:include="include::footer"></div>
+	    <script th:inline="javascript">
+			$(function() {
+				onImpMode();
+	        });
+
+			// <!--/* 初始化时间控件-扩展 */-->
+			layui.use('laydate', function() {
+            	const laydate = layui.laydate;
+
+            	// <!--/* 报送周期  0：月报，1：季度报，2：半年报，3：年报 */-->
+           		laydate.render({
+           			elem: '#dateTime', 
+            	    btns: ['confirm'],
+            	    /*[#th:block th:if="${gatherCycle eq '0' || gatherCycle eq '1' || gatherCycle eq '2'}"]*/
+           	    	type:'month',
+           	    	format: 'yyyy-MM',
+           	    	/*[/th:block]*/
+           	    	/*[#th:block th:if="${gatherCycle eq '3'}"]*/
+              	    type:'year',
+           	    	format: 'yyyy',
+           	    	/*[/th:block]*/
+           	    	/*[#th:block th:if="${gatherCycle eq '1' || gatherCycle eq '2'}"]*/
+                    ready: function () {
+                    	const hd = $("#layui-laydate" + $('#dateTime').attr("lay-key"));
+                        if (hd.length > 0) {
+                        	hd.on('click', function () {
+                        		/*[#th:block th:if="${gatherCycle eq '1'}"]*/
+                        		readyQuarter($(this));
+	                   	    	/*[/th:block]*/
+                        		/*[#th:block th:if="${gatherCycle eq '2'}"]*/
+                        		readyHalfYear($(this));
+	                   	    	/*[/th:block]*/
+                        	});
+                       	}
+                        /*[#th:block th:if="${gatherCycle eq '1'}"]*/
+                        readyQuarter(hd);
+               	    	/*[/th:block]*/
+                        /*[#th:block th:if="${gatherCycle eq '2'}"]*/
+                		readyHalfYear(hd);
+               	    	/*[/th:block]*/
+                	}
+              	    /*[/th:block]*/
+         		});
+
+            });
+			// <!--/* 将文件选中值赋予显示文本中 */-->
+			$("#file").change(function(){
+				let el = document.getElementById("file");
+				let fileName = "",split = "";
+				for(let i = 0; i < el.files.length; i++) {
+					fileName += split + el.files[i].name;
+					split = ",";
+				}
+				$("#file_label").val(fileName);
+			});
+			// <!--/* 表单校验 */-->
+			$("#form-excel-imp").validate({
+				rules:{
+					dateTime: {
+						required: true
+					},
+					file_label: {
+						required: true
+					},
+					impMode:{
+						required:true
+					}
+				}
+			});
+
+			// <!--/* 导入 */-->
+			function submitHandler() {
+				if ($.validate.form()) {
+					const url = ctx + 'module/dataImp/batchImpExcel'
+					const formdata = new FormData(document.getElementById("form-excel-imp"))
+					$.modal.loading("数据导入中，请稍等...");
+				 	$.ajax({
+	                    url: url,
+	                    data: formdata,
+	                    type: "post",
+	                    cache: false,		// <!--/* 上传文件无需缓存 */-->
+	                    processData: false, // <!--/* 必须false才会避开jQuery对 formdata 的默认处理,XMLHttpRequest会对 formdata 进行正确的处理 */-->
+	                    contentType: false, // <!--/* 必须false才会自动加上正确的Content-Type */-->
+	                    success: function (data) {
+	                    	if(data.code === 0) {
+		                    	$.modal.closeLoading();
+		                    	$.modal.alertSuccess(data.msg);
+		                    	parent.$.table.refresh();
+	                    	} else {
+	                    		$.modal.closeLoading();
+		                    	$.modal.alertError(data.msg);
+	                    	}
+	                    },
+	                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+	                    	$.modal.closeLoading();
+	                    	$.modal.alertError("发生未知错误，请联系管理员！");
+	                    }
+	                });
+				}
+		    }
+			// <!--/* 选择文件 */-->
+			function fileLabelClick() {
+				$('#file').trigger('click');
+			}
+			// <!--/* 导入方式 */-->
+			function onImpMode() {
+				const impMode = $("#impMode").val()
+				hideEl(["div_coverMode"]);
+				if (impMode === "1") {
+	                showEl(["div_coverMode"]);
+	            }
+			}
+			// <!--/* 隐藏控件 */-->
+			function hideEl(elIds){
+                for (let i = 0; i < elIds.length; i++) {
+					const _elIds = $("#" + elIds[i])
+					_elIds.hide();
+					_elIds.find(":input").attr("disabled", true);
+                }
+            }
+			// <!--/* 显示控件 */-->
+            function showEl(elIds) {
+                for (let i = 0; i < elIds.length; i++) {
+					const _elIds = $("#" + elIds[i])
+					_elIds.show();
+					_elIds.find(":input").attr("disabled", false);
+                }
+            }
+			// <!--/* 季度 */-->
+	        function readyQuarter(_this) {
+	            const dateList = _this.find(".laydate-month-list");
+	            dateList.each(function (i, e) {
+	            	let _index = 1;
+	                $(this).find("li").each(function (index, ele) {
+	                   	if (index % 3 + 1 === 3) {
+	                    	ele.innerHTML = "第" + (_index ++) + "季度";
+	                    } else {
+	                    	ele.style.display = "none";
+	                    }
+	                });
+	            });
+	        }
+			// <!--/* 年度 */-->
+	        function readyHalfYear(_this) {
+	        	const dateList = _this.find(".laydate-month-list");
+	        	dateList.each(function (i, e) {
+                    $(this).find("li").each(function (index, ele) {
+                    	if (index % 6 + 1 === 6) {
+                    		const cx = ele.innerHTML;
+	                    	ele.innerHTML = cx.replace(/六月/g, "上半年").replace(/十二月/g, "下半年");
+	                    } else {
+	                    	ele.style.display = "none";
+	                    }
+                    });
+                });
+	        }
+
+		</script>
+	</body>
+</html>

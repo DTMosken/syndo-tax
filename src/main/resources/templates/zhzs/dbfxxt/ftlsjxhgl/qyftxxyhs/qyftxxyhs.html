@@ -1,0 +1,431 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('企业房土信息已核实')" />
+	</head>
+	<body class="gray-white">
+	     <div class="container-div">
+			<div class="row">
+			
+				<!-- 查询条件 -->
+		    	<div class="panel panel-default">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+								<span class="fa fa-chevron-down"></span>
+							</a>
+						</h4>
+					</div>
+					<div id="collapseExample" class="panel-collapse collapse in">
+						<form id="query-form" class="form-horizontal m">
+				        	<div class="row">
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">核对日期： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" readonly="readonly" id="checktime" name="checktime"/>
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">核对用户名： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="checkeduserid" name="checkeduserid"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">纳税人识别号： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="nsrsbh" name="nsrsbh"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">纳税人名称： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="nsrmc" name="nsrmc"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">企业名称： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="title" name="title"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">标准地址： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="staddress" name="staddress"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">上报用户： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="sbyh" name="sbyh"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">报送日期： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" readonly="readonly" id="bszq" name="bszq"/>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">经营状态： </label>
+										<div class="col-sm-9">
+											<select id="businessstate" name="businessstate" th:with="type=${@dict.getType('dm_dbfxxt_ftlsjxhgl_qyftxxwhs_jyzt')}"  class="form-control input-sm">
+												<option value=""></option>
+												<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+											</select>
+										</div>
+									</div>
+								</div>
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">产权人： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" id="ownername" name="ownername"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="col-sm-12 text-right">
+									<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+									<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				
+				<!-- 工具栏 -->
+				<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+					<a class="btn btn-primary single disabled" onclick="lookup()">
+		            	<i class="fa fa-edit"></i> 详细信息
+		        	</a>	
+			        <a class="btn btn-primary single disabled" onclick="">
+			            <i class="fa fa-edit"></i> 生成文书
+			        </a>
+		        </div>
+				
+		        <div class="btn-group-sm" id="toolbar" role="group">
+				</div>
+				<div class="col-sm-12 select-table table-striped">
+					<table id="bootstrap-table" data-mobile-responsive="true"></table>
+				</div>
+			</div>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script th:inline="javascript">
+	        var prefix = ctx + "zhzs/dbfxxt/ftlsjxhgl/qyftxxyhs";
+	
+	        $(function() {
+	            var options = {
+	                url: prefix + "/list",
+	                updateUrl: prefix + "/edit/{id}",
+	                modalName: "企业房土信息已核实",
+			        showExport: true,
+			        showSearch:false,
+                	columns: [
+                	{
+			            checkbox: true							// 复选框（固定宽度）
+			        },
+			        {
+			            field: 'objId',
+			            visible: false
+			        },
+					{
+			            field: 'title',
+			            title: '企业名称',
+			            sortable: true
+			        },
+					{
+			            field: 'staddress',
+			            title: '标准地址',
+			            sortable: true
+			        },
+					{
+			            field: 'address',
+			            title: '定位地址',
+			            sortable: true
+			        },
+					{
+			            field: 'remark',
+			            title: '描述备注',
+			            sortable: true
+			        },
+					{
+			            field: 'electricitynumber',
+			            title: '电表号',
+			            sortable: true
+			        },
+					{
+			            field: 'waternumber',
+			            title: '水表号',
+			            sortable: true
+			        },
+			        {
+			            field: 'taxnumber',
+			            title: '税务号',
+			            sortable: true
+			        },
+			        {
+			            field: 'businesstitle',
+			            title: '工商注册名称',
+			            sortable: true
+			        },
+			        {
+			            field: 'businessnumber',
+			            title: '工商注册号',
+			            sortable: true
+			        },
+			        {
+			            field: 'businessstate',
+			            title: '经营状态',
+			            sortable: true
+			        },
+			        {
+			            field: 'businessphone',
+			            title: '经营者电话',
+			            sortable: true
+			        },
+			        {
+			            field: 'gasnumber',
+			            title: '天然气号',
+			            sortable: true
+			        },
+			        {
+			            field: 'ownnumber',
+			            title: '产权号码',
+			            sortable: true
+			        },
+			        {
+			            field: 'ownername',
+			            title: '产权人名称',
+			            sortable: true
+			        },
+			        {
+			            field: 'owneridnumber',
+			            title: '产权人身份证号码',
+			            sortable: true
+			        },
+			        {
+			            field: 'ownerphnumber',
+			            title: '产权人电话号码',
+			            sortable: true
+			        },
+			        {
+			            field: 'industryname',
+			            title: '行业名称',
+			            sortable: true
+			        },
+			        {
+			            field: 'nsrsbh',
+			            title: '纳税人识别号',
+			            sortable: true
+			        },
+			        {
+			            field: 'nsrmc',
+			            title: '纳税人名称',
+			            sortable: true
+			        },
+			        {
+			            field: 'scjydz',
+			            title: '生产经营地址',
+			            sortable: true
+			        },
+			        {
+			            field: 'frmc',
+			            title: '法人名称',
+			            sortable: true
+			        },
+			        {
+			            field: 'lxdh',
+			            title: '联系电话',
+			            sortable: true
+			        },
+			        {
+			            field: 'jyfw',
+			            title: '经营范围',
+			            sortable: true
+			        },
+			        {
+			            field: 'cyrs',
+			            title: '从业人数',
+			            sortable: true
+			        },
+			        {
+			            field: 'jye',
+			            title: '月核定营业额',
+			            sortable: true
+			        },
+			        {
+			            field: 'fwly',
+			            title: '房屋来源',
+			            sortable: true
+			        },
+			        {
+			            field: 'xcqr',
+			            title: '产权人',
+			            sortable: true
+			        },
+			        {
+			            field: 'cqrzjh',
+			            title: '产权人身份证号',
+			            sortable: true
+			        },
+			        {
+			            field: 'fwjz',
+			            title: '房产原值',
+			            sortable: true
+			        },
+			        {
+			            field: 'czfcyz',
+			            title: '出租房产原值',
+			            sortable: true
+			        },
+			        {
+			            field: 'fcmj',
+			            title: '房产面积',
+			            sortable: true
+			        },
+			        {
+			            field: 'czfcmj',
+			            title: '出租房产面积',
+			            sortable: true
+			        },
+			        {
+			            field: 'fczlje',
+			            title: '房产租赁金额',
+			            sortable: true
+			        },
+			        {
+			            field: 'fcszxbz',
+			            title: '房产税执行标准',
+			            sortable: true
+			        },
+			        {
+			            field: 'tddjbz',
+			            title: '土地等级标准',
+			            sortable: true
+			        },
+			        {
+			            field: 'qnynftls',
+			            title: '全年应纳房、土两税',
+			            sortable: true
+			        },
+			        {
+			            field: 'jmftse',
+			            title: '减免房、土税额及年度',
+			            sortable: true
+			        },
+			        {
+			            field: 'yjnftls',
+			            title: '已缴纳房、土两税税款年度',
+			            sortable: true
+			        },
+			        {
+			            field: 'sbhm',
+			            title: '税票号码',
+			            sortable: true
+			        },
+			        {
+			            field: 'glbm',
+			            title: '管理编码',
+			            sortable: true
+			        },
+			        {
+			            field: 'bszq',
+			            title: '报送日期',
+			            sortable: true
+			        },
+			        {
+			            field: 'noTaxAcreage',
+			            title: '非税面积 ',
+			            sortable: true
+			        },
+			        {
+			            field: 'taxAcreage',
+			            title: '应税面积',
+			            sortable: true
+			        },
+			        {
+			            field: 'sbyh',
+			            title: '上报用户',
+			            sortable: true
+			        },
+			        {
+			            field: 'checkeduserid',
+			            title: '核对人',
+			            sortable: true
+			        },
+			        {
+			            field: 'checktime',
+			            title: '核对时间',
+			            sortable: true
+			        },
+			        {
+			            field: 'zl',
+			            title: '是否租赁',
+			            sortable: true
+			        },
+			        {
+			            field: 'dc',
+			            title: '档次',
+			            sortable: true
+			        },
+			        {
+			            field: 'tdlb',
+			            title: '土地类别',
+			            sortable: true
+			        }]
+	            };
+	            $.table.init(options);
+	            
+	            // 双击修改
+	            $("#bootstrap-table").on('dbl-click-row.bs.table', function (e, row, ele,field) {
+	            	if(editFlag != 'hidden') {
+	            		$.operate.edit(row.id);
+	            	}
+	            });
+	            
+	        });
+	        
+	        //详细信息
+	        function lookup(id) {
+	        	if ($.common.isEmpty(id)) {
+	            	id = $.table.selectColumns("objId");
+	        	    if (id.length == 0) {
+	        			$.modal.alertWarning("请至少选择一条记录");
+	        			return;
+	        		}
+	        	}
+	        	var url = prefix + "/lookup/" + id;
+	        	$.modal.openFull("企业房土信息未核实" + "【查看】", url, false);
+	        }
+	        
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	        	laydate.render({elem: '#checktime',format: 'yyyy-MM-dd'});
+	    	  	laydate.render({elem: '#bszq',format: 'yyyy-MM-dd'});
+	       });
+	    </script>
+	</body>
+</html>

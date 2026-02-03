@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.FtlswsqkMapper">
+	
+	<!-- 房土两税精细化管理-房土两税完税情况 -->
+	
+	<sql id="whereClause">
+		<if test="yjsemax !=null and yjsemax !=''">
+			AND T.YJSE &gt;=#{yjsemax}
+		</if>
+		<if test="yjsemin !=null and yjsemin !=''">
+			AND T.YJSE &lt;=#{yjsemin}
+		</if>
+		<if test="sjsetotalmax !=null and sjsetotalmax !=''">
+			AND T.SJSETOTAL &gt;=#{sjsetotalmax}
+		</if>
+		<if test="sjsetotalmin !=null and sjsetotalmin !=''">
+			AND T.SJSETOTAL &lt;=#{sjsetotalmin}
+		</if>
+		<if test="cetotalmax != null and cetotalmax != ''">
+			AND CETOTAL &gt;=#{cetotalmax}
+		</if>
+	</sql>
+	
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Ftlswsqk"
+		parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Ftlswsqk">
+		WITH DICT AS (
+		     SELECT DICT_LABEL FROM SYS_DICT_DATA
+		     WHERE DICT_TYPE = 'dm_dbfxxt_ftlsjxhgl_tdsysyztz_jd'
+		),
+			FTLSTAX AS (
+			 SELECT W1.JD,NVL(W1.YJSE, 0) YJSE,NVL(W2.SJSETOTAL, 0) SJSETOTAL,
+			 NVL(YJSE, 0) - NVL(SJSETOTAL, 0) AS CE,W1.NF FROM (
+			 	SELECT BB.DICT_LABEL AS JD, SUM(WW.YJFCS2016) YJSE, '2016' AS NF 
+		        FROM CS_FTLSGZGL WW RIGHT JOIN DICT BB
+		        ON WW.STADDRESS LIKE '%' || BB.DICT_LABEL || '%' AND WW.ISCHECKED IS NOT NULL 
+		        GROUP BY BB.DICT_LABEL
+		     ) W1,
+		     (
+		     	SELECT BB.DICT_LABEL AS JD, SUM(WW.SJE) SJSETOTAL
+		        FROM CS_FTLSZSGLTAX WW RIGHT JOIN DICT BB
+		        ON WW.DZ LIKE '%' || BB.DICT_LABEL || '%' AND WW.SZ = '房产税'
+		        GROUP BY BB.DICT_LABEL
+		     ) W2
+		 	WHERE W1.JD = W2.JD
+		)
+		SELECT T.JD,T.YJSE,T.SJSETOTAL,T.CE CETOTAL,T.NF FROM FTLSTAX T
+		WHERE T.NF = #{nf}
+		<include refid="whereClause" />
+		<if test="jdlist!=null">
+			AND T.JD IN
+			<foreach item="item" index="index" collection="jdlist" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+</mapper>

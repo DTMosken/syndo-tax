@@ -1,0 +1,775 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 一户式 -->
+<div th:fragment="yhs">
+    <style>
+        .yhs-dialog .el-tabs__content {
+            padding: 0;
+            height: 100%;
+        }
+    </style>
+    <template id="yhsTemplate">
+        <el-dialog
+            :title="title"
+            custom-class="yhs-dialog"
+            :append-to-body="false"
+            :fullscreen="true"
+            :modal="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogVisible"
+            :before-close="handleDialogClose"
+        >
+            <el-tabs v-model="active" @tab-click="onSwitch" class="yhs-tab" type="border-card" tab-position="left" style="height: 100%">
+                <el-tab-pane name="swdjxx" label="税务登记信息" style="height: 100%">
+                    <swdjxx-component ref="swdjxx"></swdjxx-component>
+                </el-tab-pane>
+                <el-tab-pane name="ssrkxx" label="税收入库信息" style="height: 100%">
+                    <ssrkxx-component ref="ssrkxx"></ssrkxx-component>
+                </el-tab-pane>
+                <el-tab-pane name="gsdjxx" label="工商登记信息" style="height: 100%">
+                    <gsdjxx-component ref="gsdjxx"></gsdjxx-component>
+                </el-tab-pane>
+                <el-tab-pane name="sbjfxx" label="社保缴费信息" style="height: 100%">
+                    <sbjfxx-component ref="sbjfxx"></sbjfxx-component>
+                </el-tab-pane>
+                <!--<el-tab-pane label="土地使用情况" style="height: 100%">
+                    <tdsyqk-component ref="tdsyqk"></tdsyqk-component>
+                </el-tab-pane>-->
+                <el-tab-pane name="fcsyxx" label="房产税源信息" style="height: 100%">
+                    <fcsyxx-component ref="fcsyxx"></fcsyxx-component>
+                </el-tab-pane>
+                <el-tab-pane name="qyysxx" label="企业用水信息" style="height: 100%">
+                    <qyysxx-component ref="qyysxx"></qyysxx-component>
+                </el-tab-pane>
+                <el-tab-pane name="qyydxx" label="企业用电信息" style="height: 100%">
+                    <qyydxx-component ref="qyydxx"></qyydxx-component>
+                </el-tab-pane>
+                <!--<el-tab-pane label="工程项目信息" style="height: 100%">
+                    <gcxmxx-component ref="gcxmxx"></gcxmxx-component>
+                </el-tab-pane>-->
+            </el-tabs>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component("yhsComponent", {
+            template: "#yhsTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+            },
+            data() {
+                return {
+                    title: "一户式",
+                    dialogVisible: false,
+                    shxydm: "",
+                    nsrmc: "",
+                    active: "swdjxx",
+                    state: { swdjxx: false, ssrkxx: false, gsdjxx: false, sbjfxx: false, fcsyxx: false, qyysxx: false, qyydxx: false }
+                };
+            },
+            mounted: function () {
+                this.pubVue.$on("showYhs", (data) => {
+                    if (data.shxydm) this.shxydm = data.shxydm;
+                    if (data.nsrmc) this.nsrmc = data.nsrmc;
+                    this.title = "一户式【" + this.nsrmc + "】";
+                    this.showDialog();
+                });
+            },
+            methods: {
+                onSwitch(tab) {
+                    if(this.state[tab.name] === false) {
+                        this.state[tab.name] = true;
+                        if(tab.name === "sbjfxx" || tab.name === "qyysxx" || tab.name === "qyydxx") {
+                            this.$refs[tab.name].init(this.nsrmc);
+                        } else {
+                            this.$refs[tab.name].init(this.shxydm);
+                        }
+                    }
+                },
+                showDialog() {
+                    this.dialogVisible = true;
+                    this.active = "swdjxx";
+                    this.state.ssrkxx = false;
+                    this.state.gsdjxx = false;
+                    this.state.sbjfxx = false;
+                    this.state.fcsyxx = false;
+                    this.state.qyysxx = false;
+                    this.state.qyydxx = false;
+                    this.$nextTick().then(() => {
+                        this.state.swdjxx = true;
+                        this.$refs.swdjxx.init(this.shxydm);
+                    });
+                },
+                handleDialogClose() {
+                    this.dialogVisible = false;
+                },
+            },
+        });
+    </script>
+
+    <!-- 税务登记信息 -->
+    <style>
+        .swdjxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="swdjxxTemplate">
+        <div style="height: 100%">
+            <iframe v-if="count>0" v-show="showMx" :src="swdjxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-if="count>1"
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component
+                v-if="count>1"
+                v-show="!showMx"
+                ref="table"
+                :params="params"
+                :gucode="gucode"
+                @row-click="rowClick"
+            ></yhs-table-component>
+            <div v-if="count==0" class="el-table__empty-block" style="width: 100%; height: 100%">
+                <span class="el-table__empty-text">暂无数据</span>
+            </div>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("swdjxxComponent", {
+            template: "#swdjxxTemplate",
+            data() {
+                let gucode = "swdjxx";
+                return {
+                    count: 0,
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    swdjxxUrl: "",
+                    queryIdsUrl: "/module/taxgis/GetSwdjxxIds",
+                    params: {
+                        nsrsbh: "",
+                    },
+                };
+            },
+            methods: {
+                init(shxydm) {
+                    this.showMx = false;
+                    this.params.nsrsbh = shxydm;
+                    let params = new URLSearchParams();
+                    params.append("shxydm", shxydm);
+
+                    this.axios
+                        .post(this.queryIdsUrl, params)
+                        .then((response) => {
+                            let ids = response.data;
+                            this.count = ids.length;
+                            if (this.count == 1) {
+                                this.swdjxxUrl = this.baseUrl + ids[0];
+                                this.showMx = true;
+                            } else if (this.count > 1) {
+                                this.refresh();
+                            }
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                refresh() {
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList();
+                    });
+                },
+                rowClick(id) {
+                    this.swdjxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 工商登记信息 -->
+    <style>
+        .gsdjxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="gsdjxxTemplate">
+        <div style="height: 100%">
+            <iframe v-if="count>0" v-show="showMx" :src="gsdjxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-if="count>1"
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component
+                v-if="count>1"
+                v-show="!showMx"
+                ref="table"
+                :params="params"
+                :gucode="gucode"
+                @row-click="rowClick"
+            ></yhs-table-component>
+            <div v-if="count==0" class="el-table__empty-block" style="width: 100%; height: 100%">
+                <span class="el-table__empty-text">暂无数据</span>
+            </div>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("gsdjxxComponent", {
+            template: "#gsdjxxTemplate",
+            data() {
+                let gucode = "xbqyxxlb";
+                return {
+                    count: 0,
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    gsdjxxUrl: "",
+                    queryIdsUrl: "/module/taxgis/GetGsdjxxIds",
+                    params: {
+                        tyshxydm: "",
+                    },
+                };
+            },
+            methods: {
+                init(shxydm) {
+                    this.showMx = false;
+                    this.params.tyshxydm = shxydm;
+                    let params = new URLSearchParams();
+                    params.append("shxydm", shxydm);
+
+                    this.axios
+                        .post(this.queryIdsUrl, params)
+                        .then((response) => {
+                            let ids = response.data;
+                            this.count = ids.length;
+                            if (this.count == 1) {
+                                this.gsdjxxUrl = this.baseUrl + ids[0];
+                                this.showMx = true;
+                            } else if (this.count > 1) {
+                                this.refresh();
+                            }
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                refresh() {
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList();
+                    });
+                },
+                rowClick(id) {
+                    this.gsdjxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 税收入库信息 -->
+    <style>
+        .ssrkxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="ssrkxxTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="ssrkxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component v-show="!showMx" ref="table" :params="params" :gucode="gucode" @row-click="rowClick"></yhs-table-component>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("ssrkxxComponent", {
+            template: "#ssrkxxTemplate",
+            data() {
+                let gucode = "jrkxx";
+                return {
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    ssrkxxUrl: "",
+                    params: {
+                        nsrsbh: "",
+                    },
+                };
+            },
+            methods: {
+                init(shxydm) {
+                    this.showMx = false;
+                    this.params.nsrsbh = shxydm;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+                rowClick(id) {
+                    this.ssrkxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 社保缴费信息 -->
+    <style>
+        .sbjfxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="sbjfxxTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="sbjfxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component v-show="!showMx" ref="table" :params="params" :gucode="gucode" @row-click="rowClick"></yhs-table-component>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("sbjfxxComponent", {
+            template: "#sbjfxxTemplate",
+            data() {
+                let gucode = "qyylbxjf";
+                return {
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    sbjfxxUrl: "",
+                    params: {
+                        dwmc: "",
+                    },
+                };
+            },
+            methods: {
+                init(nsrmc) {
+                    this.showMx = false;
+                    this.params.dwmc = nsrmc;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+                rowClick(id) {
+                    this.sbjfxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 土地使用情况 -->
+    <style>
+        .tdsyqkComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="tdsyqkTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="tdsyqkUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component v-show="!showMx" ref="table" :params="params" :gucode="gucode" @row-click="rowClick"></yhs-table-component>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("tdsyqkComponent", {
+            template: "#tdsyqkTemplate",
+            data() {
+                let gucode = "gytdsyq";
+                return {
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    tdsyqkUrl: "",
+                    params: {
+                        qlrmc: "",
+                    },
+                };
+            },
+            methods: {
+                init(nsrmc) {
+                    this.showMx = false;
+                    this.params.qlrmc = nsrmc;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+                rowClick(id) {
+                    this.tdsyqkUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 房产税源信息 -->
+    <style>
+        .fcsyxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="fcsyxxTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="fcsyxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component v-show="!showMx" ref="table" :params="params" :gucode="gucode" @row-click="rowClick"></yhs-table-component>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("fcsyxxComponent", {
+            template: "#fcsyxxTemplate",
+            data() {
+                let gucode = "fcsyxx";
+                return {
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    fcsyxxUrl: "",
+                    params: {
+                        shxydm: "",
+                    },
+                };
+            },
+            methods: {
+                init(shxydm) {
+                    this.showMx = false;
+                    this.params.shxydm = shxydm;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+                rowClick(id) {
+                    this.fcsyxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 企业用水信息 -->
+    <style>
+        .qyysxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="qyysxxTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="qyysxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component v-show="!showMx" ref="table" :params="params" :gucode="gucode" @row-click="rowClick"></yhs-table-component>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("qyysxxComponent", {
+            template: "#qyysxxTemplate",
+            data() {
+                let gucode = "qyysxx";
+                return {
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    qyysxxUrl: "",
+                    params: {
+                        hm: "",
+                    },
+                };
+            },
+            methods: {
+                init(nsrmc) {
+                    this.showMx = false;
+                    this.params.hm = nsrmc;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+                rowClick(id) {
+                    this.qyysxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 企业用电信息 -->
+    <style>
+        .qyydxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="qyydxxTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="qyydxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <yhs-table-component v-show="!showMx" ref="table" :params="params" :gucode="gucode" @row-click="rowClick"></yhs-table-component>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("qyydxxComponent", {
+            template: "#qyydxxTemplate",
+            data() {
+                let gucode = "qyydl";
+                return {
+                    showMx: false,
+                    gucode: gucode,
+                    baseUrl: "/module/dataImp/edit?gucode=" + gucode + "&pVal=",
+                    qyydxxUrl: "",
+                    params: {
+                        yhmc: "",
+                    },
+                };
+            },
+            methods: {
+                init(nsrmc) {
+                    this.showMx = false;
+                    this.params.yhmc = nsrmc;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+                rowClick(id) {
+                    this.qyydxxUrl = this.baseUrl + id;
+                    this.showMx = true;
+                },
+            },
+        });
+    </script>
+
+    <!-- 工程项目信息 -->
+    <style>
+        .gcxmxxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="gcxmxxTemplate">
+        <div style="height: 100%">
+            <iframe v-show="showMx" :src="gcxmxxUrl" width="100%" height="100%" frameborder="0"></iframe>
+            <el-button
+                v-show="showMx"
+                title="返回列表"
+                icon="el-icon-back"
+                type="primary"
+                @click="showMx=false"
+                plain
+                circle
+                style="position: fixed; right: 30px; top: 70px"
+            ></el-button>
+            <my-el-table
+                v-show="!showMx"
+                ref="table"
+                table-class="gcxmxxComponentTable"
+                :columns="gridTable.columns"
+                :data-url="gridTable.queryUrl"
+                :query-params="gridTable.queryParams"
+            >
+            </my-el-table>
+        </div>
+    </template>
+    <script type="module">
+        Vue.component("gcxmxxComponent", {
+            template: "#gcxmxxTemplate",
+            data() {
+                return {
+                    showMx: false,
+                    gcxmxxUrl: "",
+                    gridTable: {
+                        queryUrl: "/module/taxgis/getGcxmxx",
+                        queryParams: {
+                            dwmc: "",
+                        },
+                        columns: [
+                            { prop: "id", label: "ID", width: "30", show: false },
+                            { prop: "gcxmmc", label: "工程项目名称", width: "150", show: true },
+                            { prop: "xmdz", label: "项目地址", width: "150", show: true },
+                            { prop: "jsnr", label: "建设内容", width: "150", show: true },
+                            { prop: "kgsj", label: "开工时间", width: "150", show: true },
+                            { prop: "jgsj", label: "竣工时间", width: "150", show: true },
+                            { prop: "jsdw", label: "建设单位", width: "150", show: true },
+                            { prop: "jsdwlxr", label: "建设单位联系人", width: "150", show: true },
+                            { prop: "lxfs", label: "联系方式", width: "150", show: true },
+                            { prop: "jsqx", label: "建设期限", width: "150", show: true },
+                            { prop: "tze", label: "投资额（元）", width: "150", show: true },
+                            { prop: "njhtz", label: "年计划投资", width: "150", show: true },
+                            { prop: "jsgm", label: "建设规模（㎡）", width: "150", show: true },
+                            { prop: "lxsj", label: "立项时间", width: "150", show: true },
+                            { prop: "zjly", label: "资金来源", width: "150", show: true },
+                        ],
+                    },
+                };
+            },
+            methods: {
+                init(nsrmc) {
+                    this.showMx = false;
+                    this.gridTable.queryParams.dwmc = nsrmc;
+                    this.refresh();
+                },
+                refresh() {
+                    this.$refs.table.queryList();
+                },
+            },
+        });
+    </script>
+
+    <!-- 一户式表格 -->
+    <style>
+        .yhsTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 5px);
+        }
+    </style>
+    <template id="yhsTableTemplate">
+        <my-el-table ref="table" table-class="yhsTable" :columns="columns" @row-click="rowClick" :data-url="queryUrl" :query-params="queryParams">
+        </my-el-table>
+    </template>
+    <script type="module">
+        Vue.component("yhsTableComponent", {
+            template: "#yhsTableTemplate",
+            props: {
+                gucode: {
+                    type: String,
+                },
+                params: {
+                    type: Object,
+                },
+            },
+            data() {
+                return {
+                    queryUrl: "/module/dataImp/list",
+                    getTableColsUrl: "/module/taxgis/getTableCols",
+                    queryParams: {
+                        gucode: this.gucode,
+                    },
+                    columns: [
+                        { prop: "id", label: "ID", width: "30", show: false },
+                        { prop: "date_time", label: "数据所属期", width: "100", show: true },
+                    ],
+                };
+            },
+            mounted() {
+                this.loadColumns();
+            },
+            methods: {
+                loadColumns() {
+                    let params = new URLSearchParams();
+                    params.append("gucode", this.gucode);
+                    this.axios
+                        .post(this.getTableColsUrl, params)
+                        .then((response) => {
+                            let cols = response.data;
+                            for (let i = 0, len = cols.length; i < len; i++) {
+                                let col = cols[i];
+                                this.columns.push({ prop: col.field_name, label: col.field_comment, width: col.col_width, show: true });
+                            }
+                        })
+                        .catch((error) => {
+                            // 请求失败
+                            console.log("请求失败");
+                            console.log(error);
+                        });
+                },
+                queryList() {
+                    $.extend(this.queryParams, this.params);
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList();
+                    });
+                },
+                rowClick(row) {
+                    let id = row.id;
+                    if (id) this.$emit("row-click", id);
+                },
+            },
+        });
+    </script>
+</div>

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.sjkshxt.mapper.SjkshxtMapper">
+	
+	<!-- 获取各级次收入占比-->
+	<select id="getLeftChart1" resultType="com.syndo.project.zhzs.sjkshxt.domain.Jcsr">
+		SELECT zyjsr,ssjsr,dsjsr,qxjsr from t_v_tax_gjcsrzb where createtime = (select max(createtime)createtime from t_v_tax_gjcsrzb)
+	</select>
+
+
+	<!-- 获取收入趋势中地方收入与总收入数据-->
+	<select id="getLeftChart2" resultType="map">
+		/*SELECT GROUP_CONCAT(S.DAYS) sryf, GROUP_CONCAT( ROUND(sjje/10000,2)) zsr, GROUP_CONCAT( ROUND(qxj/10000,2)) dfsr
+		FROM (
+		select M.DAYS, ROUND(IFNULL(B.SJJE,0),2) sjje, ROUND(IFNULL(replace(B.QXJ,',',''),0),2) qxj FROM (
+		WITH recursive sj ( DAYS, num ) AS (
+		SELECT date_format( concat( date_format( now(), '%Y-%m' ), '-01' ), '%Y-%m' ), @num := 1
+		UNION ALL
+		SELECT date_format( date_sub( concat( date_format( now(), '%Y-%m' ), '-01' ), INTERVAL num MONTH ), '%Y-%m' ), @num := @num + 1
+		FROM sj
+		WHERE num &lt; timestampdiff( MONTH, concat( DATE_FORMAT( date( date_add( now(), INTERVAL - 1 YEAR )), '%Y-%m' ), '-01' ), concat( date_format( now(), '%Y-%m' ), '-01' ))
+		)
+		select DAYS from sj
+		order by DAYS
+		) M
+		LEFT JOIN (
+		SELECT  SUBSTR(RKRQ,1,7)RKRQ,SUM(SJJE) SJJE, SUM(QXJ) QXJ
+		FROM t_v_tax_detail
+		WHERE SUBSTR(RKRQ,1,7) &lt;= SUBSTR(DATE_FORMAT(NOW(),'%Y-%m'), 1, 7)
+		AND SUBSTR(RKRQ,1,7) >= DATE_FORMAT( date( date_add( now(), INTERVAL - 1 YEAR )), '%Y-%m' )
+		GROUP BY SUBSTR(RKRQ,1,7)
+		) B ON M.DAYS = B.RKRQ
+		) S;*/
+
+		select sryf,dfsr,zsr,createtime from t_v_tax_srqs where createtime=(select max(createtime) from t_v_tax_srqs)
+	</select>
+
+
+	<!--获取重点税种税收数据-->
+	<select id="getLeftChart3" resultType="map">
+		/*select GROUP_CONCAT(ZSXM) hy ,GROUP_CONCAT(ROUND(SJJE,2)) sssr
+		from (
+				 SELECT ZSXM,ROUND(SUM(SJJE)/10000,2) SJJE FROM t_v_tax_detail
+				 WHERE SUBSTR(rkrq,1,4) = SUBSTR(NOW(),1,4)
+				 GROUP BY ZSXM ORDER BY sjje desc LIMIT 1,8
+			 ) s;*/
+		select hy,sssr,createtime from t_v_tax_zdhyss where createtime=(select max(createtime) from t_v_tax_zdhyss)
+	</select>
+
+
+	<!--获取centerTop1数据-->
+	<select id="getCenterTop1" resultType="map">
+	/*with sr as(
+			select SUM(SJJE)/10000 zsr, SUM(QXJ)/10000 dfsr FROM t_srfxrkxx
+			WHERE SUBSTR(rkrq,1,4) = '2021'
+	  ),
+		zs as(
+			select count(distinct(qymc))qyzs from t_db_xzspj_xbyyzzxx
+		)
+		select concat(round(zsr,2),'')zsr,concat(round(dfsr,2),'')dfsr,(select qyzs from zs) qyzs from sr*/
+
+		select zsr,dfsr,qyzs from t_v_tax_centertop where createtime=(select max(createtime) from t_v_tax_centertop)
+	</select>
+
+
+	<!--获取企业街道收入增速:centerBottom1数据-->
+	<select id="getCenterBottom1" resultType="com.syndo.project.zhzs.sjkshxt.domain.Jdxzsrmx">
+		/*WITH bq as(
+			SELECT ss.jdxz, ss.jdzsr /10000 jdzsr, ss.jddfsr/10000 jddfsr, zb.zh/10000 zh FROM
+			(select  jdxz, SUM(SJJE) jdzsr, SUM(QXJ) jddfsr
+		  from t_v_tax_detail WHERE SUBSTR(RKRQ,1,4) = YEAR(CURDATE())
+		  GROUP BY JDXZ) ss,
+			( SELECT sum( sjje ) zh FROM t_v_tax_detail WHERE SUBSTR(RKRQ,1,4) = YEAR(CURDATE())) zb
+		)
+		, tq as(
+			SELECT  jdxz,SUM( SJJE )/10000 jdqnzsr,SUM( QXJ) /10000 jdqndfsr FROM t_v_tax_detail
+		 WHERE SUBSTR( RKRQ, 1, 4 ) = YEAR(CURDATE()) -1 GROUP BY JDXZ
+		), dict as(
+			select dict_label mc, dict_sort rownum
+		  from sys_dict_data
+		  where dict_type = 'dm_srfxxt_jdxz'
+		)
+				SELECT
+					dict.mc jdxz,
+					ROUND( bq.jdzsr, 2 ) jdzsr,
+					ROUND( IFNULL( jdqnzsr, 0 ), 2 ) jdqnzsr,
+					ROUND( IFNULL( bq.jdzsr - jdqnzsr, 0 ), 2 ) jdzje,
+					ROUND( IFNULL(( bq.jdzsr / jdqnzsr ) * 100, 0 ), 2 ) jdzjl,
+					ROUND( IFNULL( bq.jddfsr, 0 ), 2 ) jddfsr,
+					ROUND( IFNULL( jdqndfsr, 0 ), 2 ) jdqndfsr,
+					ROUND( IFNULL( bq.jddfsr - jdqndfsr, 0 ), 2 ) jddfzje,
+					ROUND( IFNULL(( bq.jddfsr / jdqndfsr ) * 100, 0 ), 2 ) jddfzjl,
+
+					ROUND((bq.jdzsr / bq.zh) * 100,2) srzb
+				FROM
+					bq
+						LEFT JOIN dict ON bq.jdxz = dict.mc
+						LEFT JOIN tq ON bq.jdxz = tq.jdxz
+				GROUP BY dict.mc*/
+		select jdxz,bnsr jdzsr,zs jdzjl from t_v_tax_jdxzsssr where createtime=(select max(createtime) from t_v_tax_jdxzsssr)
+	</select>
+
+	<!--获取centerMapData-->
+	<select id="getCenterMapData" resultType="com.syndo.project.zhzs.sjkshxt.domain.Jdxzsrmx">
+
+		<!--WITH ds as(
+			WITH bq as(
+				SELECT ss.jdxz, ss.jdzsr /10000 jdzsr, ss.jddfsr/10000 jddfsr, zb.zh/10000 zh FROM
+				(select jdxz, SUM(SJJE) jdzsr, SUM(QXJ) jddfsr
+		 			from T_V_TAX_DETAIL WHERE SUBSTR(RKRQ,1,4) = YEAR(CURDATE())
+					GROUP BY JDXZ
+				) ss,
+				(SELECT sum(sjje) zh FROM T_V_TAX_DETAIL WHERE SUBSTR(RKRQ,1,4) = YEAR(CURDATE())) zb
+			), 
+			tq as(
+				SELECT jdxz,SUM( SJJE )/10000 jdqnzsr,SUM( QXJ) /10000 jdqndfsr FROM T_V_TAX_DETAIL
+		 		WHERE SUBSTR( RKRQ, 1, 4 ) = YEAR(CURDATE()) -1 GROUP BY JDXZ
+			), 
+			&lt;!&ndash; num as(
+				SELECT jdxz,count( jdxz ) nszhs,sum( CASE WHEN djzclx IN ( '内资个体', '民办非企业单位（法人）', '民办非企业单位（个体）', '内资个人' ) THEN 1 ELSE 0 END ) gt,
+				count( jdxz ) - sum( CASE WHEN djzclx IN ( '内资个体', '民办非企业单位（法人）', '民办非企业单位（个体）', '内资个人' ) THEN 1 ELSE 0 END ) AS qy
+		 		FROM t_db_swj_swdjxx tdss GROUP BY jdxz
+			),  &ndash;&gt;
+			num as(
+				SELECT '' jdxz,'' nszhs,'' gt,
+				'' qy
+		 		FROM dual
+			), 
+			dict as(
+				select dict_label mc, dict_sort rownum from sys_dict_data where dict_type = 'dm_srfxxt_jdxz'
+			)
+			SELECT
+			dict.mc jdxz,
+			ROUND( bq.jdzsr, 2 ) jdzsr,
+			ROUND( IFNULL( jdqnzsr, 0 ), 2 ) jdqnzsr,
+			ROUND( IFNULL( bq.jdzsr - jdqnzsr, 0 ), 2 ) jdzje,
+			ROUND( IFNULL(( (bq.jdzsr - jdqnzsr) / jdqnzsr ) * 100, 0 ), 2 ) jdzjl,
+			ROUND( IFNULL( bq.jddfsr, 0 ), 2 ) jddfsr,
+			ROUND( IFNULL( jdqndfsr, 0 ), 2 ) jdqndfsr,
+			ROUND( IFNULL( bq.jddfsr - jdqndfsr, 0 ), 2 ) jddfzje,
+			ROUND( IFNULL(( (bq.jddfsr - jdqndfsr) / jdqndfsr ) * 100, 0 ), 2 ) jddfzjl,
+			IFNULL( num.nszhs, 0 ) zhs,
+			IFNULL( num.qy, 0 ) qys,
+			IFNULL( num.gt, 0 ) gts,
+			ROUND((bq.jdzsr / bq.zh) * 100,2) srzb,
+			NOW() cjsj
+			FROM
+			bq
+			LEFT JOIN dict ON bq.jdxz = dict.mc
+			LEFT JOIN tq ON bq.jdxz = tq.jdxz
+			left join num on bq.jdxz = num.jdxz
+			GROUP BY dict.mc
+		)
+		SELECT replace(jdxz,'办事处','')jdxz,jdzsr,jddfsr,zhs,qys,gts,srzb from ds group by jdxz-->
+		select GROUP_CONCAT(jdxz)jdxz,GROUP_CONCAT(round(sjje,2))sjje from t_v_tax_jdxzsrmap where createtime=(select max(createtime) from t_v_tax_jdxzsrmap)
+	</select>
+
+	<!--获取数据采集情况数据-->
+	<select id="getSjcjqkData" resultType="com.syndo.project.zhzs.sjkshxt.domain.Sjcjqk">
+		/*select bm.sjbm sjbm, zy.sjzy sjzy,zl.sjzl sjzl
+		FROM(SELECT count(dept_name) sjbm FROM sys_dept WHERE parent_id = 100) bm,
+			(SELECT count(`name`)sjzy,count(theme_class) zt from pub_data_menu) zy,
+			(SELECT ROUND(sum(a.table_rows)/10000,0) sjzl  FROM pub_meta_data p LEFT JOIN
+			 (select table_name,table_rows from information_schema.tables
+			where table_schema = (select database())) a ON lower(p.tab_name) = lower(a.table_name)) zl;*/
+
+		  select sjbm,sjzl,sjzy,hyzt from t_v_tax_sjcjqk where createtime=(select max(createtime) from t_v_tax_sjcjqk)
+
+	</select>
+
+	<!--获取税收风险情况数据-->
+	<select id="getSsfxqkData" resultType="com.syndo.project.zhzs.sjkshxt.domain.Ssfxqk">
+			/*with BN AS (
+			SELECT * FROM (
+			SELECT NSRSBH AS NSRSBH,
+				GROUP_CONCAT(DISTINCT NSRMC) AS NSRMC,
+				GROUP_CONCAT(DISTINCT CASE WHEN HYML!=' ' THEN HYML ELSE NULL END) AS HYML,
+				dense_rank() OVER(order by SUM(SJJE)
+					desc
+				) as PM,
+				SUM(SJJE) BNZSS
+				FROM T_V_TAX_DETAIL
+				WHERE  SUBSTR(rkrq,1,7) = YEAR(CURDATE())
+				AND NSRMC != '国家税务总局烟台经济技术开发区税务局第一税务所（办税服务厅）（HGDZ01）'
+				AND YSKM NOT IN ('出口货物退增值税','出口业务退增值税', '改征增值税出口退税')
+				GROUP BY NSRSBH
+			)T WHERE 1=1
+		)
+		SELECT PM, BN.NSRMC nsrmc,  FORMAT(BN.BNZSS/10000,2)  zsr
+		FROM BN limit 0,20*/
+		select rq,zb,yjce from t_v_tax_ssfxqk where createtime=(select max(createtime) from t_v_tax_ssfxqk)
+	</select>
+
+	<!--获取税种收入金额-->
+	<select id="getFxczqkData" resultType="com.syndo.project.zhzs.sjkshxt.domain.Fxczqk">
+		/*WITH bywc AS
+				 (SELECT SUM(t.sjje) je, IFNULL(t.zsxm, '其他') zsxm
+				  FROM t_v_tax_detail t
+				  WHERE SUBSTRING(t.RKRQ, 1, 4) = YEAR(CURDATE())
+				  GROUP BY t.zsxm),
+			 tbqn AS
+				 (SELECT SUM(t.sjje) je, IFNULL(t.zsxm, '其他') zsxm
+				  FROM t_v_tax_detail t
+				  WHERE  SUBSTRING(t.RKRQ, 1, 4) = YEAR(CURDATE())-1
+				  GROUP BY t.zsxm),
+			 ljwcs AS
+				 (SELECT SUM(t.sjje) je, IFNULL(t.zsxm, '其他') zsxm
+				  FROM t_v_tax_detail t
+				  WHERE  SUBSTRING(t.RKRQ, 1, 4) =YEAR(CURDATE())
+				  GROUP BY t.zsxm),
+			 dict AS (
+				 SELECT * FROM sys_dict_data WHERE dict_type='dm_zsxm'
+			 )
+		SELECT b.zsxm zsxm,
+			   ROUND(l.je/10000,2) ljwcs,
+			   IFNULL(ROUND(tb.je/10000,2),0) sntq,
+			   ROUND((b.je - IFNULL(tb.je,0))/IFNULL(tb.je,1) *100, 2) bsn
+		FROM bywc b
+				 LEFT JOIN tbqn tb ON b.zsxm = tb.ZSXM
+				 LEFT JOIN ljwcs l ON b.zsxm = l.ZSXM
+				 LEFT JOIN dict d on b.zsxm=d.dict_label
+
+		ORDER BY d.dict_sort*/
+		select qymc,bn,sntq,zs from t_v_tax_ssqsqy where createtime=(select max(createtime) from t_v_tax_ssqsqy)
+	</select>
+
+
+	<!--税收前十企业-->
+	<select id="getSsqsqyData" resultType="com.syndo.project.zhzs.sjkshxt.domain.Ssqsqy">
+	  	select qymc,bn,sntq,zs from t_v_tax_ssqsqy where createtime=(select max(createtime) from t_v_tax_ssqsqy)
+	</select>
+
+</mapper>

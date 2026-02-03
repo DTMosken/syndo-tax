@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.jkbb.JkdjbtjMapper">
+<!-- 金库多级表统计 -->
+
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkdjb" 
+			parameterType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkdjb">
+		WITH fen AS (
+			SELECT 
+			kmdm, kmmc,
+			to_char( nvl( sum( CASE WHEN lx = '区县级' THEN fse END ), 0 ), 'fm99999999999990.00' ) qxshuie,
+			to_char( nvl( sum( CASE WHEN lx = '省级' THEN fse END ), 0 ), 'fm99999999999990.00' ) shengshuie,
+			to_char( nvl( sum( CASE WHEN lx = '市级' THEN fse END ), 0 ), 'fm99999999999990.00' ) shishuie,
+			to_char( nvl( sum( CASE WHEN lx = '中央级' THEN fse END ), 0 ), 'fm99999999999990.00' ) zyshuie 
+		FROM VM_JKBB 
+		WHERE 1 = 1 
+			<if test="cxrqq !=null and cxrqq !=''"><![CDATA[ AND substr(sj,0,10)>=#{cxrqq} ]]></if>
+			<if test="cxrqz !=null and cxrqz !=''"><![CDATA[ AND substr(sj,0,10)<=#{cxrqz} ]]></if>
+		GROUP BY kmdm, kmmc 
+		) 
+		SELECT * 
+		FROM
+			( SELECT kmdm, kmmc, qxshuie, shengshuie, shishuie, zyshuie FROM fen ) UNION ALL
+		SELECT 
+			'' kmdm, '合计' kmmc,
+			to_char( nvl( sum( CASE WHEN lx = '区县级' THEN fse END ), 0 ), 'fm99999999999990.00' ) qxshuie,
+			to_char( nvl( sum( CASE WHEN lx = '省级' THEN fse END ), 0 ), 'fm99999999999990.00' ) shengshuie,
+			to_char( nvl( sum( CASE WHEN lx = '市级' THEN fse END ), 0 ), 'fm99999999999990.00' ) shishuie,
+			to_char( nvl( sum( CASE WHEN lx = '中央级' THEN fse END ), 0 ), 'fm99999999999990.00' ) zyshuie 
+		FROM VM_JKBB 
+		WHERE 1 = 1 
+			<if test="cxrqq !=null and cxrqq !=''"><![CDATA[ AND substr(sj,0,10)>=#{cxrqq} ]]></if>
+			<if test="cxrqz !=null and cxrqz !=''"><![CDATA[ AND substr(sj,0,10)<=#{cxrqz} ]]></if>
+			AND substr( kmdm, 0, 5 ) IN ( SELECT kmdm FROM VM_JKBB WHERE length( kmdm ) = 5 GROUP BY kmdm UNION ALL SELECT '10399' FROM dual ) 
+			AND length( kmdm ) >5
+	</select>
+
+</mapper>

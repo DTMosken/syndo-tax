@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title></title>
+        <link th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+        <link th:href="@{/ajax/libs/elementui/theme-chalk/index.css}" rel="stylesheet" />
+        <link th:href="@{/ajax/libs/leaflet/leaflet.css}" rel="stylesheet" />
+        <link th:href="@{/ajax/libs/leaflet/minimap/Control.MiniMap.min.css}" rel="stylesheet" />
+        <link th:href="@{/ajax/libs/leaflet/geoman/leaflet-geoman.css}" rel="stylesheet" />
+        <style type="text/css">
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                color: #303133;
+            }
+            .el-dialog__body {
+                padding: 5px 5px;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            .el-dialog__footer {
+                text-align: center;
+                padding: 0 20px 20px;
+            }
+            .el-dialog.is-fullscreen .el-dialog__body {
+                height: calc(100% - 70px);
+            }
+            .el-dialog {
+                -webkit-pointer-events: auto;
+                -moz-pointer-events: auto;
+                -ms-pointer-events: auto;
+                -o-pointer-events: auto;
+                pointer-events: auto;
+            }
+            .el-dialog__wrapper {
+                -webkit-pointer-events: none;
+                -moz-pointer-events: none;
+                -ms-pointer-events: none;
+                -o-pointer-events: none;
+                pointer-events: none;
+                overflow: hidden;
+            }
+            /* elementui表格错位 */
+            body .el-table th.gutter{
+                display: table-cell!important;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <leaflet-map ref="leafletMap" v-bind:pub-vue="pubVue" :use-online-tdt="useOnlineTdt" :limit-bound="limitBound"></leaflet-map>
+            <yhs-component :pub-vue="pubVue"></yhs-component>
+            <component v-for="(item, index) in comName" :is="item.name" :key="index" :pub-vue="pubVue" @on-del="onDel(index)"> </component>
+        </div>
+
+        <script th:src="@{/js/jquery.min.js}"></script>
+        <script th:src="@{/js/vue.min.js}"></script>
+        <script th:src="@{/js/axios.min.js}"></script>
+        <script th:src="@{/js/vue-axios.min.js}"></script>
+        <script th:src="@{/js/qs.js}"></script>
+        <script th:src="@{/ajax/libs/elementui/index.js}"></script>
+        <script th:src="@{/ajax/libs/leaflet/leaflet.js}"></script>
+        <script th:src="@{/ajax/libs/leaflet/proj4-compressed.js}"></script>
+        <script th:src="@{/ajax/libs/leaflet/proj4leaflet.js}"></script>
+        <script th:src="@{/ajax/libs/leaflet/leaflet.ChineseTmsProviders.js}"></script>
+        <!-- <script th:src="@{/ajax/libs/leaflet/Leaflet.PopupListLayer.js}"></script> -->
+        <script th:src="@{/js/wicket.js}"></script>
+        <script th:src="@{/js/wicket-leaflet.js}"></script>
+        <script th:src="@{/ajax/libs/leaflet/minimap/Control.MiniMap.min.js}"></script>
+        <script th:src="@{/ajax/libs/leaflet/geoman/leaflet-geoman.min.js}"></script>
+        <!-- <script th:src="@{/ajax/libs/leaflet/leaflet.canvas-markers.js}"></script> -->
+        <th:block th:if="${module=='qybz'}" th:include="taxgis/qybz::qybz" />
+        <th:block th:if="${module=='xmgl'}" th:include="taxgis/xmgl::xmgl" />
+        <th:block th:if="${module=='glqywh'}" th:include="taxgis/glqywh::glqywh" />
+        <th:block th:if="${module=='xzqhwh'}" th:include="taxgis/xzqhwh::xzqhwh" />
+        <th:block th:if="${module=='nsrcx'}" th:include="taxgis/nsrcx::nsrcx" />
+        <th:block th:if="${module=='xmcx'}" th:include="taxgis/xmcx::xmcx" />
+        <th:block th:if="${module=='zhcx'}" th:include="taxgis/zhcx::zhcx" />
+        <th:block th:if="${module=='glqycx'}" th:include="taxgis/glqycx::glqycx" />
+        <th:block th:if="${module=='syfb'}" th:include="taxgis/syfb::syfb" />
+        <script th:if="${module=='hyfb'}" th:src="@{/ajax/libs/leaflet/heatmap.min.js}"></script>
+        <script th:if="${module=='hyfb'}" th:src="@{/ajax/libs/leaflet/leaflet-heatmap.js}"></script>
+        <th:block th:if="${module=='hyfb'}" th:include="taxgis/hyfb::hyfb" />
+        <th:block th:include="taxgis/elementui::table" />
+        <th:block th:include="taxgis/leaflet::leaflet" />
+        <th:block th:include="taxgis/yhs::yhs" />
+        <script type="module" th:inline="javascript">
+            var useOnlineTdt = /*[[${useOnlineTdt}]]*/ true,
+                limitBound = /*[[${limitBound}]]*/ false;
+            if (useOnlineTdt === null) useOnlineTdt = true;
+            if (limitBound === null) limitBound = false;
+            useOnlineTdt = false;
+            limitBound = false;
+            var vm = new Vue({
+                el: "#app",
+                data() {
+                    return {
+                        comName: [],
+                        pubVue: new Vue(),
+                        useOnlineTdt: useOnlineTdt,
+                        limitBound: limitBound,
+                    };
+                },
+                mounted() {
+                    this.onSwitch(/*[[${module}]]*/ "");
+                },
+                methods: {
+                    onSwitch: function (param) {
+                        let comp = param + "Component";
+                        for (let i = 0; i < this.comName.length; i++) {
+                            if (!(this.comName[i].name === comp)) {
+                                this.onDel(i);
+                            }
+                        }
+                        this.onAdd(param);
+                    },
+                    onAdd(param) {
+                        let comp = param + "Component";
+                        if (this._isAdded(comp))
+                            this.comName.push({
+                                name: comp,
+                            });
+                    },
+                    _isAdded: function (name) {
+                        return this.comName.map((a) => a.name).indexOf(name) === -1;
+                    },
+                    onDel: function (index) {
+                        this.comName.splice(index, 1);
+                    },
+                },
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ftlsjxhgl.WkpqycxMapper">
+	
+	<!-- 未开票企业查询 -->
+	
+	<sql id="whereClause">
+		<if test="bszq != null and bszq != ''"> and bszq = #{bszq}</if>
+		<if test="title != null and title != ''"> and title like '%'||#{title}||'%'</if>
+		<if test="nsrsbh != null and nsrsbh != ''"> and nsrsbh = #{nsrsbh}</if>
+		<if test="nsrmc != null and nsrmc != ''"> and nsrmc like '%'||#{nsrmc}||'%'</if>
+		<if test="staddress != null and staddress != ''"> and staddress like '%'||#{staddress}||'%'</if>
+		<if test="sbyh != null and sbyh != ''"> and y.user_name like '%'||#{sbyh}||'%'</if>
+		<if test="ownername != null and ownername != ''"> and ownername like '%'||#{ownername}||'%'</if>
+		<if test="businessstate != null and businessstate != ''"> and businessstate = #{businessstate}</if>
+		<!-- <if test="account != null and account != ''"> and y.user_code = #{account}</if> -->
+		<if test="checkeduserid != null and checkeduserid != ''"> and z.user_name like '%'||#{checkeduserid}||'%'</if>
+		<if test="checktime != null and checktime != ''"> and substr(checktime,0,10) = #{checktime}</if>
+	</sql>
+
+	<!-- 查询 -->
+	<select id="selectList" resultType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Wkpqycx" parameterType="com.syndo.project.zhzs.dbfxxt.domain.ftlsjxhgl.Wkpqycx">
+		select
+		t.obj_id,t.title,t.staddress,t.address,t.remark,t.userid,t.longitude,t.latitude,t.electricitynumber,t.waternumber,t.taxnumber,t.sbsj,t.imgfilepath,t.
+		imgfilepath2,t.businesstitle,t.businessnumber,t.businessstate,t.businessphone,t.gasnumber,t.ownnumber,t.ownername,t.owneridnumber,t.
+		ownerphnumber,t.industryname,t.policehotel,t.nsrsbh,t.nsrmc,t.scjydz,t.frmc,t.lxdh,t.jyfw,t.cyrs,t.jye,t.fwly,t.xcqr,t.cqrzjh,t.fwjz,t.czfcyz,t.fcmj,t.
+		czfcmj,t.fczlje,t.fcszxbz,t.tddjbz,t.qnynftls,t.jmftse,t.yjnftls,t.sbhm,t.glbm,t.bszq,t.zjr,t.zjsj,t.xgr,t.xgsj,t.taxacreage,t.notaxacreage,t.businesstitle2,t.
+		businessnumber2,t.ownnumber2,'已核对' as
+		ischecked,z.user_name,t.ISPRINT,case when t.ISRAR is null then '未生成'
+		else t.ISRAR end as ISRAR,
+		t.PRINTUSERID,t.PRINTTIME,t.RARTIME,RARUSERID,WSID,t.mj1,t.mj2,t.mj3,
+		z.user_name checkeduserid,t.checktime,t.zl,t.dc,t.tdlb,
+		y.user_name as sbyh from cs_ftlsgzgl t,gis_users y,sys_user z
+		where t.ischecked is not null
+		<include refid="whereClause" />
+		and t.userid = y.user_id
+		and t.checkeduserid = z.login_name
+		and t.obj_id not in(
+		select distinct(obj_id) from(
+		select t.obj_id from cs_ftlsgzgl t
+		where t.ischecked is not null
+		and t.wsid is not null
+		and t.wsid in(
+		select distinct(t1.wsid)
+		from cs_ftlszsgltax t1
+		where t1.wsid is not null)
+		union all
+		select distinct(t.obj_id) from cs_ftlsgzgl t,cs_ftlszsgltax t2
+		where t.ischecked is not null
+		and t.ownername is not null
+		and t.ownername = t2.nsrmc
+		and t.staddress = t2.dz))
+	</select>
+
+</mapper>

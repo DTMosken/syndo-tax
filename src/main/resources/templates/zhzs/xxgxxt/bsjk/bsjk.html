@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('报送监控')" />
+</head>
+<body class="gray-bg">
+    <div class="container-div">
+    	<div class="row">
+			<!-- 查询条件选择 -->
+			<div class="col-sm-12 search-collapse">
+				<form id="post-form">
+					<div class="select-list">
+						<ul>
+							<!-- <li>
+								报送时间：<input type="text" id="bsTime" name="bsTime" th:value="${dateTime + ' 至 ' + dateTime}" readonly="readonly"/>
+							</li> -->
+							<li>
+								数据所属期：<input type="text" id="dateTime" name="dateTime" readonly="readonly"/>
+							</li>
+							<li>
+								部门名称：
+        						<input name="deptId"  type="hidden" id="treeId"/>
+								<input type="text" id="treeName" name="deptName" onclick="selectDeptTree()" readonly="readonly" >
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			<!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<a class="btn btn-info" onclick="optExcelOption()">
+					<i class="fa fa-download"></i> 导出
+				</a>
+			</div>
+			<!-- 列表 -->
+			<div class="col-sm-12 select-table table-striped">
+		    	<table id="bootstrap-table"></table>
+		    </div>
+  		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/xxgxxt/bsjk";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                modalName: "报送监控",
+		        showExport: true,
+				pageSize: 10,
+				pageList: [10, 20, 50, 100],
+                columns: [
+					{
+						field : 'deptName', 
+						title : '部门名称',
+						width : 120,
+						align: 'center',
+						sortable: true
+					},
+					{
+						field : 'chdesc', 
+						title : '指标名称',
+						width : 280,
+						halign: 'center'
+					},
+					{
+						field : 'dateTime', 
+						title : '数据所属期',
+						width : 100,
+						align: 'center',
+						sortable: true
+					},
+					{
+						field : 'isSubmit', 
+						title : '是否报送',
+						width : 80,
+						align: 'center',
+						formatter: function(value, item, index) { 
+							if (value == '是') {
+								return '<span class="label label-success">是</span>'
+							} else if (value == '否') {
+								return '<span class="label label-danger">否</span>'
+							} else {
+								return '-';
+							}
+						}
+					},
+					{
+						field : 'cnt', 
+						title : '报送条数',
+						width : 100,
+						align: 'right'
+					},
+					{
+						field : 'dueDate', 
+						title : '应报送时间',
+						width : 100,
+						align: 'center'
+					},
+					{
+						field : 'logDate', 
+						title : '报送时间',
+						width : 100,
+						align: 'center',
+						sortable: true
+					},
+					{
+						field : 'submitStatus', 
+						title : '报送状态',
+						width : 100,
+						align: 'center'
+					},
+					{
+						field : 'overDays', 
+						title : '超期天数',
+						align: 'right'
+					},
+					{
+						field : 'submitCycle', 
+						title : '报送周期',
+						width : 100,
+						align: 'center'
+					}
+				]
+            };
+            $.table.init(options);
+        });
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+      	    laydate.render({elem: '#dateTime', type:'month', format:'yyyy-MM'});
+			laydate.render({elem: '#bsTime', type: 'month', range: '至'});
+        });
+        
+        function selectDeptTree() {
+        	var treeId = $("#treeId").val();
+        	var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+        	var url = ctx + "system/dept/selectDeptTree/" + deptId;
+			var options = {
+				title: '选择部门',
+				width: "380",
+				height: "480",
+				url: ctx + "system/dept/selectDeptTree/" + deptId,
+				callBack: writeBack
+			};
+			$.modal.openOptions(options);
+		}
+
+		function writeBack(index, layero){
+			var tree = layero.find("iframe")[0].contentWindow.$._tree;
+			if ($.tree.notAllowParents(tree)) {
+				var body = layer.getChildFrame('body', index);
+    			$("#treeId").val(body.find('#treeId').val());
+    			$("#treeName").val(body.find('#treeName').val());
+    			layer.close(index);
+			}
+		}
+
+		function optExcelOption() {
+			var dataParam = $("#post-form").serializeArray();
+			$.post(prefix +"/expExcel", dataParam, function(result) {
+				if (result.code == web_status.SUCCESS) {
+					window.location.href = ctx + "common/excelDownload?fileName=" + encodeURI(result.msg) + "&delete=" + true;
+				} else if (result.code == web_status.WARNING) {
+					$.modal.alertWarning(result.msg)
+				} else {
+					$.modal.alertError(result.msg);
+				}
+			}).error(function(xhr, errorText, errorType) {
+				$.modal.alertError(errorText);
+			});
+		}
+    </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('审核')" />
+		<style type="text/css">
+			.layui-upload-img {
+				/* display: inline; */
+				cursor: pointer;
+				width: 92px;
+				height: 92px;
+				border-radius: 3px;
+			}
+			.layui-upload-container {
+				position:relative;
+				display:inline;
+				margin: 0 10px 10px 0;
+				width:92px;
+				height:92px;
+				overflow:hidden;
+			}
+			.layui-upload-del {
+				position:absolute;
+				padding: 0 5px 0 0;
+				top:29px;
+				right:0px;
+			}
+			.layui-btn.layui-upload-btn {
+				line-height:25px;
+				padding:0 6px;
+				width:30px;
+				height:25px;
+			}
+			.layui-table-view {
+				margin: 0;
+			}
+			.form-control {
+				font-size: 12px;
+			}
+		</style>
+		<th:block th:include="zhzs/dbfxxt/ts/dbrw/include::lct_css" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-sh" th:object="${entity}">
+				<input type="hidden" name="id" th:value="*{id}">
+	            <div class="form-group">
+					<label class="col-sm-2 control-label">纳税人名称：</label>
+					<div class="col-sm-4">
+						<input id="nsrmc" name="nsrmc" th:field="*{nsrmc}" class="form-control" type="text" readonly="readonly">
+					</div>
+	                <label class="col-sm-2 control-label">指标名称：</label>
+	                <div class="col-sm-4">
+						<a class="layui-btn layui-btn-primary layui-btn-sm" th:text="*{zbmc}" onclick="zbinfo()"></a>
+	                </div>
+	            </div>
+
+                <div class="form-group">	
+	                <label class="col-sm-2 control-label">指标数据：</label>
+	                <div class="col-sm-10">
+	                    <table class="layui-table" lay-data="{height:150,id:'table1',size:'sm'}" style="table-layout:fixed;overflow:scroll">
+                            <thead>
+                                <tr>
+                                    <th lay-data="{type:'numbers',fixed:'left'}"></th>
+									<th lay-data="{field:'id',width:90,align:'center',fixed:'left'}"></th>
+                                    <th th:each="item:*{cols}" th:attr="lay-data='{field:\''+${item['column']}+'\', width:200, align:\'center\'}'" th:text="${item['label']}"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="row:*{rows}">
+									<td></td>
+									<td><a href="javascript:;" th:onclick="ckmx([[${row['id']}]], [[${row['zbmc']}]])" class="layui-table-link">详情</a></td>
+                                    <td th:each="item:*{cols}" th:text="${row[item['column']]}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+	                </div>
+	            </div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">推送人： </label>
+					<div class="col-sm-4">
+						<input id="tsrmc" name="tsrmc" th:field="*{tsrmc}" class="form-control" type="text" readonly="readonly">
+					</div>
+					<label class="col-sm-2 control-label">推送时间： </label>
+					<div class="col-sm-4">
+						<input id="tssj" name="tssj" th:field="*{tssj}" class="form-control" type="text" readonly="readonly">
+					</div>
+				</div>
+
+
+				<div class="form-group" style="display: none">
+                    <label class="col-sm-2 control-label">推送人： </label>
+					<div class="col-sm-4">
+						<input id="tsrmc" name="tsrmc" th:field="*{tsrmc}" class="form-control" type="text" readonly="readonly">
+					</div>
+					<label class="col-sm-2 control-label">推送时间： </label>
+					<div class="col-sm-4">
+						<input id="tssj" name="tssj" th:field="*{tssj}" class="form-control" type="text" readonly="readonly">
+					</div>
+				</div>
+				<h4 class="form-header h4">反馈情况</h4>
+				<div class="form-group">
+					<label class="col-sm-2 control-label is-required">反馈类型：</label>
+					<div class="col-sm-10">
+						<label class="radio-box"><input type="radio" name="fklx" th:field="*{fklx}" value="1" disabled="disabled">有风险且已整改</label>
+						<label class="radio-box"><input type="radio" name="fklx" th:field="*{fklx}" value="2" disabled="disabled">有风险但客观无法整改</label>
+						<label class="radio-box"><input type="radio" name="fklx" th:field="*{fklx}" value="3" disabled="disabled">有风险但纳税人拒不整改</label>
+						<label class="radio-box"><input type="radio" name="fklx" th:field="*{fklx}" value="9" disabled="disabled">无风险</label>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label is-required">反馈内容： </label>
+					<div class="col-sm-10">
+						<textarea id="fknr" name="fknr" type="text" autocomplete="off" maxlength="500" class="form-control" rows="3" required disabled="disabled">[[*{fknr}]]</textarea>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">图片附件： </label>
+					<div class="col-sm-10">
+						<blockquote class="layui-elem-quote layui-quote-nm" style="font-size:9pt;">
+							<div id="wfjDiv" th:if="*{fktps.size()==0}" style="font-size:9pt;">无附件</div>
+							<div class="layui-upload-list" id="demo2">
+								<span th:each="item,itemStat:*{fktps}" class="layui-upload-container">
+									<img alt="未找到图片" title="点击看大图" th:attr="filename=${item.fileName}" th:src="${item.url}" class="layui-upload-img" onclick="viewUploadImage(this)">
+								</span>
+							</div>
+						</blockquote>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">反馈人： </label>
+					<div class="col-sm-4">
+						<input id="fkrmc" name="fkrmc" th:field="*{fkrmc}" class="form-control" type="text" readonly="readonly">
+					</div>
+					<label class="col-sm-2 control-label">反馈时间： </label>
+					<div class="col-sm-4">
+						<input id="fksj" name="fksj" th:field="*{fksj}" class="form-control" type="text" readonly="readonly">
+					</div>
+				</div>
+				<div class="form-group" th:if="*{xgfkrmc != null}">
+					<label class="col-sm-2 control-label">修改人： </label>
+					<div class="col-sm-4">
+						<input id="xgfkrmc" name="xgfkrmc" th:field="*{xgfkrmc}" class="form-control" type="text" readonly="readonly">
+					</div>
+					<label class="col-sm-2 control-label">修改时间： </label>
+					<div class="col-sm-4">
+						<input id="xgfksj" name="xgfksj" th:field="*{xgfksj}" class="form-control" type="text" readonly="readonly">
+					</div>
+				</div>
+				<h4 class="form-header h4">审核信息</h4>
+				<div class="form-group">
+					<label class="col-sm-2 control-label is-required">审核信息： </label>
+					<div class="col-sm-10">
+						<textarea id="shxx" name="shxx" type="text" autocomplete="off" maxlength="500" class="form-control" rows="3" required></textarea>
+					</div>
+				</div>
+				<th:block th:include="zhzs/dbfxxt/ts/dbrw/include::lct(*{zt})" />
+				<th:block th:include="zhzs/dbfxxt/ts/dbrw/include::lzxx(*{id})" />
+			</form>
+	    </div>
+	    <th:block th:include="include :: footer" />
+        <script th:inline="javascript">
+			var prefix = ctx + "zhzs/dbfxxt/ts/dbrw";
+			/* 退回, 归档, 消除, 转稽查, 关闭 */
+			function submitHandler() {
+				/*[# th:if="${isFkzz}"]*/
+				fixShxx("退回")
+				if ($.validate.form()) {
+					$.modal.confirm("确认要退回给反馈人员重新反馈吗?", function() {
+						$.operate.save(prefix + "/rwsh2", $('#form-sh').serialize());
+					});
+				}				
+				/*[/]*/
+				/*[# th:unless="${isFkzz}"] ]*/
+				$.modal.alertError("当前用户没有审核权限！");
+				/*[/]*/
+			}
+			// ['退回', '归档', '消除', '转稽查', '关闭']
+			function submit2Handler() {
+				/*[# th:if="${isFkzz}"]*/
+				fixShxx("归档")
+				if ($.validate.form()) {
+					$.modal.confirm("确认要归档吗?", function() {
+						$.operate.save(prefix + "/rwsh", $('#form-sh').serialize());
+					});
+				}
+				/*[/]*/
+				/*[# th:unless="${isFkzz}"] ]*/
+				$.modal.alertError("当前用户没有审核权限！");
+				/*[/]*/
+			}
+			function submit3Handler() {
+				/*[# th:if="${isFkzz}"]*/
+				fixShxx("消除")
+				if ($.validate.form()) {
+					$.modal.confirm("确认消除疑点吗?", function() {
+						$.operate.save(prefix + "/rwsh3", $('#form-sh').serialize());
+					});
+
+				}
+				/*[/]*/
+				/*[# th:unless="${isFkzz}"] ]*/
+				$.modal.alertError("当前用户没有审核权限！");
+				/*[/]*/
+			}
+			function submit4Handler() {
+				/*[# th:if="${isFkzz}"]*/
+				fixShxx("转稽查")
+				if ($.validate.form()) {
+					$.modal.confirm("确认转稽查吗?", function() {
+						$.operate.save(prefix + "/rwsh4", $('#form-sh').serialize());
+					});
+				}
+				/*[/]*/
+				/*[# th:unless="${isFkzz}"] ]*/
+				$.modal.alertError("当前用户没有审核权限！");
+				/*[/]*/
+			}
+			function zbinfo() {
+				var prefix1 = ctx + "zhzs/dbfxxt/ts/zbxx/info/";
+				var width = 500;
+				var height = 400;
+				if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+					width = 'auto';
+				}
+				parent.layer.open({
+					area: [width + 'px', height + 'px'],
+					type: 2,
+					title: [[${entity.zbmc}]],
+					btn: ['关闭'],
+					shadeClose: true,
+					content: prefix1 + [[${entity.zbdm}]]
+				});
+			}
+        </script>
+	    <script type="text/javascript">
+			$("#form-fk").validate({
+				// 表单验证，参考notes文件
+				rules:{	
+					shxx:{
+						required:true
+					}
+				}
+			});
+
+			function fixShxx(_v) {
+				let $shxx = $("#shxx");
+				if($shxx.val().length === 0) {
+					$shxx.val(_v);
+				}
+			}
+
+            layui.use(['table'], function() {
+                var table = layui.table;
+                // table.reload('table1', {data: getLocalData()})
+            });
+			layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#kssj', type: 'month', format: 'yyyy-MM'});
+	    	  	laydate.render({elem: '#jssj', type: 'month', format: 'yyyy-MM'});
+		    });
+			layui.use(['form'], function(){
+				var form = layui.form;
+			});
+			layui.use('upload', function(){
+				var upload = layui.upload;
+				var uploadInst = upload.render({
+					elem: '#test1' //绑定元素
+					,url: prefix + '/upload' //上传接口
+					,multiple: true
+					,done: function(res){
+						if(res && res.code!=0) {
+							$.modal.alertError(res.msg);
+							return 0;
+						}
+						$('#wfjDiv').hide();
+						//上传完毕回调
+						$('#demo2').append('<span class="layui-upload-container">'
+								+'<img title="点击看大图" filename="'+res.fileName+'" src="'+res.url+'" class="layui-upload-img" onclick="viewUploadImage(this)">'
+								+'<div class="layui-upload-del"><button type="button" title="删除" class="layui-btn layui-upload-btn" onclick="delUploadImage(this)"><i class="layui-icon">&#xe640;</i></button></div>'
+								+'</span>');
+					}
+					,error: function(){
+						//请求异常回调
+					}
+				});
+			});
+
+			function viewUploadImage(img) {
+				parent.parent.layer.open({
+					area:[parent.parent.document.documentElement.scrollWidth+"px", parent.parent.document.documentElement.scrollHeight+"px"],
+					type: 1,
+					title: '查看图片',
+					btn: ['关闭'],
+					content: '<div style="width: 100%;height: 100%;text-align: center;line-height: 50"><img src="'+img.src+'" style="max-width: 100%"></div>'
+				});
+			}
+			function delUploadImage(btn) {
+				layer.confirm('是否确认删除?', function(index){
+					let config = {
+						url: prefix + "/delUpload",
+						type: "post",
+						dataType: "json",
+						data: {fileName: $(btn).parent().parent().children('img').attr('filename')},
+						beforeSend: function () {
+							$.modal.loading("正在处理中，请稍后...");
+						},
+						success: function (result) {
+							$.modal.closeLoading();
+							if (result.msg === '操作成功') {
+								$(btn).parent().parent().remove();
+							} else {
+								layer.msg(result.msg);
+							}
+						}
+					};
+					$.ajax(config)
+
+					layer.close(index);
+				});
+			}
+			function ckmx(id, zbmc){
+				parent.$.modal.openTab(zbmc, prefix+"/ckmx/"+id);
+			}
+		</script>
+	</body>
+</html>

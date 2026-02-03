@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('规模企业维护')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+							<div class="col-sm-4">
+			        			<div class="form-group">
+									<label class="col-sm-3 control-label input-sm">企业名称： </label>
+									<div class="col-sm-9">
+									    <input id="nsrmc" name="nsrmc" class="form-control" type="text">
+									</div>
+								</div>
+							</div>
+							<div class="col-sm-4 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="module:srfxxt:xtwh:qyssgsqwh:add">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+	            <a class="btn btn-primary single" onclick="$.operate.edit()" shiro:hasPermission="module:srfxxt:xtwh:qyssgsqwh:edit">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple" onclick="$.operate.removeAll()" shiro:hasPermission="module:srfxxt:xtwh:qyssgsqwh:remove">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+	        </div>
+			
+			<div class="col-sm-12 full-table table-bordered">
+				<table id="bootstrap-table"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/qyssgsqwh";
+
+        $(function() {
+            var options = {
+           		url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                modalName: "规模企业维护",
+		        showExport: true,
+                columns: [
+	                {
+	                    checkbox: true
+	                },
+	                {
+						field : 'id', 
+						visible: false
+					},
+	                {
+	                	field : 'tyshxydm', 
+	                    title : '纳税人识别号',
+	                    width : '100',
+	                    align: 'center'
+	                },
+	                {
+	                	field : 'nsrmc', 
+	                    title : '企业名称',
+	                    width : '150',
+	                    align: 'center'
+	                },
+	                {
+	                	field : 'fl',
+	                    title : '分类',
+	                    width : '100',
+	                    align: 'center'
+	                },
+	                {
+	                	field : 'ksrq',
+	                    title : '开始日期',
+	                    width : '100',
+	                    align: 'center'
+	                },
+	                {
+	                	field : 'jsrq',
+	                    title : '结束日期',
+	                    width : '100',
+	                    align: 'center'
+	                }
+                ]
+            };
+            $.table.init(options);
+        });
+        
+    </script>
+</body>
+</html>

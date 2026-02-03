@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.gcxmxt.mapper.xmgl.XmglMapper">
+	
+	<!-- 项目管理 全口径-->
+	<select id="selectList" resultType="com.syndo.project.zhzs.gcxmxt.domain.xmgl.Xmgl" parameterType="com.syndo.project.zhzs.gcxmxt.domain.xmgl.Xmgl">
+
+	</select>
+
+</mapper>

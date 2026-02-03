@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<th:block th:include="include :: header('新增指标规则分组明细')" />
+	<th:block th:include="include :: ztree-css-default" />
+	<style type="text/css">
+		ul.ztree {
+			position: absolute;
+			margin-top: 10px;
+			border: 1px solid #617775;
+			background: #f0f6e4;
+			width: 220px;
+			height: 200px;
+			overflow-y: scroll;
+			overflow-x: auto;
+			z-index: 100
+		}
+	</style>
+</head>
+
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-post-add" th:object="${model}">
+			<input id="id" name="id" type="hidden" th:value="*{id}" />
+			<input id="fzid" name="fzid" type="hidden" th:value="*{fzid}" />
+			<input id="gzid" name="gzid" type="hidden" th:value="*{gzid}" />
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">指标名称：</label>
+				<div class="col-sm-8">
+					<input type="hidden" name="zbid" id="zbid" th:value="*{zbid}">
+					<input class="form-control" type="text" name="zbmc" id="zbmc" th:field="*{zbmc}" readonly="readonly"
+						onclick="showMenu();" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">指标基准值：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="zbjzz" id="zbjzz" th:field="*{zbjzz}" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">指标权重(%)：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="zbqz" id="zbqz" th:field="*{zbqz}" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">分值上限：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="fzsx" id="fzsx" th:field="*{fzsx}" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">分值下限：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="fzxx" id="fzxx" th:field="*{fzxx}" required>
+				</div>
+			</div>
+			<div id="menuContent" class="menuContent" style="display:none; position: absolute;">
+				<ul id="tree" class="ztree" style="margin-top:0; width:180px; "></ul>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: ztree-js" />
+	<script type="text/javascript">
+		var prefix = ctx + "module/industry/zbGzk";
+
+		jQuery.validator.addMethod("gtOther", function(value) {
+			return value > $("#fzxx").val();
+		}, "请输入大于”分值下限“的数字");
+
+		$("#form-post-add").validate({
+			onkeyup: false,
+			rules: {
+				zbmc: {
+					required: true,
+					remote: {
+						url: prefix + "/checkZbid?fzid=[[${model.fzid}]]&id=[[${model.id}]]&t="+new Date().getTime(),
+						type: "post",
+						dataType: "json",
+						data: {
+							"zbid": function () {
+								return $.common.trim($("#zbid").val());
+							}
+						}
+						, dataFilter: function (datastr, type) {
+							var data = eval("(" + datastr + ")");
+							return data.code == 0;
+						}
+					}
+				}
+				, zbjzz: { required: true, number: true }
+				, zbqz: { required: true, number: true }
+				, fzsx: { required: true, number: true, gtOther:true }
+				, fzxx: { required: true, number: true }
+			},
+			messages: {
+				"zbmc": {
+	                    remote: "分组中指标名称不能重复"
+	                }
+			},
+			focusCleanup: true
+		});
+
+		function submitHandler() {
+			if ($.validate.form()) {
+				$.operate.save(prefix + "/zbgzkfzmxEdit", $('#form-post-add').serialize());
+			}
+		}
+
+		$(function () {
+			queryTree();
+			$(window).resize(function () {
+				var cityObj = $("#zbmc");
+				var cityOffset = $("#zbmc").offset();
+				$("#menuContent").css({ left: (cityOffset.left + 5) + "px", top: cityOffset.top + cityObj.outerHeight() + "px" });
+				$('#tree').width($('#zbmc').width());
+			});
+		});
+
+		function queryTree() {
+			$('#tree').width($('#zbmc').width());
+			var url = prefix + "/zbDynamicTreeData";
+			var options = {
+				url: url,
+				async: {
+					enable: true,
+					url: url,
+					autoParam: ["id"]
+				},
+				callback: {
+					beforeClick: beforeClick,
+					onClick: onClick
+				}
+			};
+			$.tree.init(options);
+
+			function beforeClick(treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj(treeId);
+				zTree.checkNode(treeNode, !treeNode.checked, null, true);
+				return treeNode.lx == 'zb';
+			}
+			function onClick(e, treeId, treeNode) {
+				var label = treeNode.name,
+					val = treeNode.id;
+				var cityObj = $("#zbmc");
+				cityObj.attr("value", label);
+				$('#zbid').val(val);
+				$("#fzsx").val(treeNode.fzsx);
+				$("#fzxx").val(treeNode.fzxx);
+				hideMenu();
+			}
+		}
+		function showMenu() {
+			var cityObj = $("#zbmc");
+			var cityOffset = $("#zbmc").offset();
+			$("#menuContent").css({ left: (cityOffset.left + 3) + "px", top: cityOffset.top + cityObj.outerHeight() + "px" }).slideDown("fast");
+			$("body").bind("mousedown", onBodyDown);
+
+			var treeObj = $.fn.zTree.getZTreeObj("tree");
+
+			var zbid = $('#zbid').val();
+			var nodes = zbid.split(",");
+			if (treeObj) {
+				for (var i = 0, l = nodes.length; i < l; i++) {
+					var node = treeObj.getNodesByParam("id", nodes[i])[0];
+					if (node != null)
+						treeObj.checkNode(node, true, false);
+				}
+			} else {
+				setTimeout(function () {
+					var treeObj = $.fn.zTree.getZTreeObj("tree");
+					for (var i = 0, l = nodes.length; i < l; i++) {
+						var node = treeObj.getNodesByParam("id", nodes[i])[0];
+						if (node != null)
+							treeObj.checkNode(node, true, false);
+					}
+				}, 3000)
+			}
+
+		}
+		function hideMenu() {
+			$("#menuContent").fadeOut("fast");
+			$("body").unbind("mousedown", onBodyDown);
+		}
+		function onBodyDown(event) {
+			if (!(event.target.id == "menuBtn" || event.target.id == "zbmc" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length > 0)) {
+				hideMenu();
+			}
+		}
+	</script>
+</body>
+
+</html>

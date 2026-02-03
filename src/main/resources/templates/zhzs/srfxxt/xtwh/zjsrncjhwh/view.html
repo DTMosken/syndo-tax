@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('镇街收入年初计划维护')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+			<div class="col-sm-12 search-collapse">
+				<form id="zjsrjh-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								所属年度：<input id="ssnd" name="ssnd" th:value="${ssnd}" type="text" readonly="readonly" />
+							</li>
+							<li>
+								街道乡镇：<select id="jdxz" name="jdxz" th:with="type=${@dict.getType('dm_jdxz')}">
+											<option value=""></option>
+											<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+										</select>
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+	    	
+			
+			<!-- 工具栏 -->
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="module:srfxxt:xtwh:zjsrncjhwh:add">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+	            <a class="btn btn-primary single" onclick="$.operate.edit()" shiro:hasPermission="module:srfxxt:xtwh:zjsrncjhwh:edit">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple" onclick="$.operate.removeAll()" shiro:hasPermission="module:srfxxt:xtwh:zjsrncjhwh:remove">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+	        </div>
+			
+			<div class="col-sm-12 full-table table-bordered">
+				<table id="bootstrap-table"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/zjsrncjhwh";
+
+        $(function() {
+            var options = {
+               	url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                modalName: "镇街收入年初计划维护",
+                pageSize: 25,
+    		    pageList: [25, 50, 100],
+    		    height: $(window).height() - 125,
+		        showExport: true,
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'jhwhId', 
+					visible: false
+				},
+				{
+					field : 'jdxz', 
+					title : '街道乡镇',
+					width:150,
+					halign: 'center',
+					align: 'center',
+					sortable: true
+				},
+				{
+					field : 'qkj', 
+					title : '全口径计划（万元）',
+					width:100,
+					halign: 'center',
+					align: 'right',
+					sortable: true
+				},
+				{
+					field : 'ybys', 
+					title : '一般预算计划（万元）',
+					width:100,
+					halign: 'center',
+					align: 'right',
+					sortable: true
+				},
+				{
+					field : 'jc', 
+					title : '简称',
+					width:100,
+					halign: 'center',
+					align: 'center',
+					sortable: true
+				},
+				{
+					field : 'px', 
+					title : '排序',
+					width:100,
+					halign: 'center',
+					align: 'center',
+					sortable: true
+				},
+				{
+					field : 'ssnd', 
+					title : '所属年度',
+					width:100,
+					halign: 'center',
+					align: 'center',
+					sortable: true
+				}]
+            };
+            $.table.init(options);
+            
+         // 自适应高度-待测试
+            $(window).resize(function() {
+            	$("#bootstrap-table").bootstrapTable('resetView', {
+                    height: $(window).height() - 125
+                });
+            });
+        });
+        
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#ssnd',type:'year',format: 'yyyy',trigger: 'click'});
+        });
+    </script>
+</body>
+</html>

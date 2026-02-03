@@ -1,0 +1,223 @@
+﻿<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<head>
+		<th:block th:include="include :: header('查看消息')" />
+		<style type="text/css">
+			.message-list {
+			    position: absolute;
+			    top: 46px;
+			    bottom: 44px;
+			    left: 0;
+			    right: 0;
+			    overflow-y: auto;
+			}
+			.message-list-item {
+			    padding: 10px 20px;
+			    border-bottom: 1px solid #e8e8e8;
+			    -ms-flex-align: start;
+			    align-items: flex-start;
+			    display: flex;
+			    -ms-flex: 1 1;
+			    flex: 1 1;
+			}
+			.message-list-item:hover, .message-btn-clear:hover, .message-btn-more:hover {
+			    background: #F2F2F2;
+			}
+			.message-item-icon {
+			    width: 30px;
+			    height: 30px;
+			    margin-right: 16px;
+			    display: block;
+			    margin-top: 4px;
+			}
+			.message-item-right {
+			    display: block;
+			    flex: 1 0;
+			    line-height: 24px;
+			}
+			.message-item-title {
+			    font-size: 14px;
+			    color: rgba(0, 0, 0, .65);
+			}
+			.message-item-text {
+			    color: rgba(0, 0, 0, .45);
+			    font-size: 12px;
+			}
+			.message-btn-clear, .message-btn-more {
+			    display: block;
+			    padding: 10px 5px;
+			    text-align: center;
+			    line-height: 24px;
+			    color: #333;
+			}
+			.message-btn-clear {
+			    position: absolute;
+			    bottom: 0;
+			    left: 0;
+			    background: white;
+			    right: 0;
+			    border-top: 1px solid #e8e8e8;
+			}
+			.message-btn-more {
+			    color: #666;
+			    font-size: 13px;
+			}
+			.message-list-empty {
+			    text-align: center;
+			    color: rgba(0, 0, 0, .45);
+			    padding: 73px 0 88px;
+			}
+			.message-list-empty img {
+			    height: 76px;
+			    margin-bottom: 16px;
+			}
+		</style>
+	</head>
+	<body class="white-bg">
+		<div class="layui-tab layui-tab-brief" style="padding: 5px 0;margin: 0;">
+		    <ul class="layui-tab-title" style="text-align: center;">
+		        <li class="layui-this">通知</li>
+		        <li>私信</li>
+		        <li>待办</li>
+		    </ul>
+		    <div class="layui-tab-content" style="padding: 5px 0;">
+		        <!-- 通知 -->
+		        <div class="layui-tab-item layui-show">
+		            <div class="message-list">
+		                <!-- 实际项目请使用后台数据循环出来 -->
+		                <a class="message-list-item" href="javascript:;" onclick="viewMsg(1)">
+		                    <img class="message-item-icon" th:src="@{/img/message.png}">
+		                    <div class="message-item-right">
+		                        <h2 class="message-item-title">2019年第一季度财报</h2>
+		                        <p class="message-item-text">1个月前</p>
+		                    </div>
+		                </a>
+		                <a class="message-list-item" href="javascript:;" onclick="viewMsg(2)">
+		                    <img class="message-item-icon" th:src="@{/img/message.png}">
+		                    <div class="message-item-right">
+		                        <h2 class="message-item-title">未按规定时间完成考核</h2>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		                <a class="message-list-item" href="javascript:;" onclick="viewMsg(3)">
+		                    <img class="message-item-icon" th:src="@{/img/message.png}">
+		                    <div class="message-item-right">
+		                        <h2 class="message-item-title">逾期报送，予以惩戒</h2>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		                <!-- 列表为空 -->
+		                <div class="message-list-empty" style="display: none;">
+		                    <img th:src="@{/img/img_msg_notice.svg}">
+		                    <div>没有通知</div>
+		                </div>
+		            </div>
+		            <a class="message-btn-clear" href="javascript:;">全部标记已读</a>
+		        </div>
+		
+		        <!-- 私信 -->
+		        <div class="layui-tab-item">
+		            <div class="message-list">
+		                <a class="message-list-item" href="javascript:;">
+		                    <img class="message-item-icon" th:src="@{/img/avatar.png}">
+		                    <div class="message-item-right">
+		                        <h2 class="message-item-title">你在干啥呢么，不知道我.....</h2>
+		                        <p class="message-item-text">admin</p>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		                <a class="message-list-item" href="javascript:;">
+		                    <img class="message-item-icon" th:src="@{/img/avatar.png}">
+		                    <div class="message-item-right">
+		                        <h2 class="message-item-title">不知道该写啥</h2>
+		                        <p class="message-item-text">system</p>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		                <a class="message-list-item" href="javascript:;">
+		                    <img class="message-item-icon" th:src="@{/img/avatar.png}">
+		                    <div class="message-item-right">
+		                        <h2 class="message-item-title">xx评论了你</h2>
+		                        <p class="message-item-text">哈哈哈哈哈哈</p>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		                <a id="btn-more1" class="message-btn-more" href="javascript:;">加载更多</a>
+		                <!-- 列表为空 -->
+		                <div class="message-list-empty" style="display: none;">
+		                    <img th:src="@{/img/img_msg_pri.svg}">
+		                    <div>没有消息</div>
+		                </div>
+		            </div>
+		            <a class="message-btn-clear" href="javascript:;">清空消息</a>
+		        </div>
+		
+		        <!-- 代办 -->
+		        <div class="layui-tab-item">
+		            <div class="message-list">
+		                <a class="message-list-item" href="javascript:;">
+		                    <div class="message-item-right">
+		                        <span class="layui-badge pull-right">待完成</span>
+		                        <h2 class="message-item-title">报送入库信息数据</h2>
+		                        <p class="message-item-text">一个小时前</p>
+		                    </div>
+		                </a>
+		                <a class="message-list-item" href="javascript:;">
+		                    <div class="message-item-right">
+		                        <span class="layui-badge layui-bg-gray pull-right">已完成</span>
+		                        <h2 class="message-item-title">处理街道民事纠纷</h2>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		                <a class="message-list-item" href="javascript:;">
+		                    <div class="message-item-right">
+		                        <span class="layui-badge layui-bg-gray pull-right">已完成</span>
+		                        <h2 class="message-item-title">你收到了14份新周报</h2>
+		                        <p class="message-item-text">10个月前</p>
+		                    </div>
+		                </a>
+		
+		                <!-- 列表为空 -->
+		                <div class="message-list-empty" style="display: none;">
+		                    <img th:src="@{/img/img_msg_db.svg}">
+		                    <div>没有待办</div>
+		                </div>
+		            </div>
+		            <a class="message-btn-clear" href="javascript:;">清空待办</a>
+		        </div>
+		    </div>
+		</div>
+		<th:block th:include="include :: footer" />
+		<script th:inline="javascript">
+			var prefix = ctx + "system/message";
+			
+			layui.use(['element'], function () {
+			    var $ = layui.jquery;
+			    var element = layui.element;
+
+			    // 加载更多按钮点击事件
+			    $('#btn-more1').click(function () {
+			        var $that = $(this);
+			        var str = $that.prev()[0].outerHTML;
+			        for (var i = 0; i < 5; i++) {
+			            $that.before(str);
+			        }
+			    });
+
+			    // 清空消息点击事件
+			    $('.message-btn-clear').click(function () {
+			        $(this).css('display', 'none');
+			        $(this).prev().find('.message-list-item').remove();
+			        $(this).prev().find('.message-btn-more').remove();
+			        $(this).prev().find('.message-list-empty').css('display', 'block');
+			    });
+			});
+			
+			function viewMsg(msgId) {
+				$.modal.close();
+				var url = ctx + "system/message/viewMsg?msgId=" + msgId;
+	        	$.modal.openTab("查看消息", url);
+			}
+		</script>
+	</body>
+</html>

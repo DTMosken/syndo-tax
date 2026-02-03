@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="com.syndo.project.industry.sjys.mapper.QyjsdfMapper">
+
+	<update id="insertQydfjs"
+		parameterType="com.syndo.project.industry.sjys.domain.Qydfjs">
+		merge into cs_mcxy_zb_qydfjs S
+		using (select #{ID} ID,
+		#{TYSHXYBM} TYSHXYBM, #{QYMC} QYMC, #{SSHY} SSHY,
+		#{SSXZ} SSXZ, #{ZF}
+		ZF, #{PJDJ} PJDJ,
+		#{DWYDSS} DWYDSS, #{DWNHXSSR} DWNHXSSR, #{WRWPFSR}
+		WRWPFSR,
+		#{YFJFTRQD} YFJFTRQD, #{QYLDSCL} QYLDSCL, #{CJSJ} CJSJ,
+		#{XGSJ} XGSJ, #{CJR} CJR, #{XGR} XGR, #{SSSJGX} SSSJGX,
+		#{YDMJ} YDMJ,
+		#{XSSR} XSSR, #{ZNH} ZNH,
+		#{ZYWRWPFZDL} ZYWRWPFZDL, #{YFJFZC} YFJFZC,
+		#{GYZVZ} GYZVZ,
+		#{NNPJZGRS} NNPJZGRS ,#{PJNF} PJNF from dual ) D
+		on (
+		S.TYSHXYBM
+		=D.TYSHXYBM)
+		when not matched then
+		insert
+		( S.ID, S.TYSHXYBM,
+		S.QYMC, S.SSHY, S.SSXZ, S.ZF, S.PJDJ, S.DWYDSS,
+		S.DWNHXSSR, S.WRWPFSR,
+		S.YFJFTRQD, S.QYLDSCL, S.CJSJ, S.XGSJ, S.CJR,
+		S.XGR, S.SSSJGX, S.YDMJ,
+		S.XSSR, S.ZNH, S.ZYWRWPFZDL, S.YFJFZC,
+		S.GYZVZ, S.NNPJZGRS,S.PJNF )
+		VALUES (D.ID , D.TYSHXYBM, D.QYMC, D.SSHY,
+		D.SSXZ, D.ZF, D.PJDJ,
+		D.DWYDSS, D.DWNHXSSR, D.WRWPFSR, D.YFJFTRQD,
+		D.QYLDSCL, D.CJSJ, D.XGSJ,
+		D.CJR, D.XGR, D.SSSJGX, D.YDMJ, D.XSSR,
+		D.ZNH, D.ZYWRWPFZDL, D.YFJFZC,
+		D.GYZVZ, D.NNPJZGRS,D.PJNF)
+		when matched then
+		UPDATE set S.QYMC =
+		D.QYMC,
+		S.SSHY = D.SSHY, S.SSXZ
+		= D.SSXZ, S.ZF =
+		D.ZF, S.PJDJ = D.PJDJ,
+		S.DWYDSS = D.DWYDSS,
+		S.DWNHXSSR = D.DWNHXSSR,
+		S.WRWPFSR = D.WRWPFSR,
+		S.YFJFTRQD =
+		D.YFJFTRQD, S.QYLDSCL = D.QYLDSCL,
+		S.CJSJ = D.CJSJ, S.XGSJ
+		= D.XGSJ,
+		S.CJR = D.CJR, S.XGR = D.XGR, S.SSSJGX
+		= D.SSSJGX, S.YDMJ =
+		D.YDMJ,
+		S.XSSR = D.XSSR, S.ZNH = D.ZNH,
+		S.ZYWRWPFZDL = D.ZYWRWPFZDL,
+		S.YFJFZC
+		= D.YFJFZC, S.GYZVZ = D.GYZVZ,
+		S.NNPJZGRS = D.NNPJZGRS,
+		S.PJNF =
+		D.PJNF
+	</update>
+
+	<!-- 按照评价年份查询企业得分计算表(去年) -->
+	<select id="GetQyjsdfYear" parameterType="String"
+		resultType="com.syndo.project.industry.sjys.domain.Qydfjs">
+		SELECT *
+		FROM cs_mcxy_zb_qydfjs WHERE PJNF = #{PJFN}
+	</select>
+
+	<!-- 根据统一社会编码和年份查询企业得分计算表 -->
+	<select id="GetQyjsdf"
+		resultType="com.syndo.project.industry.sjys.domain.Qydfjs">
+		SELECT *
+		FROM cs_mcxy_zb_qydfjs order by  PJDJ 
+	</select>
+
+	<!-- 查询指标库指标分类 -->
+	<select id="GetZbkzbmc"
+		resultType="com.syndo.project.industry.zbgzjs.domain.Zbkwh">
+		SELECT
+		* FROM cs_mcxy_zb_zbk where YXBZ='Y'
+	</select>
+
+	<select id="GetMcxys"
+		resultType="com.syndo.project.industry.wstb.domain.Wstb_zhxx">
+		SELECT XX.*, PJ.PID, PJ.QYZTGYZJZ, PJ.QYZTNPJZGRS,
+		PJ.QYZTYFJFZC,
+		PJ.QYZTNZHNH, PJ.QYZTZYYWSR, PJ.QYZTSJSS
+		, PJ.QYZTYDL,
+		PJ.YDHYQK, PJ.NYSL, PJ.YSHYQK, PJ.SJYDMJ, PJ.JZMJ,
+		PJ.SSMJ,
+		PJ.YSPDJTDZMJ, PJ.THJHDSGYZJZ
+		, PJ.THJHDSNPJZGRS, PJ.THJHDSYFJFZC,
+		PJ.THJHDSNZHNH, PJ.SWJHDSZYYWSR,
+		PJ.SWJHDSSJSS, PJ.GDJHDSYDL,
+		PJ.ZRZYJHDHDTDZMJ
+		, PJ.QYZTPFL, PJ.STHJJPFL, PJ.SZXQSHYDMJ,
+		PJ.SZXQSHYSPMJ,
+		PJ.SZXQSHWSPMJ, PJ.SZXQSHDCRXM,
+		PJ.SZXQSHSHRXM,PJ.GDJHDSYDHYQK
+		FROM T_QY_JBXX XX left join T_QY_PJZB PJ
+		on XX.ID = PJ.PID
+	</select>
+	
+	<update id="UpdaePjdj"
+		parameterType="Map">
+		UPDATE  cs_mcxy_zb_qydfjs SET  PJDJ=#{PJDJ} WHERE TYSHXYBM = #{TYSHXYBM} 
+	</update>
+	 
+
+</mapper>

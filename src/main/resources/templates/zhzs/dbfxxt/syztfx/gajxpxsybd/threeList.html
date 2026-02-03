@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('查看明细')" />
+</head>
+<body class="layui-body-table">
+
+<div class="layui-card-body">
+	<table id="layui-table" lay-filter="layui-table"></table>
+</div>
+
+<th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+		var prefix = ctx + "zhzs/dbfxxt/syztfx/gajxpxsybd";
+		var entity = [[${entity}]];
+        
+        $(function() {
+            var options = {
+                url: prefix + "/getThreeList?jxmc="+entity.jxmc+"&cxsjq="+entity.cxsjq+"&cxsjz="+entity.cxsjz+"&nf="+entity.nf,
+                title: "查看详情",
+
+                cols:[ [{
+		            checkbox: true
+		        },
+				{
+					field : 'objId', 
+					hide:true
+				},
+				{
+					field : 'slsj', 
+					title : '时间',
+					sortable: true
+				},
+				{
+					field : 'jxmc', 
+					title : '驾校名称',
+					sortable: true
+				},
+				{
+				     field : 'xysl', 
+				     title : '学员数量',
+				     sortable: true
+				},
+				{
+					field : 'dj', 
+					title : '单价',
+					sortable: true
+				},
+				{
+					field : 'zxf', 
+					title : '总学费',
+					sortable: true
+				},
+				{
+					field : 'sl', 
+					title : '税率',
+					sortable: true
+				},
+				{
+					field : 'yjzzs', 
+					title : '应缴增值税',
+					sortable: true
+				},
+				{
+					field : 'sjzzs', 
+					title : '实缴增值税',
+					sortable: true
+				},
+				{
+					field : 'ce', 
+					title : '差额',
+					sortable: true
+				}] ]
+            }; 
+            $.table.init(options);
+            
+        });
+    </script>
+</body>
+</html>

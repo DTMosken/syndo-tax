@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('企业库维护')" />
+	</head>
+	<body class="white-bg">
+	    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+	        <form class="form-horizontal m" id="form-add">
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">统一社会信用代码：</label>
+					<div class="col-sm-4">
+						<input id="tyshxydm" name="tyshxydm" class="form-control" type="text">
+					</div>
+					<label class="col-sm-2 control-label is-required">纳税人名称：</label>
+					<div class="col-sm-4">
+						<input id="nsrmc" name="nsrmc" class="form-control" type="text">
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">街道乡镇：</label>
+					<div class="col-sm-4">
+						<select id="jdxz" name="jdxz" th:with="type=${@dict.getType('dm_jdxz')}" class="form-control">
+							<option value=""></option>
+							<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+						</select>
+					</div>
+					<label class="col-sm-2 control-label is-required">分成比例% ：</label>
+					<div class="col-sm-4">
+						<input id="fcbl" name="fcbl" class="form-control" value="100" type="number" >
+					</div>
+				</div>
+				<div class="form-group">	
+					<label class="col-sm-2 control-label is-required">生效年月 ：</label>
+					<div class="col-sm-4">
+						<input id="gsrq" name="gsrq" class="form-control" type="text" readonly="readonly">
+					</div>
+				</div>
+			</form>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script type="text/javascript">
+        var prefix = ctx + "zhzs/srfxxt/xtwh/qykwh";
+			$("#form-add").validate({
+				rules:{
+					tyshxydm: {required:true},
+					nsrmc: {required:true},
+					gsrq: {required:true},
+					fcbl: {required:true},
+					jdxz: {required:true}
+				}
+			});
+			
+			function submitHandler() {
+		        if ($.validate.form()) {
+		        	$.operate.save(prefix + "/add", $('#form-add').serialize());
+		        }
+		    }
+			
+			layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	    	  	laydate.render({elem: '#gsrq',type:'month',format: 'yyyy-MM',trigger: 'click'});
+	        });
+		</script>
+	</body>
+</html>

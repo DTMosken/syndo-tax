@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 问题纠偏 -->
+<mapper namespace="com.syndo.project.industry.sjsb.mapper.ProblemCorrectionMapper">
+	
+	<!-- 查询 -->
+	<select id="selectList" parameterType="com.syndo.project.industry.sjsb.domain.ProblemCorrection" resultType="com.syndo.project.industry.sjsb.domain.ProblemCorrection">
+		SELECT * FROM T_QY_WTJP
+		WHERE 1=1
+		<if test="jpsx != null and jpsx != ''">
+			AND JPSX LIKE '%'||#{jpsx}||'%'
+		</if>
+	</select>
+    
+    <!-- 主键查询 -->
+	<select id="selectById" parameterType="String" resultType="com.syndo.project.industry.sjsb.domain.ProblemCorrection">
+		SELECT * FROM T_QY_WTJP
+		WHERE id = #{id}
+	</select>
+    
+    <!-- 插入 -->	
+	<insert id="insert" parameterType="com.syndo.project.industry.sjsb.domain.ProblemCorrection">
+		INSERT INTO T_QY_WTJP (
+			TYSHXYDM, QYMC, JPRQ, JPSX, ZRBM, JPNR
+		) VALUES (
+			#{tyshxydm}, #{qymc}, #{jprq}, #{jpsx}, #{zrbm}, #{jpnr}
+		)
+	</insert>
+	
+	<!-- 删除 -->
+	<delete id="deleteByIds" parameterType="String">
+		DELETE FROM T_QY_WTJP 
+        WHERE ID IN 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+	
+</mapper>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.jkbb.JkbbMapper">
+
+	<!-- 金库日报 -->
+	<select id="selectRb" resultType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkbb" parameterType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkbb">
+		select to_char(sum(fse), 'fm99999999999990.00') brfse,'合计' kmdm,''kmmc
+ 	    from vm_jkbb
+        where lx = '区县级'
+		<if test="bszqq!=null and bszqq!=''"> and substr(sj,0,10) &gt;= #{bszqq} </if>
+		<if test="bszqz!=null and bszqz!=''"> and substr(sj,0,10) &lt;= #{bszqz} </if>
+  		 and substr(kmdm,0,5) in(
+  		 	select distinct kmdm from vm_jkbb where length(kmdm)=5
+             union all 
+            select '10399' from dual )
+ 		 and length(kmdm)>5
+ 		union all
+		select to_char(sum(fse),'fm99999999999990.00') brfse, kmdm, kmmc
+		from vm_jkbb
+		where lx='区县级'
+		<if test="bszqq!=null and bszqq!=''"> and substr(sj,0,10) &gt;= #{bszqq} </if>
+		<if test="bszqz!=null and bszqz!=''"> and substr(sj,0,10) &lt;= #{bszqz} </if>
+		group by kmdm, kmmc
+		order by kmdm
+	</select>
+	
+	<!-- 金库月报 -->
+	<select id="selectYb" resultType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkbb" parameterType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkbb">
+		select to_char(sum(fse), 'fm99999999999990.00') brfse,'合计' kmdm,''kmmc
+ 	    from vm_jkbb
+        where lx = '区县级'
+		<if test="bszqq!=null and bszqq!=''"> and substr(sj,0,7) &gt;= #{bszqq} </if>
+		<if test="bszqz!=null and bszqz!=''"> and substr(sj,0,7) &lt;= #{bszqz} </if>
+  		 and substr(kmdm,0,5) in(
+  		 	select distinct kmdm from vm_jkbb where length(kmdm)=5
+             union all 
+            select '10399' from dual )
+ 		 and length(kmdm)>5
+ 		union all
+		select to_char(sum(fse),'fm99999999999990.00') brfse, kmdm, kmmc
+		from vm_jkbb
+		where lx='区县级'
+		<if test="bszqq!=null and bszqq!=''"> and substr(sj,0,7) &gt;= #{bszqq} </if>
+		<if test="bszqz!=null and bszqz!=''"> and substr(sj,0,7) &lt;= #{bszqz} </if>
+		group by kmdm, kmmc
+		order by kmdm
+	</select>
+	
+	<!-- 金库年报 -->
+	<select id="selectNb" resultType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkbb" parameterType="com.syndo.project.zhzs.srfxxt.domain.jkbb.Jkbb">
+		select to_char(sum(fse), 'fm99999999999990.00') brfse,'合计' kmdm,''kmmc
+ 	    from vm_jkbb
+        where lx = '区县级'
+		<if test="bszqq!=null and bszqq!=''"> and substr(sj,0,4) &gt;= #{bszqq} </if>
+		<if test="bszqz!=null and bszqz!=''"> and substr(sj,0,4) &lt;= #{bszqz} </if>
+  		 and substr(kmdm,0,5) in(
+  		 	select distinct kmdm from vm_jkbb where length(kmdm)=5
+             union all 
+            select '10399' from dual )
+ 		 and length(kmdm)>5
+ 		union all
+		select to_char(sum(fse),'fm99999999999990.00') brfse, kmdm, kmmc
+		from vm_jkbb
+		where lx='区县级'
+		<if test="bszqq!=null and bszqq!=''"> and substr(sj,0,4) &gt;= #{bszqq} </if>
+		<if test="bszqz!=null and bszqz!=''"> and substr(sj,0,4) &lt;= #{bszqz} </if>
+		group by kmdm, kmmc
+		order by kmdm
+	</select>
+
+</mapper>

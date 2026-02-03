@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+	<th:block th:include="include :: header('分组树选择')" />
+	<th:block th:include="include :: ztree-css" />
+</head>
+<style>
+body{height:auto;font-family: "Microsoft YaHei";}
+button{font-family: "SimSun","Helvetica Neue",Helvetica,Arial;}
+</style>
+<body class="hold-transition box box-main">
+	<input id="fzid"   name="fzid"    type="hidden"/>
+	<input id="fzmc" name="fzmc"  type="hidden" />
+	<div class="wrapper"><div class="treeShowHideButton" onclick="$.tree.toggleSearch();">
+		<label id="btnShow" title="显示搜索" style="display:none;">︾</label>
+		<label id="btnHide" title="隐藏搜索">︽</label>
+	</div>
+	<div class="treeSearchInput" id="search">
+		<label for="keyword">关键字：</label><input type="text" class="empty" id="keyword" maxlength="50">
+		<button class="btn" id="btn" onclick="$.tree.searchNode()"> 搜索 </button>
+		<button class="btn" id="add" onclick="add()"> 新增 </button>
+		<button class="btn" id="edit" onclick="edit()"> 修改 </button>
+		<button class="btn" id="edit" onclick="del()"> 删除 </button>
+	</div>
+	<div id="tree" class="ztree treeselect"></div>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: ztree-js" />
+	<script th:inline="javascript">
+		var prefix = ctx + "zhzs/dbfxxt/ts/fkxz";
+		$(function() {
+			var url = prefix + "/fzTreeData";
+			var options = {
+		        url: url,
+		        // expandLevel: 2,
+		        onClick : zOnClick
+		    };
+			$.tree.init(options);
+		});
+		
+		function zOnClick(event, treeId, treeNode) {
+		    var treeId = treeNode.id;
+		    var treeName = treeNode.name;
+		    $("#fzid").val(treeId);
+		    $("#fzmc").val(treeName);
+		}
+
+		function add() {
+			var url = prefix + "/addFz";
+			var options = {
+				title: '选择分组',
+				width: "400",
+				height: "300",
+				url: url,
+				callBack: function (index, layero){
+					var iframeWin = layero.find('iframe')[0];
+					iframeWin.contentWindow.submitHandler(index, layero);
+					parent.layer.close(index);
+					document.location.reload();
+				}
+			};
+			parent.$.modal.openOptions(options);
+		}
+		function edit() {
+			var fzid = $("#fzid").val();
+			if(fzid === undefined || fzid === '') {
+				$.modal.alertWarning("请选择待修改分组！");
+				return;
+			}
+			var url = prefix + "/editFz/"+fzid;
+			var options = {
+				title: '选择分组',
+				width: "400",
+				height: "300",
+				url: url,
+				callBack: function (index, layero){
+					var iframeWin = layero.find('iframe')[0];
+					iframeWin.contentWindow.submitHandler(index, layero);
+					parent.layer.close(index);
+					document.location.reload();
+				}
+			};
+			parent.$.modal.openOptions(options);
+		}
+		function del() {
+			var fzid = $("#fzid").val();
+			if(fzid === undefined || fzid === '') {
+				$.modal.alertWarning("请选择待删除分组！");
+				return;
+			}
+			$.modal.confirm("确认要删除选中的分组吗?", function() {
+				var url = prefix + "/deleteFz";
+				var data = { "fzid": fzid };
+				$.operate.saveModal(url, data, function (res){
+					if(res.code=="0") {
+						$.modal.alertSuccess("删除成功！");
+						document.location.reload();
+					}
+						// else {
+					// 	$.modal.alertError("操作失败，不能删除有成员的分组！");
+					// }
+				});
+			});
+		}
+	</script>
+</body>
+</html>

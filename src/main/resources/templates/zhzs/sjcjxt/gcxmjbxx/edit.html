@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('修改工程项目基本信息')" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-gcxmjbxx-edit" th:object="${gcxmjbxx}">
+            <input name="id" th:field="*{id}" type="hidden">
+            <div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">工程项目名称：</label>
+	                <div class="col-sm-8">
+	                    <input name="gcxmmc" th:field="*{gcxmmc}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">项目地址：</label>
+	                <div class="col-sm-8">
+	                    <input name="xmdz" th:field="*{xmdz}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">建设内容：</label>
+	                <div class="col-sm-8">
+	                    <input name="jsnr" th:field="*{jsnr}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">开工时间：</label>
+	                <div class="col-sm-8">
+	                    <input id="kgsj" name="kgsj" th:field="*{kgsj}" readonly="readonly" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label">竣工时间：</label>
+	                <div class="col-sm-8">
+	                    <input id="jgsj" name="jgsj" th:field="*{jgsj}" readonly="readonly" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">建设单位：</label>
+	                <div class="col-sm-8">
+	                    <input name="jsdw" th:field="*{jsdw}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">建设单位联系人：</label>
+	                <div class="col-sm-8">
+	                    <input name="jsdwlxr" th:field="*{jsdwlxr}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label is-required">联系方式：</label>
+	                <div class="col-sm-8">
+	                    <input name="lxfs" th:field="*{lxfs}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label">建设期限：</label>
+	                <div class="col-sm-8">
+	                    <input name="jsqx" th:field="*{jsqx}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label">投资额(元)：</label>
+	                <div class="col-sm-8">
+	                    <input name="tze" th:field="*{tze}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+       		<div class="col-sm-6">
+	            <div class="form-group">    
+	                <label class="col-sm-4 control-label">年计划投资(元)：</label>
+	                <div class="col-sm-8">
+	                    <input name="njhtz" th:field="*{njhtz}" class="form-control" type="text">
+	                </div>
+	            </div>
+            </div>
+        </form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script type="text/javascript">
+        var prefix = ctx + "zhzs/sjcjxt/gcxmjbxx";
+        
+        $("#form-gcxmjbxx-edit").validate({
+            focusCleanup: true,
+            rules: {
+            	gcxmmc: {
+					required: true,
+					remote:{
+						type: 'get',							
+						url: prefix + "/checkGcxmmcUnique",
+						data: {
+							'gcxmmc': function(){
+								return $("#gcxmmc").val();
+							}
+						}
+					}
+				},
+				xmdz: {
+					required: true
+				},
+				jsnr: {
+					required: true
+				},
+				kgsj: {
+					required: true
+				},
+				jsdw: {
+					required: true
+				},
+				jsdwlxr: {
+					required: true
+				},
+				lxfs: {
+					required: true
+				}
+            },
+            messages: {
+	            gcxmmc: {
+	                remote: "已经存在"
+	            }
+	        }
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                $.operate.save(prefix + "/edit", $('#form-gcxmjbxx-edit').serialize());
+            }
+        }
+
+        layui.use('laydate', function() {
+        	var laydate = layui.laydate;
+        	laydate.render({elem: '#jgsj', type: 'date'});
+        	laydate.render({elem: '#kgsj', type: 'date'});
+        });
+    </script>
+</body>
+</html>

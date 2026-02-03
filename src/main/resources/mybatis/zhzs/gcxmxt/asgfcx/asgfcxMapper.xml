@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.gcxmxt.mapper.asgfcx.AsgfcxMapper">
+	
+	<!-- 按施工方查询列表-->
+	<select id="selectList" resultType="com.syndo.project.zhzs.gcxmxt.domain.asgfcx.Asgfcx" parameterType="com.syndo.project.zhzs.gcxmxt.domain.asgfcx.Asgfcx">
+
+	</select>
+
+</mapper>

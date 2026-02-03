@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+    <th:block th:include="include :: layui-header('行业税电指数管理')" />
+    <style type="text/css">
+        .layui-card-header{
+            height: auto;
+        }
+    </style>
+</head>
+<body class="layui-body-table">
+<div class="layui-card">
+    <div class="layui-card-header">
+        <form id="query-form" class="layui-form">
+            <div class="layui-form-item layui-row">
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">行业：</label>
+                    <div class="layui-input-block">
+                        <select id="sshy" name="sshy" th:with="type=${@dict.getType('dm_ml')}" class="form-control select2-multiple">
+                            <option value=""></option>
+                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictLabel}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">税款所属期起： </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="ssqq" name="ssqq" th:value="${ssqq}"
+                               readonly="readonly" autocomplete="off"
+                               data-type="month" data-format="yyyy-MM"
+                               class="layui-input time-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                    <label class="layui-form-label">税款所属期止： </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="ssqz" name="ssqz" th:value="${ssqz}"
+                               readonly="readonly" autocomplete="off"
+                               data-type="month" data-format="yyyy-MM"
+                               class="layui-input time-input">
+                    </div>
+                </div>
+                <div class="layui-inline layui-col-sm6 layui-col-md2">
+                        <label class="layui-form-label">纳税人名称： </label>
+                        <div class="layui-input-block">
+                            <input class="layui-input form-control" type="text" id="nsrmc" name="nsrmc"/>
+                        </div>
+                </div>
+                <div class="layui-inline layui-col-sm12 layui-col-md5">
+                    <div class="layui-form-btn" style="text-align: right">
+                        <a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+                            <i class="layui-icon">&#xe615;</i> 查询
+                        </a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+                            <i class="layui-icon">&#xe669;</i> 重置
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-card-body">
+        <table id="layui-table" lay-filter="layui-table"></table>
+    </div>
+</div>
+<th:block th:include="include :: layui-footer" />
+<script type="text/javascript">
+    var prefix = ctx + "zhzs/dbfxxt/ztzhfx/qyydfx";
+
+    $(function() {
+        var options = {
+            url: prefix + "/list",
+            exportUrl: prefix + "/expExcel",
+            title: "企业用电分析",
+            height:"full-110",
+            clickToSelect: true,
+            showExport: true,	// 点击选中行
+            cols:[ [{
+                checkbox: true
+            },
+                {
+                    field: 'id',
+                    title: 'ID',
+                    hide: true
+                },
+                {
+                    field : 'tyshxydm',
+                    title : '统一社会信用代码',
+                    sortable: true,
+                    width : 180
+                },
+                {
+                    field : 'nsrmc',
+                    title : '纳税人名称',
+                    sortable: true,
+                    width : 180
+                },
+                {
+                    field : 'ssqq',
+                    title : '所属期起',
+                    sortable: true,
+                    width : 100
+                },
+                {
+                    field : 'ssqz',
+                    title : '所属期止',
+                    sortable: true,
+                    width : 100
+                },
+                {
+                    field : 'zzs',
+                    title : '增值税(元)',
+                    sortable: true,
+                    width : 100,
+                    align: 'right'
+                },
+                {
+                    field : 'ydl',
+                    title : '用电量(度)',
+                    sortable: true,
+                    width : 100,
+                    align: 'right'
+                },
+                {
+                    field : 'sdzs',
+                    title : '税电指数',
+                    sortable: true,
+                    width : 200,
+                    align: 'right'
+                },
+                {
+                    field : 'hysdzsfw',
+                    title : '行业税电指数范围',
+                    sortable: true,
+                    width : 200,
+                    align: 'right'
+                },
+                {
+                    field : 'sdzscy',
+                    title : '税电指数差异',
+                    sortable: true,
+                    width : 150,
+                    align: 'right'
+                }
+            ]]
+        };
+        $.table.init(options);
+    });
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        laydate.render({elem: '#ssqq', type: 'month', format: 'yyyy-MM'});
+        laydate.render({elem: '#ssqz', type: 'month', format: 'yyyy-MM'});
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<!-- 项目查询 -->
+<div th:fragment="xmcx">
+    <style>
+        .xmcxComponentTable {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 65px);
+        }
+    </style>
+    <template id="xmcxTemplate">
+        <my-panel ref="panel" :width.sync="width" :collapsed="true">
+            <xmcx-dialog ref="dialog" @do-query="handleDoQuery"></xmcx-dialog>
+            <div>
+                <h3 style="padding-left: 20px">查询结果</h3>
+                <el-button
+                    @click="queryFilter"
+                    icon="fa fa-filter"
+                    style="position: absolute; top: 10px; right: 80px"
+                    circle
+                    title="筛选"
+                ></el-button>
+                <el-button @click="refresh" icon="fa fa-refresh" style="position: absolute; top: 10px; right: 30px" circle title="刷新"></el-button>
+                <my-el-table
+                    ref="table"
+                    table-class="xmcxComponentTable"
+                    :columns="columns"
+                    @row-click="rowClick"
+                    @on-load="onLoad"
+                    :data-url="queryUrl"
+                    :query-params="queryParams"
+                >
+                </my-el-table>
+            </div>
+        </my-panel>
+    </template>
+    <script type="module">
+        Vue.component("xmcxComponent", {
+            template: "#xmcxTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+            },
+            data() {
+                return {
+                    width: 340,
+                    layerType: "xmcx",
+                    marker: xmcxMarkerContentCmp,
+                    queryUrl: "/module/taxgis/GetXmxxBz",
+                    queryParams: {},
+                    columns: [
+                        { prop: "id", label: "ID", width: "30", show: false },
+                        { prop: "xmmc", label: "项目名称", width: "100", show: true },
+                        { prop: "xmdz", label: "项目地址", width: "100", show: true },
+                        { prop: "jsnr", label: "建设内容", width: "100", show: true },
+                        { prop: "kgsj", label: "开工时间", width: "100", show: true },
+                        { prop: "jgsj", label: "竣工时间", width: "100", show: true },
+                        { prop: "jsdw", label: "建设单位", width: "100", show: true },
+                        { prop: "jsdwlxr", label: "建设单位联系人", width: "120", show: true },
+                        { prop: "lxfs", label: "联系方式", width: "100", show: true },
+                        { prop: "jsqx", label: "建设期限", width: "100", show: true },
+                        { prop: "tze", label: "投资额（元）", width: "110", show: true },
+                        { prop: "njhtz", label: "年计划投资", width: "100", show: true },
+                        { prop: "jsgm", label: "建设规模（㎡）", width: "120", show: true },
+                        { prop: "lxsj", label: "立项时间", width: "100", show: true },
+                        { prop: "zjly", label: "资金来源", width: "100", show: true },
+                    ],
+                };
+            },
+            destroyed: function () {
+                this.removeMarkers();
+            },
+            mounted: function () {
+                // this.$refs.table.queryList();
+            },
+            methods: {
+                removeMarkers() {
+                    this.pubVue.$emit("removeMarkers", { layerType: this.layerType });
+                },
+                rowClick(row) {
+                    let rowObj = {};
+                    $.extend(rowObj, row, { layerType: this.layerType });
+                    this.pubVue.$emit("drawPoint", { row: rowObj, marker: this.marker });
+                },
+                refresh() {
+                    this.$nextTick().then(() => {
+                        this.$refs.table.queryList();
+                    });
+                },
+                queryFilter() {
+                    this.$refs.dialog.showDialog();
+                },
+                handleDoQuery(form) {
+                    this.queryParams = form;
+                    this.$refs.panel.showPanel();
+                    this.refresh();
+                },
+                onLoad(data) {
+                    this.removeMarkers();
+                    if (data && data.total && data.total > 0) {
+                        this.pubVue.$emit("showMarker", { rows: data.rows, marker: this.marker, layerType: this.layerType });
+                    }
+                },
+            },
+        });
+    </script>
+    <style>
+        /*dialog*/
+        .xmcxDialogClass {
+            width: 500px;
+        }
+        /*dialog>form*/
+        .xmcxDialogClass .el-form {
+            width: 460px;
+        }
+        .xmcxDialogClass .el-select .el-input {
+            width: 340px;
+        }
+    </style>
+    <!-- 查询条件 -->
+    <template id="xmcxDialogTemplate">
+        <el-dialog
+            title="查询条件"
+            custom-class="xmcxDialogClass"
+            :append-to-body="false"
+            :fullscreen="false"
+            :modal="false"
+            :close-on-click-modal="false"
+            close-on-press-escape
+            :visible="dialogTableVisible"
+            :before-close="handleDialogClose"
+        >
+            <el-form :model="form" size="medium" :label-width="formLabelWidth">
+                <el-form-item label="项目名称">
+                    <el-input v-model="form.xmmc" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="项目地址">
+                    <el-input v-model="form.xmdz" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="handleDialogClose">取 消</el-button>
+                <el-button type="primary" @click="handleSumbit">确 定</el-button>
+            </div>
+        </el-dialog>
+    </template>
+    <script type="module">
+        Vue.component("xmcxDialog", {
+            template: "#xmcxDialogTemplate",
+            data() {
+                return {
+                    dialogTableVisible: true,
+                    form: {
+                        xmmc: "",
+                        xmdz: "",
+                    },
+                    formLabelWidth: "120px",
+                };
+            },
+            methods: {
+                showDialog() {
+                    this.dialogTableVisible = true;
+                },
+                handleDialogClose() {
+                    this.dialogTableVisible = false;
+                },
+                handleSumbit() {
+                    this.dialogTableVisible = false;
+                    let params = {};
+                    $.extend(params, this.form);
+                    this.$emit("do-query", params);
+                },
+            },
+        });
+    </script>
+    <!-- 地图信息框 -->
+    <style>
+        /* marker样式 */
+        .xmcx_popup_content {
+            padding: 0;
+        }
+
+        .xmcx_info_container {
+            cursor: default;
+            word-wrap: break-word;
+            width: 310px;
+        }
+
+        .xmcx_info_container .title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+            margin-right: 30px;
+        }
+
+        .xmcx_info_container .title:after {
+            clear: both;
+            content: "";
+            display: table;
+        }
+
+        .xmcx_info_container .props p {
+            margin: 10px 0;
+        }
+
+        .xmcx_info_container p {
+            font-size: 12px;
+        }
+    </style>
+    <template id="xmcxMarkerTemplate">
+        <div class="xmcx_popup_content">
+            <div class="xmcx_info_container">
+                <div class="title">
+                    <span><a href="#">{{markerData.xmmc}}</a></span>
+                </div>
+                <div class="props">
+                    <p><span>项目地址：</span> <span>{{markerData.xmdz}}</span></p>
+                    <p><span>建设内容：</span> <span>{{markerData.jsnr}}</span></p>
+                    <p><span>开工时间：</span> <span>{{markerData.kgsj}}</span></p>
+                    <p><span>竣工时间：</span> <span>{{markerData.jgsj}}</span></p>
+                    <p><span>建设单位：</span> <span>{{markerData.jsdw}}</span></p>
+                    <p><span>建设单位联系人：</span> <span>{{markerData.jsdwlxr}}</span></p>
+                    <p><span>联系方式：</span> <span>{{markerData.lxfs}}</span></p>
+                    <p><span>建设期限：</span> <span>{{markerData.jsqx}}</span></p>
+                    <p><span>投资额（元）：</span> <span>{{markerData.tze}}</span></p>
+                    <p><span>年计划投资：</span> <span>{{markerData.njhtz}}</span></p>
+                    <p><span>建设规模（㎡）：</span> <span>{{markerData.jsgm}}</span></p>
+                    <p><span>立项时间：</span> <span>{{markerData.lxsj}}</span></p>
+                    <p><span>资金来源：</span> <span>{{markerData.zjly}}</span></p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        let xmcxMarkerContentCmp = Vue.extend({
+            template: "#xmcxMarkerTemplate",
+            props: {
+                pubVue: {
+                    type: Object,
+                },
+                markerData: {
+                    type: Object,
+                },
+            },
+            data: function () {
+                return {};
+            },
+            methods: {},
+        });
+    </script>
+</div>

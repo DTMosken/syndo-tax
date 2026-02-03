@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: header('分级次收入情况')" />
+</head>
+<body class="gray-white">
+     <div class="container-div">
+		<div class="row">
+		
+			<!-- 查询条件 -->
+	    	<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+							<span class="fa fa-chevron-down"></span>
+						</a>
+					</h4>
+				</div>
+				<div id="collapseExample" class="panel-collapse collapse">
+					<form id="query-form" class="form-horizontal m">
+			        	<div class="row">
+			        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">日期 ： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" th:value="${cxsj}" readonly="readonly" id="cxsj" name="cxsj"/>
+										</div>
+									</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-12 text-right">
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-resizable="true"></table>
+			</div>
+		</div>
+	</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/srfxxt/szqkfx/fjcsrqk";
+
+        $(function() {
+            var options = {
+                //url: prefix + "/list",
+                modalName: "分级次收入情况",
+		        showExport: true,
+		        showSearch:false,
+                columns: [
+                	[
+		                {
+				            checkbox: true,
+				            valign: 'middle',    //垂直居中
+				            colspan: 1,            //表示占1列
+                            rowspan: 2            //表示占2行
+				        },
+						{
+							field : 'objId', 
+							width : '50',
+							visible: false
+						},
+						{
+							field : 'hh',
+							title : '行号',
+							width : '60',
+							valign: 'middle',    //垂直居中
+							colspan: 1,         //表示占1列
+                            rowspan: 2,         //表示占2行
+							formatter:function(value,row,index) {
+								return $.table.serialNumber(index);
+							}
+						},
+						{
+							field : 'jdxz', 
+                            title : '乡镇',
+                            width : '120',
+                            valign: 'middle',    //垂直居中
+                            colspan: 1,
+                            rowspan: 2
+						},
+						{
+							field : 'hj', 
+                            title : '各级次合计',
+                            width : '120',
+                            valign: 'middle',    //垂直居中
+                            colspan: 1,
+                            rowspan: 2
+						},
+						{
+                            title : '乡镇级',
+                            width : '360',
+                            align: 'center',    //水平居中
+                            colspan: 3,
+                            rowspan: 1
+                        },
+                        {
+                            title : '中央级',
+                            width : '1080',
+                            align: 'center',    //水平居中
+                            colspan: 9,
+                            rowspan: 1
+                        },
+						{
+                        	title : '市级',
+                            width : '1080',
+                            align: 'center',    //水平居中
+                            colspan: 9,
+                            rowspan: 1
+						},
+						{
+							title : '区级',
+                            width : '1200',
+                            align: 'center',    //水平居中
+                            colspan: 10,
+                            rowspan: 1
+						},
+					],
+					[
+                        {
+                        	field : 'xzjhj', 
+                            title : '合计',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'xzjybyshj', 
+                            title : '一般预算收入合计',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'xzjjjhj', 
+                            title : '基金收入合计',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjhj', 
+                            title : '合计',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjzzs', 
+                            title : '增值税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjxfs', 
+                            title : '消费税100%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjqysds', 
+                            title : '企业所得税60%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjgrsds', 
+                            title : '个人所得税60%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjclgzs', 
+                            title : '车辆购置税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjqtsssr', 
+                            title : '其他税收收入',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjstbcbcf', 
+                            title : '水土保持补偿费',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'zyjqtfmsr', 
+                            title : '税务部门其他罚没收入',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjhj', 
+                            title : '合计',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjzzs', 
+                            title : '增值税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjgrsds', 
+                            title : '个人所得税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjccs', 
+                            title : '车船税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjhjbhs', 
+                            title : '环境保护税',
+                            width : '140',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjqtsssr', 
+                            title : '其他税收收入',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjjyffj', 
+                            title : '教育费附加收入20%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjdfjyfj', 
+                            title : '地方教育附加收入',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'sjwhsyjsf', 
+                            title : '文化事业建设费收入',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjhj', 
+                            title : '合计',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjcztdsys', 
+                            title : '城镇土地使用税60%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjcztdzzs', 
+                            title : '城镇土地增值税50%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjhjbhs', 
+                            title : '环境保护税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjszyf', 
+                            title : '水资源费收入',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjcbj', 
+                            title : '残保金',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjjyffj', 
+                            title : '教育费附加收入80%',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjyljj', 
+                            title : '育林基金',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjshfyf', 
+                            title : '社会抚养费',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        },
+                        {
+                        	field : 'qjzzs', 
+                            title : '增值税',
+                            width : '120',
+                            colspan: 1,
+                            rowspan: 1
+                        }
+                    ]
+                ]
+            };
+            $.table.init(options);
+        });
+        
+        layui.use('laydate', function(){
+        	var laydate = layui.laydate;
+    	  	laydate.render({elem: '#cxsj',type:'month',format: 'yyyy-MM'});
+        });
+    </script>
+</body>
+</html>

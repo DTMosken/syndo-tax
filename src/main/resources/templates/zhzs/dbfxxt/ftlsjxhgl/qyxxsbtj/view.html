@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+	<meta charset="utf-8">
+	<head>
+		<th:block th:include="include :: header('企业房土信息已核实')" />
+	</head>
+	<body class="gray-white">
+	     <div class="container-div">
+			<div class="row">
+			
+				<!-- 查询条件 -->
+		    	<div class="panel panel-default">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<i class="fa fa-search"></i>&nbsp;&nbsp;查询条件选择
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapseExample" class="collapse-a">
+								<span class="fa fa-chevron-down"></span>
+							</a>
+						</h4>
+					</div>
+					<div id="collapseExample" class="panel-collapse collapse in">
+						<form id="query-form" class="form-horizontal m">
+				        	<div class="row">
+				        		<div class="col-sm-4">
+				        			<div class="form-group">
+										<label class="col-sm-3 control-label input-sm">报送日期： </label>
+										<div class="col-sm-9">
+											<input class="form-control input-sm" type="text" readonly="readonly" id="bszq" name="bszq"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="col-sm-12 text-right">
+									<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+									<a class="btn btn-warning btn-rounded btn-sm" onclick="onReset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				
+		        <div class="btn-group-sm" id="toolbar" role="group">
+				</div>
+				<div class="col-sm-12 select-table table-striped">
+					<table id="bootstrap-table" data-mobile-responsive="true"></table>
+				</div>
+			</div>
+		</div>
+	    <th:block th:include="include :: footer" />
+	    <script th:inline="javascript">
+	        var prefix = ctx + "zhzs/dbfxxt/ftlsjxhgl/qyxxsbtj";
+	
+	        $(function() {
+	            var options = {
+	                url: prefix + "/list",
+	                modalName: "企业信息上报统计",
+			        showExport: true,
+			        showSearch:false,
+                	columns: [
+                	{
+			            checkbox: true							// 复选框（固定宽度）
+			        },
+					{
+						field : 'id', 							// 字段名称
+						title : 'ID',							// 标题
+						// 以下参数只做参考，可删除
+						titleTooltip: '主键',						// 提示文本
+						rowspan: 1,								// 跨行
+						colspan: 1,								// 跨列
+						align: 'center',						// 数据对齐  'left', 'right', 'center' 
+						halign: 'center',						// 表头对齐  'left', 'right', 'center' 
+						falign: 'center',						// 页脚对齐  'left', 'right', 'center' 
+						valign: 'top',							// 对齐单元格数据 'top', 'middle', 'bottom'
+						width: 200,								// 列宽度 'px','%'
+						sortable: false,						// 是否排序
+						order: 'asc',							// 排序顺序 'asc','desc'
+						visible: false,							// 是否显示
+						formatter: function(value, row, index) {// 格式化函数 value:字段值，row:行数据,index:索引
+							return value;
+						}
+					},
+					{
+			            field: 'userCode',
+			            title: '用户登录名'
+			        },
+					{
+			            field: 'userName',
+			            title: '用户名称'
+			        },
+					{
+			            field: 'userTel',
+			            title: '联系电话'
+			        },
+					{
+			            field: 'userDept',
+			            title: '所属乡镇'
+			        },
+					{
+			            field: 'totals',
+			            title: '上报总数'
+			        },
+					{
+			            field: 'bszq',
+			            title: '报送日期'
+			        }]
+	            };
+	            $.table.init(options);
+	            
+	            // 双击修改
+	            $("#bootstrap-table").on('dbl-click-row.bs.table', function (e, row, ele,field) {
+	            	if(editFlag != 'hidden') {
+	            		$.operate.edit(row.id);
+	            	}
+	            });
+	            
+	        });
+	        
+	        layui.use('laydate', function(){
+	        	var laydate = layui.laydate;
+	      	  //执行一个laydate实例
+	      	  laydate.render({
+	      	    elem: '#bszq', //指定元素
+	      	    format:'yyyy-MM-dd'
+	      	  });
+	      });
+	    </script>
+	</body>
+</html>

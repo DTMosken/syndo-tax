@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.syndo.project.taxgis.mapper.TaxgisMapper">
+
+    <select id="getNsrxxBz" resultType="TaxgisNsrxx" databaseId="mysql" >
+        select id, shxydm, nsrmc, nsrzt, zcdz, jydz, djzclx, lon, lat, wbz, jdxz, kzztdjlx, zgswskfj from
+        (SELECT row_number() over(PARTITION BY t.nsrmc order by t.create_time DESC, t.id desc) rownum,
+            t.id,
+            t.nsrsbh shxydm,
+            t.nsrmc,
+            t.nsrzt,
+            t.zcdz,
+            t.jydz,
+            t.djzclx,
+            t.jdxz,
+            t.kzztdjlx,
+            t.zgswskfj,
+            st_x(q.geo) lon,
+            st_y(q.geo) lat,
+            ISNULL(q.id) wbz
+        FROM t_db_swj_swdjxx t
+        LEFT JOIN (SELECT nsrmc FROM(
+                    SELECT nsrmc, LEAST(yxqz, sjzzrq) yxqz, ROW_NUMBER() OVER(PARTITION BY nsrmc ORDER BY create_time DESC, id DESC) rn FROM t_db_swj_ybnsrdjxx
+                    ) yb WHERE rn=1 AND yxqz>=DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d')
+            ) ybnsr on t.nsrmc=ybnsr.nsrmc
+        LEFT JOIN gis_qyxx q ON t.nsrmc = q.qymc
+        where t.nsrmc is not null and t.nsrmc!=''
+        <if test='sfbz!=null and sfbz=="0"'>
+            and q.id is null
+        </if>
+        <if test='sfbz!=null and sfbz=="1"'>
+            and q.id is not null
+        </if>
+        <if test='sfybnsr!=null and sfybnsr=="0"'>
+            and ybnsr.nsrmc is null
+        </if>
+        <if test='sfybnsr!=null and sfybnsr=="1"'>
+            and ybnsr.nsrmc is not null
+        </if>
+
+        ) t where t.rownum=1
+        <if test="nsrmc!=null and nsrmc!=''">
+            and instr(nsrmc, #{nsrmc})>0
+        </if>
+        <if test="shxydm!=null and shxydm!=''">
+            and instr(shxydm, #{shxydm})>0
+        </if>
+        <if test="kzztdjlx!=null and kzztdjlx!=''">
+            and kzztdjlx = #{kzztdjlx}
+        </if>
+        <if test="nsrzt!=null and nsrzt!=''">
+            and nsrzt = #{nsrzt}
+        </if>
+        <if test="djzclx!=null and djzclx!=''">
+            and djzclx = #{djzclx}
+        </if>
+        <if test="jdxz!=null and jdxz!=''">
+            and jdxz = #{jdxz}
+        </if>
+        <if test="zgswjg!=null and zgswjg!=''">
+            and zgswskfj = #{zgswjg}
+        </if>
+
+        union
+        select id, shxydm, nsrmc, nsrzt, zcdz, jydz, djzclx, lon, lat, wbz, jdxz, kzztdjlx, zgswskfj from
+        (SELECT row_number() over(PARTITION BY ybnsr.nsrmc order by ybnsr.create_time DESC, ybnsr.id desc) rownum,
+        ybnsr.id,
+        ybnsr.nsrsbh shxydm,
+        ybnsr.nsrmc,
+        ybnsr.nsrzt,
+        ybnsr.zcdz,
+        ybnsr.scjydz jydz,
+        '' djzclx,
+        '' jdxz,
+        '' kzztdjlx,
+        LEAST(yxqz, sjzzrq) yxqz,
+        ybnsr.zgswskfj,
+        st_x(q.geo) lon,
+        st_y(q.geo) lat,
+        ISNULL(q.id) wbz
+        FROM t_db_swj_ybnsrdjxx ybnsr
+        LEFT JOIN (select distinct nsrmc from t_db_swj_swdjxx where nsrmc is not null and nsrmc!='') t on t.nsrmc=ybnsr.nsrmc
+        LEFT JOIN gis_qyxx q ON ybnsr.nsrmc = q.qymc
+        where ybnsr.nsrmc is not null and ybnsr.nsrmc!='' and t.nsrmc is null
+        <if test='sfbz!=null and sfbz=="0"'>
+            and q.id is null
+        </if>
+        <if test='sfbz!=null and sfbz=="1"'>
+            and q.id is not null
+        </if>
+        <if test='sfybnsr!=null and sfybnsr=="0"'>
+            and ybnsr.id is null
+        </if>
+        <if test='sfybnsr!=null and sfybnsr=="1"'>
+            and ybnsr.id is not null
+        </if>
+        ) t where t.rownum=1 and yxqz>=DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d')
+        <if test="nsrmc!=null and nsrmc!=''">
+            and instr(nsrmc, #{nsrmc})>0
+        </if>
+        <if test="shxydm!=null and shxydm!=''">
+            and instr(shxydm, #{shxydm})>0
+        </if>
+        <if test="kzztdjlx!=null and kzztdjlx!=''">
+            and kzztdjlx = #{kzztdjlx}
+        </if>
+        <if test="nsrzt!=null and nsrzt!=''">
+            and nsrzt = #{nsrzt}
+        </if>
+        <if test="djzclx!=null and djzclx!=''">
+            and djzclx = #{djzclx}
+        </if>
+        <if test="jdxz!=null and jdxz!=''">
+            and jdxz = #{jdxz}
+        </if>
+        <if test="zgswjg!=null and zgswjg!=''">
+            and zgswskfj = #{zgswjg}
+        </if>
+    </select>
+
+    <select id="getNsrxxBzByNsrmcs" resultType="TaxgisNsrxx" databaseId="mysql">
+        select * from
+        (SELECT row_number() over(PARTITION BY t.nsrmc order by t.id desc) rownum,
+            t.id,
+            t.nsrsbh shxydm,
+            t.nsrmc,
+            t.nsrzt,
+            t.zcdz,
+            t.jydz,
+            t.djzclx,
+            st_x(q.geo) lon,
+            st_y(q.geo) lat,
+            ISNULL(q.id) wbz
+        FROM t_db_swj_swdjxx t
+        INNER JOIN t_db_swj_ybnsrdjxx ybnsr on t.nsrsbh=ybnsr.nsrsbh and t.nsrmc=ybnsr.nsrmc
+        INNER JOIN gis_qyxx q ON t.nsrmc = q.qymc
+        where t.nsrmc in (<foreach collection="nsrmcs" item="nsrmc" separator=",">#{nsrmc}</foreach>)        
+        ) t where t.rownum=1
+    </select>
+
+    <select id="selectNsrxxBzCnt" resultType="int">
+        select count(1) from gis_qyxx q where q.qymc=#{nsrmc}
+    </select>
+    <insert id="insertNsrxxBz" databaseId="mysql">
+        insert into gis_qyxx(qymc, zcdz, geo, lrr, lrrq, lx)
+        values (#{nsrmc}, #{zcdz}, st_geomfromtext(#{geo}), #{lrr}, #{lrrq}, '0')
+    </insert>
+    <update id="updateNsrxxBz" databaseId="mysql">
+        update gis_qyxx set qymc=#{nsrmc}, zcdz=#{zcdz}, xgr=#{xgr}, xgrq=#{xgrq}, geo=st_geomfromtext(#{geo})
+        where qymc=#{nsrmc}
+    </update>
+    <delete id="deleteNsrxxBz">
+        delete from gis_qyxx
+        where qymc=#{nsrmc}
+    </delete>
+
+    <select id="getXmxxBz" resultType="TaxgisXmxx" databaseId="mysql">
+        SELECT
+        t.id,
+        t.gcxmmc xmmc,
+        t.xmdz,
+        t.jsnr,
+        t.kgsj,
+        t.jgsj,
+        t.jsdw,
+        t.jsdwlxr,
+        t.lxfs,
+        t.jsqx,
+        t.tze,
+        t.njhtz,
+        t.jsgm,
+        t.lxsj,
+        t.zjly,
+        st_x(q.geo) lon,
+        st_y(q.geo) lat,
+        ISNULL(q.id) wbz
+        FROM
+        t_db_zd_gcxmjbxx t
+        LEFT JOIN gis_xmxx q
+        ON t.id = q.id
+        <where>
+            <if test='sfbz!=null and sfbz=="0"'>
+                and q.id is null
+            </if>
+            <if test='sfbz!=null and sfbz=="1"'>
+                and q.id is not null
+            </if>
+            <if test="xmmc!=null and xmmc!=''">
+                and instr(t.gcxmmc, #{xmmc})>0
+            </if>
+            <if test="xmdz!=null and xmdz!=''">
+                and instr(t.xmdz, #{xmdz})>0
+            </if>
+        </where>
+    </select>
+    <select id="selectXmxxBzCnt" resultType="int">
+        select count(1) from gis_xmxx q where q.id=#{id}
+    </select>
+    <insert id="insertXmxxBz" databaseId="mysql">
+        insert into gis_xmxx(id, xmmc, xmdz, geo, lrr, lrrq)
+        values (#{id}, #{xmmc}, #{xmdz}, st_geomfromtext(#{geo}), #{lrr}, #{lrrq})
+    </insert>
+    <update id="updateXmxxBz" databaseId="mysql">
+        update gis_xmxx set xgr=#{xgr}, xgrq=#{xgrq}, geo=st_geomfromtext(#{geo})
+        where id=#{id}
+    </update>
+    <delete id="delXmxxBz">
+        delete from gis_xmxx
+        where id=#{id}
+    </delete>
+
+
+    <resultMap id="glqywhTreeDataMap" type="map">
+        <result column="id" property="id" javaType="string"/>
+        <result column="pid" property="pid" javaType="string"/>
+        <result column="label" property="label" javaType="string"/>
+        <result column="lx" property="lx" javaType="string"/>
+        <result column="geo" property="geo" javaType="string"/>
+        <result column="wbz" property="wbz" javaType="string"/>
+    </resultMap>
+    <select id="glqywhTreeData" resultMap="glqywhTreeDataMap" databaseId="mysql">
+        SELECT dept_id id, parent_id pid, dept_name label, '2' lx, St_asText(q.geo) geo, ISNULL(q.id) wbz 
+        FROM sys_dept t LEFT JOIN gis_qygl q ON t.dept_id=q.id AND q.lx='2'
+        where t.parent_id='0'
+        UNION
+        SELECT dept_id id, parent_id pid, dept_name label, '2' lx, St_asText(q.geo) geo, ISNULL(q.id) wbz 
+        FROM sys_dept t LEFT JOIN gis_qygl q ON t.dept_id=q.id AND q.lx='2'
+        <where>
+            ${params.dataScope}
+        </where>
+        UNION ALL
+        SELECT t3.id, t3.pid, t3.qymc label, t3.lx, St_asText(t3.geo) geo, ISNULL(t3.geo) wbz 
+        FROM gis_qygl t3 LEFT JOIN sys_dept d ON t3.id=d.dept_id AND t3.lx='2'
+        JOIN sys_user t ON t3.lrr=t.user_id
+        WHERE t3.lx IN('2','3') 
+        AND d.dept_id IS NULL
+        ${params.dataScope}
+        ORDER BY pid, id
+    </select>
+    <select id="glqyTreeData" resultMap="glqywhTreeDataMap" databaseId="mysql">
+        with recursive aa as
+        (select qy.id, qy.pid, qy.qymc, qy.lx, geo
+            from (select q.id, q.pid, q.qymc, q.lx, St_asText(q.geo) geo, q.lrr from gis_qygl q where q.lx in('2','3') and q.geo is not null) qy
+            left join sys_user t on qy.lrr=t.user_id
+            <where>${params.dataScope}</where>            
+            union all
+            select t.id, t.pid, t.qymc, t.lx, St_asText(t.geo) geo
+            from gis_qygl t, aa where t.id=aa.pid
+            union all
+            select dept_id id, parent_id pid, dept_name qymc, '2' lx, null geo
+            FROM sys_dept t join aa on t.dept_id=aa.pid left join gis_qygl g on t.dept_id=g.id
+            where g.id is null
+        )
+        select distinct id, pid, qymc label, lx, geo, 0 wbz from aa ORDER BY pid, id
+    </select>
+    <select id="selectGlqywhCnt" resultType="int">
+        select count(1) from gis_qygl 
+        where id=#{id}
+    </select>
+    <insert id="insertQygl" parameterType="GisGlqy" databaseId="mysql">
+        <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="id">
+            <choose>
+                <when test="id==null || id==''">SELECT cast(MAX(id)+1 as char) FROM (SELECT MAX(id) id FROM gis_qygl UNION ALL SELECT MAX(dept_id) id FROM sys_dept) tmp</when>
+                <otherwise>select #{id} id</otherwise>
+            </choose>
+        </selectKey>
+        insert into gis_qygl(id, pid, qymc, lx, geo, lrr, lrrq) values(
+            #{id}, #{pid}, #{qymc}, #{lx}, ST_PolygonFromText(#{geo}), #{lrr}, #{lrrq}
+        )
+    </insert>
+    <update id="updateQygl" parameterType="GisGlqy">
+        update gis_qygl 
+        set qymc=#{qymc}, 
+        <if test="geo!=null and geo!=''">geo=ST_PolygonFromText(#{geo}), </if>
+        xgr=#{xgr}, xgrq=#{xgrq}
+        where id=#{id}
+    </update>
+    <select id="checkDelGlqywh1" resultType="int">
+        SELECT COUNT(1) FROM gis_qygl where pid=#{id}
+    </select>
+    <select id="checkDelGlqywh2" resultType="int">
+        SELECT COUNT(1) FROM gis_qygl where id=#{id}
+    </select>
+    <update id="delGlqywh">
+        delete from gis_qygl where id=#{id}
+    </update>
+
+    <resultMap id="xzqhwhTreeDataMap" type="map">
+        <result column="id" property="id" javaType="string"/>
+        <result column="pid" property="pid" javaType="string"/>
+        <result column="label" property="label" javaType="string"/>
+        <result column="lx" property="lx" javaType="string"/>
+        <result column="geo" property="geo" javaType="string"/>
+        <result column="wbz" property="wbz" javaType="string"/>
+    </resultMap>
+    <select id="xzqhwhTreeData" resultMap="xzqhwhTreeDataMap" databaseId="mysql">
+        SELECT t3.id, t3.pid, t3.qymc label, t3.lx, St_asText(t3.geo) geo, ISNULL(t3.geo) wbz 
+        FROM gis_qygl t3
+        WHERE t3.lx ='1'
+        ORDER BY pid, id
+    </select>
+
+    <resultMap id="hyTreeDataMap" type="map">
+        <result column="hy_dm" property="hyDm" javaType="string" />
+        <result column="hymc" property="hymc" javaType="string" />
+        <result column="sjhy_dm" property="sjhyDm" javaType="string" />
+        <result column="mlbz" property="mlbz" javaType="string" />
+        <result column="dlbz" property="dlbz" javaType="string" />
+        <result column="zlbz" property="zlbz" javaType="string" />
+        <result column="xlbz" property="xlbz" javaType="string" />
+    </resultMap>
+    <select id="hyTreeData" resultMap="hyTreeDataMap">
+        select hy_dm, hymc, sjhy_dm, mlbz, dlbz, zlbz, xlbz from dm_hy order by hy_dm
+    </select>
+    
+    <select id="hyAnalyze" resultType="TaxgisNsrxx" databaseId="mysql">
+        <choose>
+            <when test="hyDm != null and hyDm != ''">
+                with recursive aa as
+                (select hymc, hy_dm, sjhy_dm from dm_hy where hy_dm = #{hyDm}
+                union all
+                select t.hymc, t.hy_dm, t.sjhy_dm from dm_hy t, aa where t.SJHY_DM=aa.hy_dm
+                )
+            </when>
+            <otherwise>
+                with aa as (
+                    select hymc, hy_dm, sjhy_dm from dm_hy
+                )
+            </otherwise>
+        </choose>
+        select id, shxydm, nsrmc, nsrzt, zcdz, jydz, djzclx, lon, lat, wbz from(
+            SELECT row_number() over (partition by nsrmc order by t.create_time desc, t.id desc) rn,
+                t.id,
+                t.nsrsbh shxydm,
+                t.nsrmc,
+                t.nsrzt,
+                t.zcdz,
+                t.jydz,
+                t.djzclx,
+                t.hy,
+                st_x(q.geo) lon,
+                st_y(q.geo) lat,
+                ISNULL(q.id) wbz
+            FROM t_db_swj_swdjxx t JOIN gis_qyxx q ON t.nsrmc = q.qymc
+        ) tt
+        where rn = 1
+        and tt.hy in(select hymc from aa)
+    </select>
+
+    <resultMap id="glqyAnalyzeMap" type="map">
+        <result column="nsrsbh" property="nsrsbh" javaType="string" />
+        <result column="nsrmc" property="nsrmc" javaType="string" />
+        <result column="nsrzt" property="nsrzt" javaType="string" />
+        <result column="kzztdjlx" property="kzztdjlx" javaType="string" />
+        <result column="djzclx" property="djzclx" javaType="string" />
+        <result column="kyslrq" property="kyslrq" javaType="string" />
+        <result column="cyrs" property="cyrs" javaType="string" />
+        <result column="zzjglx" property="zzjglx" javaType="string" />
+        <result column="jyfw" property="jyfw" javaType="string" />
+        <result column="hy" property="hy" javaType="string" />
+        <result column="djjg" property="djjg" javaType="string" />
+        <result column="jdxz" property="jdxz" javaType="string" />
+        <result column="zczb" property="zczb" javaType="string" />
+        <result column="zcdz" property="zcdz" javaType="string" />
+        <result column="jydz" property="jydz" javaType="string" />
+    </resultMap>
+
+    <select id="glqyAnalyze" resultMap="glqyAnalyzeMap">
+        SELECT nsrsbh, nsrmc, nsrzt, kzztdjlx, djzclx, kyslrq, cyrs, zzjglx, jyfw, hy, djjg, jdxz, zczb, jydz FROM(
+              SELECT t.nsrsbh, t.nsrmc, t.nsrzt, t.kzztdjlx, t.djzclx, t.kyslrq, FORMAT(t.cyrs,0) cyrs, t.zzjglx, t.jyfw, t.hy, t.djjg, t.jdxz, t.zczb, t.zcdz, t.jydz, q.geo,
+                     ROW_NUMBER() OVER(PARTITION BY t.nsrmc ORDER BY t.create_time DESC, t.id DESC) rn
+              FROM t_db_swj_swdjxx t INNER JOIN gis_qyxx q ON t.nsrmc=q.qymc
+          ) tt
+        WHERE rn=1 and ST_Contains(ST_GeomFromText(#{polygon}), geo)
+
+        UNION
+
+        SELECT nsrsbh, nsrmc, nsrzt, kzztdjlx, djzclx, kyslrq, cyrs, zzjglx, jyfw, hy, djjg, jdxz, zczb, jydz FROM(
+              SELECT t.nsrsbh, t.nsrmc, t.nsrzt, LEAST(t.yxqz, t.sjzzrq) yxqz, '' kzztdjlx, '' djzclx, '' kyslrq, '' cyrs, '' zzjglx, '' jyfw, '' hy, t.zgswjg djjg, '' jdxz, '' zczb, t.zcdz, t.scjydz jydz, q.geo,
+                     ROW_NUMBER() OVER(PARTITION BY t.nsrmc ORDER BY t.create_time DESC, t.id DESC) rn
+              FROM t_db_swj_ybnsrdjxx t
+                       LEFT JOIN (SELECT DISTINCT nsrmc FROM t_db_swj_swdjxx WHERE nsrmc IS NOT NULL) n ON t.nsrmc=n.nsrmc
+                       INNER JOIN gis_qyxx q ON t.nsrmc=q.qymc
+              WHERE n.nsrmc IS NULL
+          ) tt
+        WHERE rn=1 and yxqz>=DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') and ST_Contains(ST_GeomFromText(#{polygon}), geo)
+
+    </select>
+
+    <resultMap id="hyfxMap" type="map">
+        <result column="hy" property="hy" javaType="string"></result>
+        <result column="col0" property="col0" javaType="string"></result>
+        <result column="col1" property="col1" javaType="string"></result>
+        <result column="col2" property="col2" javaType="string"></result>
+        <result column="col3" property="col3" javaType="string"></result>
+        <result column="col4" property="col4" javaType="string"></result>
+        <result column="col5" property="col5" javaType="string"></result>
+        <result column="col6" property="col6" javaType="string"></result>
+        <result column="col7" property="col7" javaType="string"></result>
+        <result column="col8" property="col8" javaType="string"></result>
+        <result column="col9" property="col9" javaType="string"></result>
+        <result column="col10" property="col10" javaType="string"></result>
+        <result column="col11" property="col11" javaType="string"></result>
+    </resultMap>
+    <select id="hyfx" resultMap="hyfxMap" databaseId="mysql">
+        with nsr as (
+            select nsrmc from(
+                select t.nsrmc, q.geo, row_number() over (partition by t.nsrmc order by t.create_time desc, t.id desc) rn
+                from t_db_swj_swdjxx t
+                inner join gis_qyxx q on t.nsrmc = q.qymc
+            ) tt where rn=1 and ST_Contains(ST_GeomFromText(#{polygon}), geo)
+            union
+            select nsrmc from(
+                select yb.nsrmc, q.geo, LEAST(yb.yxqz, yb.sjzzrq) yxqz, row_number() over (partition by yb.nsrmc order by yb.create_time desc, yb.id desc) rn
+                from t_db_swj_ybnsrdjxx yb
+                inner join gis_qyxx q on yb.nsrmc = q.qymc
+                left join (select nsrmc from t_db_swj_swdjxx where nsrmc is not null) t on yb.nsrmc=t.nsrmc
+                where t.nsrmc is null
+            ) tt where rn=1 and ST_Contains(ST_GeomFromText(#{polygon}), geo) and yxqz>=DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d')
+        )
+        select r.hyml hy,
+        <foreach collection="cols" item="col" separator="," index="index1">
+                format(sum(case when substr(r.RKRQ, 1,7)=#{col} then replace(r.sjje,',','') else 0 end),2) col${index1}
+            </foreach>
+        from t_db_swj_jrkxx r inner join nsr on r.NSRMC=nsr.nsrmc
+        where tzlx IN ('未被调账的税款', '调账后产生的新税款')
+        group by r.hyml
+        order by 1
+    </select>
+
+    <resultMap id="szfxMap" type="map">
+        <result column="zsxm" property="zsxm" javaType="string"></result>
+        <result column="zspm" property="zspm" javaType="string"></result>
+        <result column="col0" property="col0" javaType="string"></result>
+        <result column="col1" property="col1" javaType="string"></result>
+        <result column="col2" property="col2" javaType="string"></result>
+        <result column="col3" property="col3" javaType="string"></result>
+        <result column="col4" property="col4" javaType="string"></result>
+        <result column="col5" property="col5" javaType="string"></result>
+        <result column="col6" property="col6" javaType="string"></result>
+        <result column="col7" property="col7" javaType="string"></result>
+        <result column="col8" property="col8" javaType="string"></result>
+        <result column="col9" property="col9" javaType="string"></result>
+        <result column="col10" property="col10" javaType="string"></result>
+        <result column="col11" property="col11" javaType="string"></result>
+    </resultMap>
+    <select id="szfx" resultMap="szfxMap">
+        with nsr as (
+            select nsrmc from(
+                select t.nsrmc, q.geo, row_number() over (partition by t.nsrmc order by t.create_time desc, t.id desc) rn
+                from t_db_swj_swdjxx t
+                inner join gis_qyxx q on t.nsrmc = q.qymc
+            ) tt where rn=1 and ST_Contains(ST_GeomFromText(#{polygon}), geo)
+            union
+            select nsrmc from(
+                select yb.nsrmc, q.geo, LEAST(yb.yxqz, yb.sjzzrq) yxqz, row_number() over (partition by yb.nsrmc order by yb.create_time desc, yb.id desc) rn
+                from t_db_swj_ybnsrdjxx yb
+                inner join gis_qyxx q on yb.nsrmc = q.qymc
+                left join (select nsrmc from t_db_swj_swdjxx where nsrmc is not null) t on yb.nsrmc=t.nsrmc
+                where t.nsrmc is null
+            ) tt where rn=1 and ST_Contains(ST_GeomFromText(#{polygon}), geo) and yxqz>=DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d')
+        )
+        select zsxm, zspm,
+        <foreach collection="cols" item="col" separator="," index="index1">
+            format(sum(col${index1}),2) col${index1}
+        </foreach>
+        from(
+            select r.zsxm, r.zspm,
+            <foreach collection="cols" item="col" separator="," index="index1">
+                sum(case when substr(r.RKRQ, 1,7)=#{col} then replace(r.sjje,',','') else 0 end) col${index1}
+            </foreach>
+            from t_db_swj_jrkxx r inner join nsr on r.NSRMC=nsr.nsrmc
+            where tzlx IN ('未被调账的税款', '调账后产生的新税款')
+            group by r.zsxm, r.zspm
+            union all
+            select r.zsxm, r.zspm,
+            <foreach collection="cols" item="col" separator="," index="index1">
+                format(sum(case when substr(r.RTKRQ, 1,7)=#{col} then replace(r.SJJETKJE,',','') else 0 end),2) col${index1}
+            </foreach>
+            from t_db_swj_swjrkgsgr r inner join nsr on r.NSRMC=nsr.nsrmc
+            where r.ZSXM is not null
+            group by r.zsxm, r.zspm
+            union all
+            select r.zsxm, r.zspm,
+            <foreach collection="cols" item="col" separator="," index="index1">
+                format(sum(case when substr(r.RTKRQ, 1,7)=#{col} then replace(r.SJJETKJE,',','') else 0 end),2) col${index1}
+            </foreach>
+            from t_db_swj_swjrkgsqy r inner join nsr on r.NSRMC=nsr.nsrmc
+            where r.ZSXM is not null
+            group by r.zsxm, r.zspm
+        ) tt
+        group by zsxm, ZSPM
+        order by 1,2
+    </select>
+</mapper>

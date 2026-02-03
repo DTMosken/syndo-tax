@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 任务调整 -->
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.ts.RwtzMapper">
+
+    <select id="selectList" parameterType="Rwtz" resultType="Rwtz">
+        select t.id, t.ywid, t.zt lx, t.zbdm, zb.zbmc, t.nsrmc,
+               t.tsr, tsr.user_name tsrmc, date_format(t.tssj,'%Y-%m-%d %T') tssj, t.fkr, fkr.user_name fkrmc, date_format(t.fksj,'%Y-%m-%d %T') fksj, t.fksx
+        from t_dbfxxt_fkb t left join t_dbfxxt_zbxx zb on t.zbdm=zb.zbdm
+        left join sys_user tsr on t.tsr=tsr.user_id
+        left join sys_user fkr on t.fkr=fkr.user_id
+        LEFT JOIN t_dbfxxt_fkxz xz ON fkr.`login_name`=xz.user_name
+        where t.zt in ('1','2','3.1')
+            <if test="fkr!=null and fkr!=''">
+                and fkr.user_name like concat('%',#{fkr},'%')
+            </if>
+            <if test="fzid!=null and fzid!=''">
+                and xz.fzid = #{fzid}
+            </if>
+            <if test="zbdm!=null and zbdm!=''">
+                and t.zbdm = #{zbdm}
+            </if>
+            <if test="tsrq!=null and tsrq!=''">
+                and DATE_FORMAT(t.tssj, '%Y-%m')=#{tsrq}
+            </if>
+            <if test="syts!=null">
+                and t.fksx - datediff(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d'), DATE_FORMAT(t.tssj, '%Y-%m-%d')) >= #{syts}
+            </if>
+    </select>
+
+    <insert id="insert" parameterType="Rwtz">
+        insert into t_dbfxxt_rwtz(fkid, tzsx, tzq, tzh, creator, create_time)
+        values
+        <foreach item="objId" collection="idList" separator=",">
+            (#{objId}, #{tzsx}, #{tzq}, #{tzh}, #{creator}, current_timestamp(6))
+        </foreach>
+    </insert>
+
+    <insert id="insertFksx" parameterType="Rwtz">
+        insert into t_dbfxxt_rwtz(fkid, tzsx, tzq, tzh, creator, create_time)
+        values
+        <foreach item="objId" collection="idList"  separator="," >
+            (#{objId}, #{tzsx}, (select fksx from t_dbfxxt_fkb where id=#{objId}), #{tzh}, #{creator}, current_timestamp(6))
+        </foreach>
+    </insert>
+
+    <update id="tzfkr" parameterType="Rwtz">
+        update t_dbfxxt_fkb
+        set fkr=#{fkr}
+        where zt='1'
+          and id in
+        <foreach item="objId" collection="idList" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+    </update>
+
+    <update id="tzfksx" parameterType="Rwtz">
+        update t_dbfxxt_fkb
+        set fksx=#{fksx}
+        where zt='1'
+          and id in
+        <foreach item="objId" collection="idList" open="(" separator="," close=")">
+            #{objId}
+        </foreach>
+    </update>
+
+
+    <!-- 插入取消表 -->
+    <insert id="insertQx" parameterType="Rwtz">
+        insert into t_dbfxxt_fkb_qx(fkbid,ywid,nsrmc,zbdm,zt,tsr,tssj,fkr,fksx,fksj,xgfkr,xgfksj,fklx,fknr,fktp,fkfj,shxx,shr,shsj,qxry,qxsj)
+        select id,ywid,nsrmc,zbdm,zt,tsr,tssj,fkr,fksx,fksj,xgfkr,xgfksj,fklx,fknr,fktp,fkfj,shxx,shr,shsj,#{creator} qxry,current_timestamp(6) qxsj
+        from t_dbfxxt_fkb where id=#{fkid}
+    </insert>
+    <!-- 取消推送 -->
+    <delete id="deleteFk" parameterType="Rwtz">
+        delete from t_dbfxxt_fkb where id=#{fkid}
+    </delete>
+
+</mapper>

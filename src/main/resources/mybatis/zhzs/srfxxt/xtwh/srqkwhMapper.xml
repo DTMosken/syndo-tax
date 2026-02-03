@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.srfxxt.mapper.xtwh.SrqkwhMapper">
+	<select id="selectList" parameterType="Srqkwh" resultType="Srqkwh">
+		select * from t_srfxxt_srqk
+		<where>
+			<if test="dateTime!=null and dateTime!=''"> date_time = #{dateTime} </if>
+		</where>
+	</select>
+
+	<select id="selectById" parameterType="String" resultType="Srqkwh">
+		select * from t_srfxxt_srqk where id=#{id}
+	</select>
+
+	<insert id="insert" parameterType="Srqkwh">
+		replace into t_srfxxt_srqk(date_time, zsr, dfsr
+		<if test="zsrTq!=null and zsrTq!=''"> , zsr_tq </if>
+		<if test="dfsrTq!=null and dfsrTq!=''">, dfsr_tq </if>
+		) values
+		(#{dateTime}, #{zsr}, #{dfsr}
+		<if test="zsrTq!=null and zsrTq!=''">, #{zsrTq} </if>
+		<if test="dfsrTq!=null and dfsrTq!=''">, #{dfsrTq} </if>
+		)
+	</insert>
+
+	<update id="update" parameterType="Srqkwh">
+		update t_srfxxt_srqk
+		    <set>
+			date_time=#{dateTime},
+			zsr=#{zsr},
+			dfsr=#{dfsr},
+			<if test="zsrTq!=null and zsrTq!=''"> zsr_tq=#{zsrTq}, </if>
+			<if test="dfsrTq!=null and dfsrTq!=''"> dfsr_tq=#{dfsrTq} </if>
+			</set>
+		where id=#{id}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="String">
+		delete from t_srfxxt_srqk where id in
+		<foreach item="objId" collection="array" open="(" separator="," close=")">
+			#{objId}
+		</foreach>
+	</delete>
+
+	<select id="getBySsq" parameterType="Srqkwh" resultType="Srqkwh">
+		select * from t_srfxxt_srqk t
+		WHERE DATE_FORMAT(DATE_ADD(CONCAT(date_time,'-01'), INTERVAL 12 MONTH),'%Y-%m')=#{dateTime}
+	</select>
+
+	<select id="selectIndex1" resultType="Index">
+		SELECT SUM(zsr)                                                          zsr,
+			   IF(DATE_FORMAT(CONCAT(MAX(date_time), '-01'), '%c') = '1',
+				  CONCAT(DATE_FORMAT(CONCAT(MAX(date_time), '-01'), '%Y'), '年1月'),
+				  CONCAT(DATE_FORMAT(CONCAT(MAX(date_time), '-01'), '%Y'), '年1-', DATE_FORMAT(CONCAT(MAX(date_time), '-01'), '%c'), '月')) zsr_rq,
+			   CONCAT(ROUND((SUM(zsr) - SUM(zsr_tq)) / SUM(zsr_tq) * 100, 2),'%')                   zsrqs,
+			   SUM(dfsr)                                                         dfsr,
+			   CONCAT(ROUND((SUM(dfsr) - SUM(dfsr_tq)) / SUM(dfsr_tq) * 100, 2),'%')                   dfsrqs
+		FROM t_srfxxt_srqk
+		WHERE SUBSTR(date_time, 1, 4) = DATE_FORMAT(CURRENT_DATE(), '%Y')
+	</select>
+
+	<select id="selectIndex2" resultType="Index">
+		WITH RECURSIVE sj (dt, num) AS (
+			SELECT DATE_FORMAT(CONCAT((SELECT IFNULL(MAX(date_time),DATE_FORMAT(CURRENT_DATE(), '%Y-%m')) FROM t_srfxxt_srqk), '-01'), '%Y-%m'), @num := 1
+			UNION ALL
+			SELECT DATE_FORMAT(DATE_SUB(CONCAT((SELECT IFNULL(MAX(date_time),DATE_FORMAT(CURRENT_DATE(), '%Y-%m')) FROM t_srfxxt_srqk), '-01'), INTERVAL num MONTH),
+							   '%Y-%m'), @num := @num + 1
+			FROM sj
+			WHERE num &lt; 12
+		)
+		SELECT CONCAT('[',GROUP_CONCAT(CONCAT('\'',sj.dt,'\'') ORDER BY sj.dt),']')            e_yf,
+			   CONCAT('[',GROUP_CONCAT(IFNULL(t.zsr, 0) ORDER BY sj.dt),']')    e_bqs,
+			   CONCAT('[',GROUP_CONCAT(IFNULL(t.zsr_tq, 0) ORDER BY sj.dt),']') e_tqs,
+			   CONCAT('[',GROUP_CONCAT(IFNULL(ROUND((IFNULL(t.zsr, 0) - IFNULL(t.zsr_tq, 0)) / NULLIF(t.zsr_tq, 0) * 100, 2), 0) ORDER BY sj.dt),']') e_zjl
+		FROM sj LEFT JOIN t_srfxxt_srqk t ON sj.dt = t.date_time
+	</select>
+	
+</mapper>

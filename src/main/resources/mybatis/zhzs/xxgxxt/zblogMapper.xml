@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.syndo.project.zhzs.xxgxxt.mapper.ZbLogMapper">
+	
+	<select id="queryCount" resultType="long" parameterType="com.syndo.etl.meta.domain.MetaData" statementType="STATEMENT">
+		select count(0) from ${tabName} where date_time='${dateTime}'
+	</select>
+	
+	<!-- 插入 -->	
+	<update id="insert" parameterType="com.syndo.project.zhzs.xxgxxt.domain.Zblog">
+	    merge into xxgxxt_zblog m 
+	    using(
+	    	select #{dept} dept,#{deptName} dept_name,#{userId} user_id, #{userName} user_name,
+	    		   #{zbbh} zbbh,#{zbmc} zbmc,#{wzx} wzx,#{bszq} bszq,#{bssl} bssl 
+	   	    from dual
+	   	    ) n
+	    on (m.bszq=n.bszq and m.zbbh=n.zbbh) 
+	    when not matched then 
+			insert(m.dept, m.dept_name, m.user_id, m.user_name, m.zbbh, m.zbmc, m.wzx, m.bszq, m.bssl)
+			values(n.dept, n.dept_name, n.user_id, n.user_name, n.zbbh, n.zbmc, n.wzx, n.bszq, n.bssl)
+		when matched then 
+			update set m.dept=n.dept, m.dept_name=n.dept_name, m.user_id=n.user_id,m.wzx=n.wzx, m.user_name=n.user_name, 
+		    m.bssl=n.bssl,m.upd_date=sysdate 
+	</update>
+	
+</mapper>

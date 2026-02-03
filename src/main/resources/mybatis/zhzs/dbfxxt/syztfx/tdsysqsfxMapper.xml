@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 土地使用税趋势分析 -->
+
+<mapper namespace="com.syndo.project.zhzs.dbfxxt.mapper.syztfx.TdsysqsfxMapper">
+	<!-- 查询 -->
+	<select id="selectList" resultType="Tdsysqsfx" parameterType="Tdsysqsfx" databaseId="mysql">
+		WITH
+        bq AS(
+	        SELECT NSRMC, SUM(SJJE) SJJE
+	        FROM t_db_swj_jrkxx
+	        WHERE ZSXM = '城镇土地使用税'
+	        AND ZSPM NOT IN ('滞纳金', '罚款')
+	        AND HYDL != '房地产业'
+	        AND SUBSTRING(SKSSQQ, 1, 4) = #{nd}
+	        <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE CONCAT('%', #{nsrmc}, '%')</if>
+			and nsrmc in(select nsrmc from t_db_swj_ybnsrdjxx)
+	        GROUP BY NSRMC
+        ),
+        tq AS (
+	        SELECT NSRMC, SUM(SJJE) SJJE
+	        FROM t_db_swj_jrkxx
+	        WHERE ZSXM = '城镇土地使用税'
+	        AND ZSPM NOT IN ('滞纳金', '罚款')
+	        AND HYDL != '房地产业'
+	        AND SUBSTRING(SKSSQQ, 1, 4) = #{nd}-1
+	        <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE CONCAT('%', #{nsrmc}, '%')</if>
+			and nsrmc in(select nsrmc from t_db_swj_ybnsrdjxx)
+	        GROUP BY NSRMC
+        ),
+        jg AS (
+        	SELECT * FROM (
+		        SELECT tq.NSRMC NSRMC,
+		        IFNULL(tq.SJJE, 0) tqjnsk,
+		        IFNULL(bq.SJJE, 0) bqjnsk,
+		        IFNULL(bq.SJJE, 0) -  IFNULL(tq.SJJE, 0) jnskce
+		        FROM tq LEFT JOIN bq
+		        ON tq.NSRMC = bq.NSRMC
+		        WHERE tq.NSRMC IS NOT NULL
+	        )T WHERE 1=1
+	        <if test="sfsj !=null and sfsj != ''">
+				<if test="sfsj == 1">
+					AND jnskce &lt; 0
+				</if>
+				<if test="sfsj == 2">
+					AND jnskce &gt;= 0
+				</if>
+			</if>
+			ORDER BY jnskce
+        )
+        SELECT nsrmc, FORMAT(tqjnsk,2) tqjnsk, FORMAT(bqjnsk,2) bqjnsk, FORMAT(jnskce,2) jnskce 
+			FROM (
+				SELECT '合计' NSRMC, SUM(tqjnsk) tqjnsk, SUM(bqjnsk) bqjnsk, SUM(jnskce) jnskce,'1' XH
+				FROM jg
+				UNION ALL
+				SELECT NSRMC, tqjnsk, bqjnsk, jnskce,'99' xh 
+				FROM jg
+			)T 
+			ORDER BY xh, cast(jnskce as DECIMAL)
+	</select>
+	
+	<select id="selectList" resultType="Tdsysqsfx" parameterType="Tdsysqsfx" databaseId="oracle">
+		WITH
+		bq AS(
+		  select NSRMC, SUM(SJJE) SJJE
+		    from MD_SWJ_RKXX
+		   WHERE ZSXM = '城镇土地使用税'
+		     AND ZSPM NOT IN ('滞纳金', '罚款')
+		     AND HYDL != '房地产业'
+		     and SUBSTR(SKSSQQ, 0, 7) <![CDATA[ >= ]]> #{nd} || '-' || #{ksy}
+		     and SUBSTR(SKSSQQ, 0, 7) <![CDATA[ <= ]]> #{nd} || '-' || #{jsy}
+		     <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE concat(concat('%',#{nsrmc}),'%')</if>
+		   group by NSRMC
+		),
+		tq AS (
+		  select NSRMC, SUM(SJJE) SJJE
+		    from MD_SWJ_RKXX
+		   WHERE ZSXM = '城镇土地使用税'
+		     AND ZSPM NOT IN ('滞纳金', '罚款')
+		     AND HYDL != '房地产业'
+		     and SUBSTR(SKSSQQ, 0, 7) <![CDATA[ >= ]]> #{nd} -1 || '-' || #{ksy}
+		     and SUBSTR(SKSSQQ, 0, 7) <![CDATA[ <= ]]> #{nd} -1 || '-' || #{jsy}
+		     <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE concat(concat('%',#{nsrmc}),'%')</if>
+		   group by NSRMC
+		),
+		jg AS (
+		   select * from (
+				select NVL(bq.NSRMC, tq.NSRMC) NSRMC,
+				       #{jd} jd,
+				       NVL(bq.SJJE, 0) bqjnsk,
+				       NVL(tq.SJJE, 0) tqjnsk,
+				       NVL( NVL(bq.SJJE, 0) - NVL(tq.SJJE, 0), 0) jnskce,
+				       '' fxlx
+				  from bq FULL JOIN tq
+				          on bq.NSRMC = tq.NSRMC
+		   )
+		   order by jnskce
+		)
+		select '合计' NSRMC,
+		       #{jd} jd,
+		       sum(bqjnsk) bqjnsk,
+		       sum(tqjnsk) tqjnsk,
+		       NVL(sum(bqjnsk) - sum(tqjnsk) ,0) jnskce,
+		       '' fxlx
+		  from jg
+		union all
+		select * from jg
+	</select>
+
+	<!-- 查询一年的四个季度 -->
+	<select id="selectListNianjd" resultType="Tdsysqsfx" parameterType="Tdsysqsfx">
+	   WITH jd as
+		 (select NSRMC,
+		         #{nd} nd,
+		         sum(CASE WHEN SUBSTR(SKSSQQ, 0, 7) <![CDATA[>=]]> #{nd} || '-01' and
+		                       SUBSTR(SKSSQQ, 0, 7) <![CDATA[<=]]> #{nd} || '-03' THEN SJJE else '0' end) dyjd,
+		         sum(CASE WHEN SUBSTR(SKSSQQ, 0, 7) <![CDATA[>=]]> #{nd} || '-04' and
+		                       SUBSTR(SKSSQQ, 0, 7) <![CDATA[<=]]> #{nd} || '-06' THEN SJJE else '0' end) dejd,
+		         sum(CASE WHEN SUBSTR(SKSSQQ, 0, 7) <![CDATA[>=]]> #{nd} || '-07' and
+		                       SUBSTR(SKSSQQ, 0, 7) <![CDATA[<=]]> #{nd} || '-09' THEN SJJE else '0' end) dsanjd,
+		         sum(CASE WHEN SUBSTR(SKSSQQ, 0, 7) <![CDATA[>=]]> #{nd} || '-10' and
+		                       SUBSTR(SKSSQQ, 0, 7) <![CDATA[<=]]> #{nd} || '-12' THEN SJJE else '0' end) dsijd,
+		         sum(SJJE) SJJE
+		    from MD_SWJ_RKXX
+		   WHERE ZSXM = '城镇土地使用税'
+		     AND ZSPM NOT IN ('滞纳金', '罚款')
+		     AND HYDL != '房地产业'
+		     AND SUBSTR(SKSSQQ, 0, 4) = #{nd}
+		     <if test="nsrmc != null and nsrmc != ''">AND NSRMC LIKE '%'||#{nsrmc}||'%'</if>
+		   group by NSRMC
+		   order by SJJE)
+		select '合计' NSRMC,
+		       #{nd} nd,
+		       sum(dyjd) dyjd,
+		       sum(dejd) dejd,
+		       sum(dsanjd) dsanjd,
+		       sum(dsijd) dsijd,
+		       sum(SJJE) SJJE
+		  from jd
+		union all
+		select * from jd
+	</select>
+</mapper>

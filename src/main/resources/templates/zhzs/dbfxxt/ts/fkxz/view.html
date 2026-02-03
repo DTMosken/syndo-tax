@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head>
+	<th:block th:include="include :: layui-header('风控小组设置')" />
+	<style type="text/css">
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-form-label {
+			width:60px
+		}
+		.layui-body-table .layui-form .layui-form-item .layui-inline .layui-input-block {
+			margin-left: 66px;
+		}
+		.layui-card-header{
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			height: auto;
+			padding:7px;
+		}
+		.layui-body-table, .layui-card {
+			background-color: #f3f3f4;
+		}
+		.layui-table-tool, .layui-card-header {
+			background-color: white;
+		}
+		.layui-body-table .layui-card-body {
+			padding: 0 10px 0px 10px;
+			margin-top: 10px;
+			border-radius: 6px;
+			box-shadow: 1px 1px 3px rgba(0 0 0 0.2);
+			background-color: white;
+			padding-bottom: 10px;
+		}
+	</style>
+</head>
+<body class="layui-body-table">
+     <div class="layui-card">
+		<div class="layui-card-header">
+			<form id="query-form" class="layui-form">
+				<div class="layui-form-item layui-row" style="padding-left:10px;">
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">登录名称：</label>
+						<div class="layui-input-block">
+							<input type="text" id="userName" name="userName" autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">姓名：</label>
+						<div class="layui-input-block">
+							<input type="text" id="name" name="name"  autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">部门：</label>
+						<div class="layui-input-block">
+							<input type="text" id="dept" name="dept"  autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">分组：</label>
+						<div class="layui-input-block">
+							<input type="text" id="fzmc" name="fzmc"  autocomplete="off" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<label class="layui-form-label">状态：</label>
+						<div class="layui-input-block">
+							<select id="status" name="status" class="form-control input-sm">
+								<option value="">请选择</option>
+								<option value="0">作为反馈人</option>
+								<option value="1">不作为反馈人</option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-inline layui-col-sm4 layui-col-md2">
+						<div class="layui-form-btn" style="text-align: left" >
+							<a class="layui-btn layui-btn-normal layui-btn-sm" onclick="$.table.search()">
+								<i class="layui-icon">&#xe615;</i> 搜索
+							</a>
+							<a class="layui-btn layui-btn-primary layui-btn-sm" onclick="$.table.reset()">
+								<i class="layui-icon">&#xe669;</i> 重置
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		 <div class="layui-card-body">
+			 <table id="layui-table" lay-filter="layui-table"></table>
+		 </div>
+	</div>
+	<script type="text/html" id="tmpToolbar">
+	 <div class="layui-btn-container" id="toolbtn">
+		 <button class="layui-btn layui-btn-sm" style="background-color: #1c84c6" onclick="add()">
+			 <i class="layui-icon">&#xe654;</i>新增
+		 </button>
+		 <button class="layui-btn layui-btn-sm" style="background-color: #1dc5a3" onclick="edit()">
+			 <i class="layui-icon">&#xe642;</i>修改
+		 </button>
+		 <button class="layui-btn layui-btn-sm" style="background-color: #ef6776" onclick="remove()">
+			 <i class="layui-icon">&#xe640;</i>删除
+		 </button>
+		 <button class="layui-btn layui-btn-sm" style="background-color: #23c6c8" onclick="imp()">
+			 <i class="layui-icon">&#xe681;</i>导入
+		 </button>
+		 <div style="position: absolute; background-color: white;top:-1px; left:-1px; width: calc(100% + 2px); height: 100%; z-index: -1;"></div>
+	 </div>
+	</script>
+    <th:block th:include="include :: layui-footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "zhzs/dbfxxt/ts/fkxz";
+
+        $(function() {
+            var options = {
+				id: 'layui-table',
+				url: prefix + "/list",
+				title: "风控小组设置",
+				toolbar: '#tmpToolbar',
+				defaultToolbar:['filter', 'print'],
+				limit: 200,
+				limits: [200],
+				even: true,
+				ataType: "json",
+				height: 'full-95',
+
+				cols: [
+                	[
+						{
+							type:'checkbox'
+						},
+                        {
+                            title : '序号',
+                            align: 'center',
+							width: '60',
+							type: 'numbers'
+                        },
+						{
+							field : 'id',
+							title : 'ID',
+							align: 'center',
+							hide: true
+						},
+						{
+                        	field : 'userName',
+                            title : '登录名称',
+                            align: 'left', 
+							width: '100'
+                        },
+                        {
+                        	field : 'name',
+                            title : '姓名',
+                            align: 'center',
+							width: '100'
+                        },
+						{
+							field : 'sexName',
+							title : '性别',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'deptName',
+							title : '部门',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'statusName',
+							title : '状态',
+							align: 'center',
+							width: '150'
+						},
+						{
+							field : 'roleName',
+							title : '角色',
+							align: 'center',
+							width: '100'
+						},
+						{
+							field : 'fzmc',
+							title : '分组',
+							align: 'center',
+							width: '100'
+						}
+                    ]
+                ]
+            };
+            $.table.init(options);
+
+        });
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            laydate.render({elem: '#rkrq',type:'month',format:'yyyy-MM'});
+        });
+
+        function add() {
+			$.modal.open("添加风控小组成员", prefix + '/add', null, 500);
+		}
+        function edit() {
+			var rows = $.table.selectColumns("id".toString());
+			if (rows.length != 1) {
+				$.modal.alertWarning("请选择一条记录");
+				return;
+			}
+			$.modal.open("修改风控小组成员", prefix + '/edit/'+rows.join(), null, 500);
+		}
+        function remove() {
+			var rows = $.table.selectColumns("id".toString());
+			if (rows.length == 0) {
+				$.modal.alertWarning("请至少选择一条记录");
+				return;
+			}
+			$.modal.confirm("确认要删除选中的" + rows.length + "条数据吗?", function() {
+				var url = prefix + "/delete";
+				var data = { "ids": rows.join() };
+				$.operate.submit(url, "post", "json", data);
+			});
+		}
+		function imp() {
+			layer.open({
+				type: 1,
+				area: ['400px', '230px'],
+				fix: false,
+				shade: 0.3,
+				title: '导入',
+				content: $('#importTpl').html(),
+				btn: ['<i class="fa fa-check"></i> 导入', '<i class="fa fa-remove"></i> 取消'],
+				// 弹层外区域关闭
+				shadeClose: true,
+				btn1: function(index, layero){
+					var file = layero.find('#file').val();
+					if (file == '' || (!$.common.endWith(file, '.xls') && !$.common.endWith(file, '.xlsx'))){
+						$.modal.msgWarning("请选择后缀为 “xls”或“xlsx”的文件。");
+						return false;
+					}
+					index = layer.load(2, {shade: false});
+					$.modal.disable();
+					var formData = new FormData(layero.find('form')[0]);
+					$.ajax({
+						url: prefix+'/importData',
+						data: formData,
+						cache: false,
+						contentType: false,
+						processData: false,
+						type: 'POST',
+						success: function (result) {
+							if (result.code == web_status.SUCCESS) {
+								$.modal.closeAll();
+								$.modal.alertSuccess(result.msg);
+								$.table.refresh();
+							} else if (result.code == web_status.WARNING) {
+								layer.close(index);
+								$.modal.enable();
+								$.modal.alertWarning(result.msg)
+							} else {
+								layer.close(index);
+								$.modal.enable();
+								$.modal.alertError(result.msg);
+							}
+						}
+					});
+				}
+			});
+		}
+		function downloadTemplate(){
+			window.location.href = ctx + "common/dbTemplateDownload?fileName=" + encodeURIComponent("风控小组.xlsx");
+		}
+
+    </script>
+	 <!-- 导入区域 -->
+	 <script id="importTpl" type="text/template">
+		 <form enctype="multipart/form-data">
+			 <div style="margin-left: 40px; margin-top: 20px; margin-bottom: 10px">
+				 <input type="file" id="file" name="file"/>
+				 <div style="margin-top: 10px; padding-top: 5px">
+					 <input type="checkbox" id="updateSupport" name="updateSupport" title="如果登录账户已经存在，更新这条数据。"> 是否更新已经存在记录
+					 &nbsp;	<a onclick="downloadTemplate()" class="layui-btn layui-btn-primary layui-btn-sm"><i class="layui-icon">&#xe656;</i> 下载模板</a>
+				 </div>
+				 <span style="float:left; margin-top:10px; color: red; ">
+					 提示：仅允许导入“xls”或“xlsx”格式文件！
+				 </span>
+			 </div>
+		 </form>
+	 </script>
+</body>
+</html>
